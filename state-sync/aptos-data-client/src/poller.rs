@@ -93,7 +93,7 @@ impl DataSummaryPoller {
 
     /// Identifies the next set of priority peers to poll from
     /// the given list of all priority peers.
-    pub fn get_priority_peers_to_poll(
+    fn get_priority_peers_to_poll(
         &self,
         all_priority_peers: HashSet<PeerNetworkId>,
     ) -> HashSet<PeerNetworkId> {
@@ -122,7 +122,7 @@ impl DataSummaryPoller {
 
     /// Identifies the next set of regular peers to poll from
     /// the given list of all regular peers.
-    pub fn get_regular_peers_to_poll(
+    fn get_regular_peers_to_poll(
         &self,
         all_regular_peers: HashSet<PeerNetworkId>,
     ) -> HashSet<PeerNetworkId> {
@@ -204,7 +204,7 @@ impl DataSummaryPoller {
     }
 
     /// Marks the given peers as having an in-flight poll request
-    pub fn in_flight_request_started(&self, is_priority_peer: bool, peer: &PeerNetworkId) {
+    pub(crate) fn in_flight_request_started(&self, is_priority_peer: bool, peer: &PeerNetworkId) {
         // Get the current in-flight polls
         let in_flight_polls = if is_priority_peer {
             self.in_flight_priority_polls.clone()
@@ -244,7 +244,7 @@ impl DataSummaryPoller {
     }
 
     /// Returns all peers with in-flight polls (both priority and regular peers)
-    pub fn all_peers_with_in_flight_polls(&self) -> HashSet<PeerNetworkId> {
+    pub(crate) fn all_peers_with_in_flight_polls(&self) -> HashSet<PeerNetworkId> {
         // Add the priority peers with in-flight polls
         let mut peers_with_in_flight_polls = hashset![];
         for peer in self.in_flight_priority_polls.iter() {
@@ -402,19 +402,22 @@ pub(crate) fn choose_peers_by_latency(
                 if let Some(latency) = peer_monitoring_metadata.average_ping_latency_secs {
                     let latency_weight = 1.0 / latency; // Invert the latency to get the weight
                     peer_and_latency_weights.push((peer, latency_weight));
+                } else {
+                    log_warning_with_sample(
+                        LogSchema::new(LogEntry::DataSummaryPoller)
+                            .event(LogEvent::PeerSelectionError)
+                            .message(&format!("Unable to get latency for peer! Peer: {:?}", peer)),
+                    );
                 }
             },
             Err(error) => {
-                sample!(
-                    SampleRate::Duration(Duration::from_secs(ERROR_LOG_FREQ_SECS)),
-                        warn!(
-                            (LogSchema::new(LogEntry::DataSummaryPoller)
-                                .event(LogEvent::PeerSelectionError)
-                                .message(&format!(
-                                    "Unable to get peer metadata! Peer: {:?}, Error: {:?}",
-                                    peer, error
-                        )))
-                    );
+                log_warning_with_sample(
+                    LogSchema::new(LogEntry::DataSummaryPoller)
+                        .event(LogEvent::PeerSelectionError)
+                        .message(&format!(
+                            "Unable to get peer metadata! Peer: {:?}, Error: {:?}",
+                            peer, error
+                        )),
                 );
             },
         }
@@ -424,21 +427,26 @@ pub(crate) fn choose_peers_by_latency(
     utils::choose_random_peers_by_weight(num_peers_to_choose, peer_and_latency_weights)
         .unwrap_or_else(|error| {
             // Log the error
-            sample!(
-                SampleRate::Duration(Duration::from_secs(ERROR_LOG_FREQ_SECS)),
-                warn!(
-                    (LogSchema::new(LogEntry::DataSummaryPoller)
-                        .event(LogEvent::PeerSelectionError)
-                        .message(&format!(
-                            "Unable to select peer by latencies! Error: {:?}",
-                            error
-                    )))
-                );
+            log_warning_with_sample(
+                LogSchema::new(LogEntry::DataSummaryPoller)
+                    .event(LogEvent::PeerSelectionError)
+                    .message(&format!(
+                        "Unable to select peer by latencies! Error: {:?}",
+                        error
+                    )),
             );
 
             // No peer was selected
             hashset![]
         })
+}
+
+/// Logs the given schema as a warning with a sampled frequency
+fn log_warning_with_sample(log: LogSchema) {
+    sample!(
+        SampleRate::Duration(Duration::from_secs(ERROR_LOG_FREQ_SECS)),
+        warn!(log);
+    );
 }
 
 /// Spawns a dedicated poller for the given peer.
