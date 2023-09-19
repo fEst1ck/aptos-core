@@ -15,6 +15,7 @@ use aptos_consensus_types::{
     block::Block,
     common::{Author, Payload, Round},
     executed_block::ExecutedBlock,
+    quorum_cert::QuorumCert,
 };
 use aptos_crypto::HashValue;
 use aptos_executor_types::StateComputeResult;
@@ -48,11 +49,43 @@ pub trait ProofNotifier: Send + Sync {
     async fn send_commit_proof(&self, ledger_info: LedgerInfoWithSignatures);
 }
 
+pub(crate) fn compute_initial_block_and_ledger_info(
+    ledger_info_from_storage: LedgerInfoWithSignatures,
+) -> (BlockInfo, LedgerInfoWithSignatures) {
+    // We start from the block that storage's latest ledger info, if storage has end-epoch
+    // LedgerInfo, we generate the virtual genesis block
+    if ledger_info_from_storage.ledger_info().ends_epoch() {
+        let genesis =
+            Block::make_genesis_block_from_ledger_info(ledger_info_from_storage.ledger_info());
+
+        let ledger_info = ledger_info_from_storage.ledger_info();
+        let genesis_qc = QuorumCert::certificate_for_genesis_from_ledger_info(
+            ledger_info_from_storage.ledger_info(),
+            genesis.id(),
+        );
+        let genesis_ledger_info = genesis_qc.ledger_info().clone();
+        (
+            genesis.gen_block_info(
+                ledger_info.transaction_accumulator_hash(),
+                ledger_info.version(),
+                ledger_info.next_epoch_state().cloned(),
+            ),
+            genesis_ledger_info,
+        )
+    } else {
+        (
+            ledger_info_from_storage.ledger_info().commit_info().clone(),
+            ledger_info_from_storage,
+        )
+    }
+}
+
 pub struct OrderedNotifierAdapter {
     executor_channel: UnboundedSender<OrderedBlocks>,
     storage: Arc<dyn DAGStorage>,
     parent_block_info: Arc<RwLock<BlockInfo>>,
     epoch_state: Arc<EpochState>,
+    highest_committed_anchor_round: Arc<RwLock<Round>>,
 }
 
 impl OrderedNotifierAdapter {
@@ -60,32 +93,15 @@ impl OrderedNotifierAdapter {
         executor_channel: UnboundedSender<OrderedBlocks>,
         storage: Arc<dyn DAGStorage>,
         epoch_state: Arc<EpochState>,
+        parent_block_info: BlockInfo,
+        highest_committed_anchor_round: Arc<RwLock<Round>>,
     ) -> Self {
-        let ledger_info_from_storage = storage
-            .get_latest_ledger_info()
-            .expect("latest ledger info must exist");
-
-        // We start from the block that storage's latest ledger info, if storage has end-epoch
-        // LedgerInfo, we generate the virtual genesis block
-        let parent_block_info = if ledger_info_from_storage.ledger_info().ends_epoch() {
-            let genesis =
-                Block::make_genesis_block_from_ledger_info(ledger_info_from_storage.ledger_info());
-
-            let ledger_info = ledger_info_from_storage.ledger_info();
-            genesis.gen_block_info(
-                ledger_info.transaction_accumulator_hash(),
-                ledger_info.version(),
-                ledger_info.next_epoch_state().cloned(),
-            )
-        } else {
-            ledger_info_from_storage.ledger_info().commit_info().clone()
-        };
-
         Self {
             executor_channel,
             storage,
             parent_block_info: Arc::new(RwLock::new(parent_block_info)),
             epoch_state,
+            highest_committed_anchor_round,
         }
     }
 }
@@ -137,6 +153,7 @@ impl OrderedNotifier for OrderedNotifierAdapter {
         );
         let block_info = block.block_info();
         let storage = self.storage.clone();
+        let highest_committed_anchor_round = self.highest_committed_anchor_round.clone();
         *self.parent_block_info.write() = block_info.clone();
         Ok(self.executor_channel.unbounded_send(OrderedBlocks {
             ordered_blocks: vec![block],
@@ -146,7 +163,9 @@ impl OrderedNotifier for OrderedNotifierAdapter {
             ),
             callback: Box::new(
                 move |_committed_blocks: &[Arc<ExecutedBlock>],
-                      _commit_decision: LedgerInfoWithSignatures| {
+                      commit_decision: LedgerInfoWithSignatures| {
+                    *highest_committed_anchor_round.write() = commit_decision.commit_info().round();
+
                     // TODO: this doesn't really work since not every block will trigger a callback,
                     // we need to update the buffer manager to invoke all callbacks instead of only last one
                     if let Err(e) = storage.delete_certified_nodes(node_digests) {
