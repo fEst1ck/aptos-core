@@ -2,7 +2,7 @@
 // Parts of the project are originally copyright © Meta Platforms, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_aggregator::delta_change_set::DeltaOp;
+use aptos_aggregator::{delta_change_set::DeltaOp, types::AggregatorID};
 use aptos_mvhashmap::types::TxnIndex;
 use aptos_types::{
     contract_event::ReadWriteEvent,
@@ -46,8 +46,6 @@ pub trait Transaction: Sync + Send + Clone + 'static {
         + Debug
         + DeserializeOwned
         + Serialize;
-    /// AggregatorV2 identifier type.
-    type Identifier: PartialOrd + Ord + Send + Sync + Clone + Hash + Eq + Debug;
     type Value: Send + Sync + Clone + TransactionWrite;
     type Event: Send + Sync + Debug + Clone + ReadWriteEvent;
 }
@@ -80,11 +78,7 @@ pub trait ExecutorTask: Sync {
     /// Execute a single transaction given the view of the current state.
     fn execute_transaction(
         &self,
-        view: &impl TExecutorView<
-            <Self::Txn as Transaction>::Key,
-            MoveTypeLayout,
-            <Self::Txn as Transaction>::Identifier,
-        >,
+        view: &impl TExecutorView<<Self::Txn as Transaction>::Key, MoveTypeLayout, AggregatorID>,
         txn: &Self::Txn,
         txn_idx: TxnIndex,
         materialize_deltas: bool,

@@ -32,8 +32,10 @@ use aptos_vm_logging::{clear_speculative_txn_logs, init_speculative_logs};
 use num_cpus;
 use rayon::ThreadPool;
 use std::{
+    cell::RefCell,
     collections::HashMap,
     marker::PhantomData,
+    rc::Rc,
     sync::{
         atomic::AtomicU32,
         mpsc,
@@ -644,8 +646,8 @@ where
         let executor = E::init(executor_arguments);
         drop(init_timer);
 
+        let counter = Rc::new(RefCell::new(0));
         let data_map = UnsyncMap::new();
-
         let mut ret = Vec::with_capacity(num_txns);
 
         let mut accumulated_fee_statement = FeeStatement::zero();
@@ -655,7 +657,7 @@ where
                 base_view,
                 ViewState::Unsync(SequentialState {
                     unsync_map: &data_map,
-                    _counter: &0,
+                    counter: Rc::clone(&counter),
                 }),
                 idx as TxnIndex,
             );

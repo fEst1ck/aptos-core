@@ -12,6 +12,7 @@ use crossbeam::utils::CachePadded;
 use dashmap::DashMap;
 use std::{
     collections::btree_map::{BTreeMap, Entry},
+    fmt::Debug,
     iter::DoubleEndedIterator,
     sync::atomic::Ordering,
 };
@@ -43,7 +44,7 @@ enum AggregatorEntry {
     // Marks the entry as an estimate, indicating that the next incarnation of the
     // transaction is estimated to populate the entry. May contain a bypass internally
     // (allowing a read operation to avoid waiting for the corresponding dependency),
-    // encapulated by the EstimatedEntry.
+    // encapsulated by the EstimatedEntry.
     Estimate(EstimatedEntry),
 }
 
@@ -332,7 +333,6 @@ pub struct VersionedAggregators {
 
 impl VersionedAggregators {
     // TODO: integrate into the rest of the system.
-    #[allow(dead_code)]
     /// Part of the big multi-versioned data-structure, which creates different types of
     /// versioned maps (including this one for aggregators), and delegates access. Hence,
     /// new should only be used from the crate.

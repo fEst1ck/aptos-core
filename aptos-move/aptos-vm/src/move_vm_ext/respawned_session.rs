@@ -137,6 +137,10 @@ impl<'r> TAggregatorView for ExecutorViewWithChangeSet<'r> {
             },
         }
     }
+
+    fn generate_aggregator_v2_id(&self) -> Self::IdentifierV2 {
+        self.base.generate_aggregator_v2_id()
+    }
 }
 
 impl<'r> TResourceView for ExecutorViewWithChangeSet<'r> {

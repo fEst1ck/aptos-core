@@ -8,7 +8,7 @@ use move_core_types::{
     account_address::AccountAddress,
     language_storage::StructTag,
     resolver::ResourceResolver,
-    value::{LayoutTag, MoveStructLayout, MoveTypeLayout},
+    value::{IdentifierMappingKind, LayoutTag, MoveStructLayout, MoveTypeLayout},
 };
 use move_vm_types::values::{Struct, Value};
 use once_cell::sync::Lazy;
@@ -27,9 +27,15 @@ macro_rules! test_struct {
 static TEST_LAYOUT: Lazy<MoveTypeLayout> = Lazy::new(|| {
     MoveTypeLayout::Struct(MoveStructLayout::Runtime(vec![
         MoveTypeLayout::U64,
-        MoveTypeLayout::Tagged(LayoutTag::AggregatorLifting, Box::new(MoveTypeLayout::U64)),
+        MoveTypeLayout::Tagged(
+            LayoutTag::IdentifierMapping(IdentifierMappingKind::Aggregator),
+            Box::new(MoveTypeLayout::U64),
+        ),
         MoveTypeLayout::U128,
-        MoveTypeLayout::Tagged(LayoutTag::AggregatorLifting, Box::new(MoveTypeLayout::U128)),
+        MoveTypeLayout::Tagged(
+            LayoutTag::IdentifierMapping(IdentifierMappingKind::Aggregator),
+            Box::new(MoveTypeLayout::U128),
+        ),
     ]))
 });
 
@@ -70,8 +76,8 @@ fn test_resource_in_storage() {
     let actual_value = Value::simple_deserialize(&blob.unwrap(), &TEST_LAYOUT).unwrap();
     let expected_value = test_struct!(100, 0, 300, 1);
     assert!(actual_value.equals(&expected_value).unwrap());
-    view.assert_lifted_equal_at(0, Value::u64(200));
-    view.assert_lifted_equal_at(1, Value::u128(400));
+    view.assert_mapping_equal_at(0, Value::u64(200));
+    view.assert_mapping_equal_at(1, Value::u128(400));
 }
 
 #[test]
@@ -97,8 +103,8 @@ fn test_table_item_in_storage() {
     let actual_value = Value::simple_deserialize(&blob.unwrap(), &TEST_LAYOUT).unwrap();
     let expected_value = test_struct!(100, 0, 300, 1);
     assert!(actual_value.equals(&expected_value).unwrap());
-    view.assert_lifted_equal_at(0, Value::u64(200));
-    view.assert_lifted_equal_at(1, Value::u128(400));
+    view.assert_mapping_equal_at(0, Value::u64(200));
+    view.assert_mapping_equal_at(1, Value::u128(400));
 }
 
 #[test]
@@ -110,10 +116,10 @@ fn test_resource_in_memory_cache() {
         test_struct,
         (*TEST_LAYOUT).clone(),
     );
-    view.add_lifting(0, Value::u64(200));
-    view.add_lifting(1, Value::u128(400));
-    view.assert_lifted_equal_at(0, Value::u64(200));
-    view.assert_lifted_equal_at(1, Value::u128(400));
+    view.add_mapping(0, Value::u64(200));
+    view.add_mapping(1, Value::u128(400));
+    view.assert_mapping_equal_at(0, Value::u64(200));
+    view.assert_mapping_equal_at(1, Value::u128(400));
 
     let (blob, _) = view
         .get_resource_bytes_with_metadata(&TEST_ADDRESS, &TEST_RESOURCE_TAG, &[])
@@ -139,10 +145,10 @@ fn test_table_item_in_memory_cache() {
         test_struct,
         (*TEST_LAYOUT).clone(),
     );
-    view.add_lifting(0, Value::u64(200));
-    view.add_lifting(1, Value::u128(400));
-    view.assert_lifted_equal_at(0, Value::u64(200));
-    view.assert_lifted_equal_at(1, Value::u128(400));
+    view.add_mapping(0, Value::u64(200));
+    view.add_mapping(1, Value::u128(400));
+    view.assert_mapping_equal_at(0, Value::u64(200));
+    view.assert_mapping_equal_at(1, Value::u128(400));
 
     let blob = view
         .resolve_table_entry_bytes(&TEST_TABLE_HANDLE, &TEST_TABLE_KEY)

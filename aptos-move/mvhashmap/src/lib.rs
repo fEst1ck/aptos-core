@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    versioned_data::VersionedData, versioned_group_data::VersionedGroupData,
-    versioned_modules::VersionedModules,
+    versioned_aggregators::VersionedAggregators, versioned_data::VersionedData,
+    versioned_group_data::VersionedGroupData, versioned_modules::VersionedModules,
 };
 use aptos_types::{
     executable::{Executable, ModulePath},
@@ -36,6 +36,7 @@ mod unit_tests;
 pub struct MVHashMap<K, T, V: TransactionWrite, X: Executable> {
     data: VersionedData<K, V>,
     group_data: VersionedGroupData<K, T, V>,
+    aggregators: VersionedAggregators,
     modules: VersionedModules<K, V, X>,
 }
 
@@ -53,6 +54,7 @@ impl<
         MVHashMap {
             data: VersionedData::new(),
             group_data: VersionedGroupData::new(),
+            aggregators: VersionedAggregators::new(),
             modules: VersionedModules::new(),
         }
     }
@@ -66,6 +68,10 @@ impl<
     /// containing different values mapped to tags of type T.
     pub fn group_data(&self) -> &VersionedGroupData<K, T, V> {
         &self.group_data
+    }
+
+    pub fn aggregators(&self) -> &VersionedAggregators {
+        &self.aggregators
     }
 
     pub fn modules(&self) -> &VersionedModules<K, V, X> {

@@ -10,10 +10,13 @@ use crate::{
 use aptos_aggregator::{
     delta_change_set::serialize,
     resolver::{AggregatorReadMode, TAggregatorView},
+    types::{AggregatorID, AggregatorValue, TryFromMoveValue, TryIntoMoveValue},
 };
 use aptos_logger::error;
 use aptos_mvhashmap::{
-    types::{MVDataError, MVDataOutput, MVModulesError, MVModulesOutput, TxnIndex},
+    types::{
+        MVAggregatorsError, MVDataError, MVDataOutput, MVModulesError, MVModulesOutput, TxnIndex,
+    },
     unsync_map::UnsyncMap,
     MVHashMap,
 };
@@ -26,13 +29,23 @@ use aptos_types::{
 use aptos_vm_logging::{log_schema::AdapterLogSchema, prelude::*};
 use aptos_vm_types::resolver::{StateStorageView, TModuleView, TResourceView};
 use move_core_types::{
-    value::MoveTypeLayout,
+    value::{IdentifierMappingKind, MoveTypeLayout},
     vm_status::{StatusCode, VMStatus},
+};
+use move_vm_types::{
+    value_transformation::{
+        deserialize_and_replace_values_with_ids, TransformationResult, ValueToIdentifierMapping,
+    },
+    values::Value,
 };
 use std::{
     cell::RefCell,
     fmt::Debug,
-    sync::{atomic::AtomicU32, Arc},
+    rc::Rc,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
 };
 
 /// A struct which describes the result of the read from the proxy. The client
@@ -55,7 +68,7 @@ pub(crate) enum ReadResult<V> {
 pub(crate) struct ParallelState<'a, T: Transaction, X: Executable> {
     versioned_map: &'a MVHashMap<T::Key, T::Tag, T::Value, X>,
     scheduler: &'a Scheduler,
-    _counter: &'a AtomicU32,
+    counter: &'a AtomicU32,
     captured_reads: RefCell<Vec<ReadDescriptor<T::Key>>>,
 }
 
@@ -68,9 +81,24 @@ impl<'a, T: Transaction, X: Executable> ParallelState<'a, T, X> {
         Self {
             versioned_map: shared_map,
             scheduler: shared_scheduler,
-            _counter: shared_counter,
+            counter: shared_counter,
             captured_reads: RefCell::new(Vec::new()),
         }
+    }
+
+    fn set_aggregator_v2_value(&self, id: AggregatorID, base_value: AggregatorValue) {
+        self.versioned_map
+            .aggregators()
+            .set_base_value(id, base_value)
+    }
+
+    fn read_aggregator_v2_committed_value(
+        &self,
+        id: AggregatorID,
+    ) -> Result<AggregatorValue, MVAggregatorsError> {
+        self.versioned_map
+            .aggregators()
+            .read_latest_committed_value(id)
     }
 
     // TODO: Actually fill in the logic to record fetched executables, etc.
@@ -172,7 +200,7 @@ impl<'a, T: Transaction, X: Executable> ParallelState<'a, T, X> {
 
 pub(crate) struct SequentialState<'a, T: Transaction, X: Executable> {
     pub(crate) unsync_map: &'a UnsyncMap<T::Key, T::Value, X>,
-    pub(crate) _counter: &'a u32,
+    pub(crate) counter: Rc<RefCell<u32>>,
 }
 
 pub(crate) enum ViewState<'a, T: Transaction, X: Executable> {
@@ -229,6 +257,34 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> LatestView<
         }
         ret
     }
+
+    /// Given a state value, performs deserialization-serialization round-trip
+    /// to replace any aggregator / snapshot values.
+    fn replace_values_with_identifiers(
+        &self,
+        state_value: StateValue,
+        layout: &MoveTypeLayout,
+    ) -> anyhow::Result<StateValue> {
+        state_value.map_bytes(|bytes| {
+            // This call will replace all occurrences of aggregator / snapshot
+            // values with unique identifiers with the same type layout.
+            // The values are stored in aggregators multi-version data structure,
+            // see the actual trait implementation for more details.
+            let patched_value =
+                deserialize_and_replace_values_with_ids(bytes.as_ref(), layout, self).ok_or_else(
+                    || anyhow::anyhow!("Failed to deserialize resource during id replacement"),
+                )?;
+            patched_value
+                .simple_serialize(layout)
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Failed to serialize value {} after id replacement",
+                        patched_value
+                    )
+                })
+                .map(|b| b.into())
+        })
+    }
 }
 
 impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TResourceView
@@ -240,7 +296,7 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TResourceVi
     fn get_resource_state_value(
         &self,
         state_key: &Self::Key,
-        _maybe_layout: Option<&Self::Layout>,
+        maybe_layout: Option<&Self::Layout>,
     ) -> anyhow::Result<Option<StateValue>> {
         debug_assert!(
             state_key.module_path().is_none(),
@@ -254,12 +310,38 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TResourceVi
 
                 if matches!(mv_value, ReadResult::Uninitialized) {
                     let from_storage = self.base_view.get_state_value(state_key)?;
+                    let maybe_patched_from_storage = match (from_storage, maybe_layout) {
+                        // There are aggregators / aggregator snapshots in the
+                        // resource, so we have to replace the actual values with
+                        // identifiers.
+                        // TODO(aggregator): gate by the flag.
+                        (Some(state_value), Some(layout)) => {
+                            let res = self.replace_values_with_identifiers(state_value, layout);
+                            if let Err(err) = &res {
+                                // TODO(aggregator): This means replacement failed
+                                //       and most likely there is a bug. Log the error
+                                //       for now, and add recovery mechanism later.
+                                let log_context = AdapterLogSchema::new(
+                                    self.base_view.id(),
+                                    self.txn_idx as usize,
+                                );
+                                alert!(
+                                    log_context,
+                                    "[VM, ResourceView] Error during value to id replacement for {:?}: {}",
+                                    state_key,
+                                    err
+                                );
+                            }
+                            Some(res?)
+                        },
+                        (from_storage, _) => from_storage,
+                    };
 
                     // This base value can also be used to resolve AggregatorV1 directly from
                     // the versioned data-structure (without more storage calls).
                     state.versioned_map.data().provide_base_value(
                         state_key.clone(),
-                        TransactionWrite::from_state_value(from_storage),
+                        TransactionWrite::from_state_value(maybe_patched_from_storage),
                     );
 
                     mv_value = state.fetch_data(state_key, self.txn_idx);
@@ -270,7 +352,7 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TResourceVi
                     ReadResult::U128(v) => Ok(Some(StateValue::new_legacy(serialize(&v).into()))),
                     // ExecutionHalted indicates that the parallel execution is halted.
                     // The read should return immediately and log the error.
-                    // For now we use STORAGE_ERROR as the VM will not log the speculative eror,
+                    // For now we use STORAGE_ERROR as the VM will not log the speculative error,
                     // so no actual error will be logged once the execution is halted and
                     // the speculative logging is flushed.
                     ReadResult::HaltSpeculativeExecution(msg) => Err(anyhow::Error::new(
@@ -346,14 +428,74 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TAggregator
     for LatestView<'a, T, S, X>
 {
     type IdentifierV1 = T::Key;
-    type IdentifierV2 = T::Identifier;
+    type IdentifierV2 = AggregatorID;
 
     fn get_aggregator_v1_state_value(
         &self,
         state_key: &Self::IdentifierV1,
         _mode: AggregatorReadMode,
     ) -> anyhow::Result<Option<StateValue>> {
-        // TODO: Integrate aggregators.
+        // TODO: Integrate aggregators V1. That is, we can lift the u128 value
+        //       from the state item by passing the right layout here. This can
+        //       be useful for cross-testing the old and the new flows.
+        // self.get_resource_state_value(state_key, Some(&MoveTypeLayout::U128))
         self.get_resource_state_value(state_key, None)
+    }
+
+    fn generate_aggregator_v2_id(&self) -> Self::IdentifierV2 {
+        match &self.latest_view {
+            ViewState::Sync(state) => (state.counter.fetch_add(1, Ordering::SeqCst) as u64).into(),
+            ViewState::Unsync(state) => {
+                let mut counter = state.counter.borrow_mut();
+                let id = (*counter as u64).into();
+                *counter += 1;
+                id
+            },
+        }
+    }
+}
+
+// For aggregators V2, values are replaced with identifiers at deserialization time,
+// and are replaced back when the value is serialized. The "lifted" values are cached
+// by the `LatestView` in the aggregators multi-version data structure.
+impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> ValueToIdentifierMapping
+    for LatestView<'a, T, S, X>
+{
+    fn value_to_identifier(
+        &self,
+        kind: &IdentifierMappingKind,
+        layout: &MoveTypeLayout,
+        value: Value,
+    ) -> TransformationResult<Value> {
+        let id = self.generate_aggregator_v2_id();
+        match &self.latest_view {
+            ViewState::Sync(state) => {
+                let base_value = AggregatorValue::try_from_move_value(layout, value, Some(kind))?;
+                state.set_aggregator_v2_value(id, base_value)
+            },
+            ViewState::Unsync(_state) => {
+                // TODO(aggregator): Support sequential execution.
+                unimplemented!("Value to ID replacement for sequential execution is not supported")
+            },
+        };
+        Ok(id.try_into_move_value(layout)?)
+    }
+
+    fn identifier_to_value(
+        &self,
+        layout: &MoveTypeLayout,
+        identifier_value: Value,
+    ) -> TransformationResult<Value> {
+        let id = AggregatorID::try_from_move_value(layout, identifier_value, /*hint=*/ None)?;
+        match &self.latest_view {
+            ViewState::Sync(state) => Ok(state
+                .read_aggregator_v2_committed_value(id)
+                .expect("Committed value for ID must always exist")
+                .try_into_move_value(layout)?),
+            ViewState::Unsync(_state) => {
+                // TODO(aggregator): Support sequential execution.
+                unimplemented!("ID to value replacement for sequential execution is not supported")
+            },
+        }
     }
 }

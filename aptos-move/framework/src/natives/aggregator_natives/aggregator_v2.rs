@@ -213,7 +213,7 @@ fn native_create_aggregator(
         let id = aggregator_data.generate_id();
         let aggregator_id = AggregatorVersionedID::V2(id);
         aggregator_data.create_new_aggregator(aggregator_id, max_value);
-        id.id() as u128
+        id.as_u64() as u128
     } else {
         0
     };
@@ -341,7 +341,9 @@ fn native_snapshot(
     let result_value = if context.aggregator_execution_enabled() {
         let (_, mut aggregator_data) = get_context_data(context);
         let aggregator_id = aggregator_value_field_as_id(agg_value)?;
-        aggregator_data.snapshot(aggregator_id, agg_max_value)?.id() as u128
+        aggregator_data
+            .snapshot(aggregator_id, agg_max_value)?
+            .as_u64() as u128
     } else {
         agg_value
     };
@@ -380,7 +382,7 @@ fn native_create_snapshot(
         let snapshot_id = aggregator_data.generate_id();
         aggregator_data.create_new_snapshot(snapshot_id, input);
 
-        SnapshotValue::Integer(snapshot_id.id() as u128)
+        SnapshotValue::Integer(snapshot_id.as_u64() as u128)
     } else {
         input
     };
@@ -496,7 +498,7 @@ fn native_string_concat(
         SnapshotValue::Integer(
             aggregator_data
                 .string_concat(aggregator_id, prefix, suffix)
-                .id() as u128,
+                .as_u64() as u128,
         )
     } else {
         SnapshotValue::String(

@@ -634,25 +634,23 @@ mod test {
     use super::*;
     use crate::{aggregator_v1_id_for_test, aggregator_v1_state_key_for_test, FakeAggregatorView};
     use claims::{assert_err, assert_ok, assert_ok_eq, assert_some_eq};
-    use once_cell::sync::Lazy;
-
-    #[allow(clippy::redundant_closure)]
-    static TEST_RESOLVER: Lazy<FakeAggregatorView> = Lazy::new(|| FakeAggregatorView::default());
 
     #[test]
     fn test_aggregator_not_in_storage() {
+        let resolver = FakeAggregatorView::default();
         let mut aggregator_data = AggregatorData::default();
         let aggregator = aggregator_data
             .get_aggregator(aggregator_v1_id_for_test(300), 700)
             .unwrap();
-        assert_err!(aggregator.read_last_committed_aggregator_value(&*TEST_RESOLVER));
-        assert_err!(aggregator.read_aggregated_aggregator_value(&*TEST_RESOLVER));
-        assert_err!(aggregator.try_add(&*TEST_RESOLVER, 100));
-        assert_err!(aggregator.try_sub(&*TEST_RESOLVER, 1));
+        assert_err!(aggregator.read_last_committed_aggregator_value(&resolver));
+        assert_err!(aggregator.read_aggregated_aggregator_value(&resolver));
+        assert_err!(aggregator.try_add(&resolver, 100));
+        assert_err!(aggregator.try_sub(&resolver, 1));
     }
 
     #[test]
     fn test_operations_on_new_aggregator() {
+        let resolver = FakeAggregatorView::default();
         let mut aggregator_data = AggregatorData::default();
         aggregator_data.create_new_aggregator(aggregator_v1_id_for_test(200), 200);
 
@@ -661,18 +659,15 @@ mod test {
             .expect("Get aggregator failed");
 
         assert_eq!(aggregator.state, AggregatorState::Create { value: 0 });
-        assert_ok!(aggregator.try_add(&*TEST_RESOLVER, 100));
+        assert_ok!(aggregator.try_add(&resolver, 100));
         assert_eq!(aggregator.state, AggregatorState::Create { value: 100 });
-        assert!(aggregator.try_sub(&*TEST_RESOLVER, 50).unwrap());
+        assert!(aggregator.try_sub(&resolver, 50).unwrap());
         assert_eq!(aggregator.state, AggregatorState::Create { value: 50 });
-        assert!(!aggregator.try_sub(&*TEST_RESOLVER, 70).unwrap());
+        assert!(!aggregator.try_sub(&resolver, 70).unwrap());
         assert_eq!(aggregator.state, AggregatorState::Create { value: 50 });
-        assert!(!aggregator.try_add(&*TEST_RESOLVER, 170).unwrap());
+        assert!(!aggregator.try_add(&resolver, 170).unwrap());
         assert_eq!(aggregator.state, AggregatorState::Create { value: 50 });
-        assert_ok_eq!(
-            aggregator.read_aggregated_aggregator_value(&*TEST_RESOLVER),
-            50
-        );
+        assert_ok_eq!(aggregator.read_aggregated_aggregator_value(&resolver), 50);
     }
     #[test]
     fn test_successful_operations_in_delta_mode() {
