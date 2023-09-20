@@ -9,6 +9,7 @@ use crate::{
     u256,
 };
 use anyhow::{anyhow, bail, Result as AResult};
+use bytes::Bytes;
 use serde::{
     de::Error as DeError,
     ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeTuple},
@@ -18,7 +19,6 @@ use std::{
     convert::TryInto,
     fmt::{self, Debug},
 };
-use bytes::Bytes;
 
 /// In the `WithTypes` configuration, a Move struct gets serialized into a Serde struct with this name
 pub const MOVE_STRUCT_NAME: &str = "struct";

@@ -14,7 +14,7 @@ use aptos_types::{
 use bytes::Bytes;
 use move_core_types::{
     effects::Op as MoveStorageOp,
-    value::{MoveTypeLayout, BytesWithLayout},
+    value::{BytesWithLayout, MoveTypeLayout},
     vm_status::{err_msg, StatusCode, VMStatus},
 };
 

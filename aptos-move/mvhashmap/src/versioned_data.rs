@@ -131,7 +131,7 @@ impl<V: TransactionWrite> VersionedValue<V> {
                 (EntryCell::Write(incarnation, data), Some(accumulator)) => {
                     // Deltas were applied. We must deserialize the value
                     // of the write and apply the aggregated delta accumulator.
-                    let (value, _) = data.as_ref().clone();
+                    let (value, _) = data.as_ref();
                     return match value
                         .as_u128()
                         .expect("Aggregator value must deserialize to u128")

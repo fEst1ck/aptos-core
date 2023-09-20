@@ -17,8 +17,12 @@ use aptos_native_interface::{
 use better_any::{Tid, TidAble};
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
-    account_address::AccountAddress, effects::Op, gas_algebra::NumBytes, identifier::Identifier,
-    value::{MoveTypeLayout, BytesWithLayout}, vm_status::StatusCode,
+    account_address::AccountAddress,
+    effects::Op,
+    gas_algebra::NumBytes,
+    identifier::Identifier,
+    value::{BytesWithLayout, MoveTypeLayout},
+    vm_status::StatusCode,
 };
 // ===========================================================================================
 // Public Data Structures and Constants

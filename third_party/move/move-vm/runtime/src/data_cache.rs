@@ -13,7 +13,7 @@ use move_core_types::{
     language_storage::{ModuleId, TypeTag},
     metadata::Metadata,
     resolver::MoveResolver,
-    value::{MoveTypeLayout, BytesWithLayout},
+    value::{BytesWithLayout, MoveTypeLayout},
     vm_status::StatusCode,
 };
 use move_vm_types::{
@@ -75,15 +75,19 @@ impl<'r> TransactionDataCache<'r> {
                                   layout: MoveTypeLayout,
                                   has_aggregator_lifting: bool|
          -> PartialVMResult<BytesWithLayout> {
-            let layout_option = if has_aggregator_lifting {
-                Some(layout.clone())
-            } else {
-                None
-            };
             value
                 .simple_serialize(&layout)
                 .map(Into::into)
-                .map(|bytes| (bytes, layout_option))
+                .map(|bytes| {
+                    (
+                        bytes,
+                        if has_aggregator_lifting {
+                            Some(layout.clone())
+                        } else {
+                            None
+                        },
+                    )
+                })
                 .ok_or_else(|| {
                     PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
                         .with_message(format!("Error when serializing resource {}.", value))

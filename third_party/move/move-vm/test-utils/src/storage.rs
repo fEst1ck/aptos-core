@@ -11,7 +11,7 @@ use move_core_types::{
     language_storage::{ModuleId, StructTag},
     metadata::Metadata,
     resolver::{ModuleResolver, MoveResolver, ResourceResolver},
-    value::{MoveTypeLayout, BytesWithLayout},
+    value::{BytesWithLayout, MoveTypeLayout},
 };
 #[cfg(feature = "table-extension")]
 use move_table_extension::{TableChangeSet, TableHandle, TableResolver};
@@ -105,9 +105,7 @@ impl<'a, 'b, S: ModuleResolver> ModuleResolver for DeltaStorage<'a, 'b, S> {
     }
 }
 
-fn get_bytes_and_size(
-    buf: Option<BytesWithLayout>,
-) -> Result<(Option<Bytes>, usize)> {
+fn get_bytes_and_size(buf: Option<BytesWithLayout>) -> Result<(Option<Bytes>, usize)> {
     let buf_bytes = buf.as_ref().map(|(bytes, _)| bytes);
     let buf_size = buf_bytes.map(|bytes| bytes.len()).unwrap_or(0);
     Ok((buf_bytes.cloned(), buf_size))
