@@ -113,6 +113,8 @@ impl VMChangeSet {
                 // TODO(aggregator) While everything else must be a resource, first
                 // version of aggregators is implemented as a table item. Revisit when
                 // we split MVHashMap into data and aggregators.
+                // TODO: Currently using MoveTypeLayout as None indicating no aggregators are in
+                // the resource value. Check if this causes any issues.
                 resource_write_set.insert(state_key, (write_op, None));
             }
         }
@@ -140,11 +142,7 @@ impl VMChangeSet {
         } = self;
 
         let mut write_set_mut = WriteSetMut::default();
-        write_set_mut.extend(
-            resource_write_set
-                .iter()
-                .map(|(k, (v, _))| (k.clone(), v.clone())),
-        );
+        write_set_mut.extend(resource_write_set.into_iter().map(|(k, (v, _))| (k, v)));
         write_set_mut.extend(module_write_set);
         write_set_mut.extend(aggregator_v1_write_set);
 
@@ -350,7 +348,7 @@ impl VMChangeSet {
         Ok(())
     }
 
-    fn squash_additional_writes(
+    fn squash_additional_module_writes(
         write_set: &mut HashMap<StateKey, WriteOp>,
         additional_write_set: HashMap<StateKey, WriteOp>,
     ) -> anyhow::Result<(), VMStatus> {
@@ -372,7 +370,7 @@ impl VMChangeSet {
         additional_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
     ) -> anyhow::Result<(), VMStatus> {
         for (key, additional_entry) in additional_write_set.into_iter() {
-            match write_set.entry(key) {
+            match write_set.entry(key.clone()) {
                 Occupied(mut entry) => {
                     // Squash entry and addtional entries if type layouts match
                     let (additional_write_op, additional_type_layout) = additional_entry;
@@ -380,7 +378,7 @@ impl VMChangeSet {
                     if *type_layout != additional_type_layout {
                         return Err(VMStatus::error(
                             StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
-                            err_msg("Cannot squash two writes with different type layouts."),
+                            err_msg(format!("Cannot squash two writes with different type layouts. key: {:?}, type_layout: {:?}, additional_type_layout: {:?}", key, type_layout, additional_type_layout)),
                         ));
                     }
                     let noop = !WriteOp::squash(write_op, additional_write_op).map_err(|e| {
@@ -428,7 +426,10 @@ impl VMChangeSet {
             &mut self.resource_write_set,
             additional_resource_write_set,
         )?;
-        Self::squash_additional_writes(&mut self.module_write_set, additional_module_write_set)?;
+        Self::squash_additional_module_writes(
+            &mut self.module_write_set,
+            additional_module_write_set,
+        )?;
         self.events.extend(additional_events);
 
         checker.check_change_set(self)
