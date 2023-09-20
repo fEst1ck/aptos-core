@@ -18,6 +18,7 @@ use std::{
     convert::TryInto,
     fmt::{self, Debug},
 };
+use bytes::Bytes;
 
 /// In the `WithTypes` configuration, a Move struct gets serialized into a Serde struct with this name
 pub const MOVE_STRUCT_NAME: &str = "struct";
@@ -184,6 +185,8 @@ impl MoveValue {
         }
     }
 }
+
+pub type BytesWithLayout = (Bytes, Option<MoveTypeLayout>);
 
 pub fn serialize_values<'a, I>(vals: I) -> Vec<Vec<u8>>
 where

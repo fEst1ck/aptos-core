@@ -13,7 +13,7 @@ use move_core_types::{
     language_storage::{ModuleId, TypeTag},
     metadata::Metadata,
     resolver::MoveResolver,
-    value::MoveTypeLayout,
+    value::{MoveTypeLayout, BytesWithLayout},
     vm_status::StatusCode,
 };
 use move_vm_types::{
@@ -74,7 +74,7 @@ impl<'r> TransactionDataCache<'r> {
         let resource_converter = |value: Value,
                                   layout: MoveTypeLayout,
                                   has_aggregator_lifting: bool|
-         -> PartialVMResult<(Bytes, Option<MoveTypeLayout>)> {
+         -> PartialVMResult<BytesWithLayout> {
             let layout_option = if has_aggregator_lifting {
                 Some(layout.clone())
             } else {

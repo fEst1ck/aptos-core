@@ -14,7 +14,7 @@ use aptos_types::{
 use bytes::Bytes;
 use move_core_types::{
     effects::Op as MoveStorageOp,
-    value::MoveTypeLayout,
+    value::{MoveTypeLayout, BytesWithLayout},
     vm_status::{err_msg, StatusCode, VMStatus},
 };
 
@@ -53,7 +53,7 @@ impl<'r> WriteOpConverter<'r> {
     pub(crate) fn convert_resource(
         &self,
         state_key: &StateKey,
-        move_storage_op: MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>,
+        move_storage_op: MoveStorageOp<BytesWithLayout>,
         legacy_creation_as_modification: bool,
     ) -> Result<(WriteOp, Option<MoveTypeLayout>), VMStatus> {
         let result = self.convert(
@@ -90,7 +90,7 @@ impl<'r> WriteOpConverter<'r> {
     fn convert(
         &self,
         state_value_metadata_result: anyhow::Result<Option<StateValueMetadataKind>>,
-        move_storage_op: &MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>,
+        move_storage_op: &MoveStorageOp<BytesWithLayout>,
         legacy_creation_as_modification: bool,
     ) -> Result<WriteOp, VMStatus> {
         use MoveStorageOp::*;

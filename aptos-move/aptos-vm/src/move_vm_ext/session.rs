@@ -26,7 +26,7 @@ use move_core_types::{
     account_address::AccountAddress,
     effects::{AccountChangeSet, ChangeSet as MoveChangeSet, Op as MoveStorageOp},
     language_storage::{ModuleId, StructTag},
-    value::MoveTypeLayout,
+    value::{MoveTypeLayout, BytesWithLayout},
     vm_status::{StatusCode, VMStatus},
 };
 use move_vm_runtime::{move_vm::MoveVM, session::Session};
@@ -214,7 +214,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         ap_cache: &mut C,
     ) -> VMResult<(
         MoveChangeSet,
-        HashMap<StateKey, MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>>,
+        HashMap<StateKey, MoveStorageOp<BytesWithLayout>>,
     )> {
         // The use of this implies that we could theoretically call unwrap with no consequences,
         // but using unwrap means the code panics if someone can come up with an attack.
@@ -311,7 +311,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         change_set: MoveChangeSet,
         resource_group_change_set: HashMap<
             StateKey,
-            MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>,
+            MoveStorageOp<BytesWithLayout>,
         >,
         events: Vec<ContractEvent>,
         table_change_set: TableChangeSet,

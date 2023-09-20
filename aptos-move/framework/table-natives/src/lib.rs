@@ -15,11 +15,10 @@ use aptos_native_interface::{
     SafeNativeResult,
 };
 use better_any::{Tid, TidAble};
-use bytes::Bytes;
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
     account_address::AccountAddress, effects::Op, gas_algebra::NumBytes, identifier::Identifier,
-    value::MoveTypeLayout, vm_status::StatusCode,
+    value::{MoveTypeLayout, BytesWithLayout}, vm_status::StatusCode,
 };
 // ===========================================================================================
 // Public Data Structures and Constants
@@ -97,7 +96,7 @@ pub struct TableChangeSet {
 
 /// A change of a single table.
 pub struct TableChange {
-    pub entries: BTreeMap<Vec<u8>, Op<(Bytes, Option<MoveTypeLayout>)>>,
+    pub entries: BTreeMap<Vec<u8>, Op<BytesWithLayout>>,
 }
 
 // =========================================================================================
