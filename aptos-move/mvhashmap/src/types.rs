@@ -137,6 +137,7 @@ pub(crate) mod test {
     };
     use bytes::Bytes;
     use claims::{assert_err, assert_ok_eq};
+    use move_core_types::value::MoveTypeLayout;
     use std::{fmt::Debug, hash::Hash, sync::Arc};
 
     #[derive(Clone, Eq, Hash, PartialEq, Debug)]
@@ -223,9 +224,9 @@ pub(crate) mod test {
     }
 
     // Generate the value_for txn_idx and incarnation in arc.
-    pub(crate) fn arc_value_for(txn_idx: TxnIndex, incarnation: Incarnation) -> Arc<TestValue> {
+    pub(crate) fn arc_value_for(txn_idx: TxnIndex, incarnation: Incarnation, layout: Option<MoveTypeLayout>) -> Arc<(TestValue, Option<MoveTypeLayout>)> {
         // Generate a Vec deterministically based on txn_idx and incarnation.
-        Arc::new(value_for(txn_idx, incarnation))
+        Arc::new((value_for(txn_idx, incarnation), layout))
     }
 
     // Convert value for txn_idx and incarnation into u128.

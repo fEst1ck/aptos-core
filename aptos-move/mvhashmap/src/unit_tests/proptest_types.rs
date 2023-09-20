@@ -233,7 +233,7 @@ where
                 .write(key.clone(), idx, 0, vec![(5, value)]);
             map.group_data().mark_estimate(&key, idx);
         } else {
-            map.data().write(key.clone(), idx, 0, value);
+            map.data().write(key.clone(), idx, 0, (value, None));
             map.data().mark_estimate(&key, idx);
         }
     }
@@ -291,7 +291,7 @@ where
                                     .fetch_data(&KeyType(key.clone()), idx as TxnIndex)
                                 {
                                     Ok(Versioned(_, v)) => {
-                                        assert_value(v);
+                                        assert_value(Arc::new(v.as_ref().clone().0));
                                         break;
                                     },
                                     Ok(Resolved(v)) => {
@@ -337,7 +337,7 @@ where
                             map.group_data()
                                 .write(key, idx as TxnIndex, 1, vec![(5, value)]);
                         } else {
-                            map.data().write(key, idx as TxnIndex, 1, value);
+                            map.data().write(key, idx as TxnIndex, 1, (value, None));
                         }
                     },
                     Operator::Insert(v) => {
@@ -347,7 +347,7 @@ where
                             map.group_data()
                                 .write(key, idx as TxnIndex, 1, vec![(5, value)]);
                         } else {
-                            map.data().write(key, idx as TxnIndex, 1, value);
+                            map.data().write(key, idx as TxnIndex, 1, (value, None));
                         }
                     },
                     Operator::Update(delta) => {

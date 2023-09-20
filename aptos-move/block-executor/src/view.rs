@@ -89,7 +89,7 @@ impl<'a, T: Transaction, X: Executable> ParallelState<'a, T, X> {
 
     /// Captures a read from the VM execution, but not unresolved deltas, as in this case it is the
     /// callers responsibility to set the aggregator's base value and call fetch_data again.
-    fn fetch_data(&self, key: &T::Key, txn_idx: TxnIndex) -> ReadResult<T::Value> {
+    fn fetch_data(&self, key: &T::Key, txn_idx: TxnIndex) -> ReadResult<(T::Value, Option<MoveTypeLayout>)> {
         use MVDataError::*;
         use MVDataOutput::*;
 

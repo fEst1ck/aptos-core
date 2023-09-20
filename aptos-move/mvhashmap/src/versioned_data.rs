@@ -128,7 +128,8 @@ impl<V: TransactionWrite> VersionedValue<V> {
                 (EntryCell::Write(incarnation, data), Some(accumulator)) => {
                     // Deltas were applied. We must deserialize the value
                     // of the write and apply the aggregated delta accumulator.
-                    return match data
+                    let (value, _) = data.as_ref().clone();
+                    return match value
                         .as_u128()
                         .expect("Aggregator value must deserialize to u128")
                     {
@@ -148,7 +149,7 @@ impl<V: TransactionWrite> VersionedValue<V> {
                                 .and_then(|a| {
                                     // Apply accumulated delta to resolve the aggregator value.
                                     a.apply_to(value)
-                                        .map(|result| Resolved(result))
+                                        .map(Resolved)
                                         .map_err(|_| DeltaApplicationFailure)
                                 })
                         },
@@ -161,7 +162,7 @@ impl<V: TransactionWrite> VersionedValue<V> {
                             .and_then(|a| {
                                 // Apply accumulated delta to resolve the aggregator value.
                                 a.apply_to(*shortcut_value)
-                                    .map(|result| Resolved(result))
+                                    .map(Resolved)
                                     .map_err(|_| DeltaApplicationFailure)
                             });
                     }
