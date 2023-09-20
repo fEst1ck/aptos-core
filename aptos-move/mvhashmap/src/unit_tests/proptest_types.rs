@@ -44,6 +44,7 @@ enum ExpectedOutput<V: Debug + Clone + PartialEq> {
     Failure,
 }
 
+#[derive(Debug, Clone)]
 struct Value<V> {
     maybe_value: Option<V>,
     maybe_bytes: Option<Bytes>,

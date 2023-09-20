@@ -10,7 +10,6 @@ use super::{
     unsync_map::UnsyncMap,
     *,
 };
-use std::sync::Arc;
 use aptos_aggregator::{
     bounded_math::SignedU128,
     delta_change_set::{delta_add, delta_sub, DeltaOp},
@@ -19,6 +18,7 @@ use aptos_aggregator::{
 use aptos_types::executable::ExecutableTestType;
 use claims::{assert_err_eq, assert_none, assert_ok_eq, assert_some_eq};
 use move_core_types::value::MoveTypeLayout;
+use std::sync::Arc;
 mod proptest_types;
 
 fn match_unresolved(
@@ -63,7 +63,9 @@ fn create_write_read_placeholder_struct() {
     assert_eq!(Err(Uninitialized), r_db);
 
     // Write by txn 10.
-    mvtbl.data().write(ap1.clone(), 10, 1, (value_for(10, 1), None));
+    mvtbl
+        .data()
+        .write(ap1.clone(), 10, 1, (value_for(10, 1), None));
 
     // Reads that should go the DB return Err(Uninitialized)
     let r_db = mvtbl.data().fetch_data(&ap1, 9);
@@ -92,8 +94,12 @@ fn create_write_read_placeholder_struct() {
     assert_eq!(Ok(Resolved(u128_for(10, 1) + 11 + 12 - (61 + 13))), r_sum);
 
     // More writes.
-    mvtbl.data().write(ap1.clone(), 12, 0, (value_for(12, 0), None));
-    mvtbl.data().write(ap1.clone(), 8, 3, (value_for(8, 3), None));
+    mvtbl
+        .data()
+        .write(ap1.clone(), 12, 0, (value_for(12, 0), None));
+    mvtbl
+        .data()
+        .write(ap1.clone(), 8, 3, (value_for(8, 3), None));
 
     // Verify reads.
     let r_12 = mvtbl.data().fetch_data(&ap1, 15);
@@ -116,15 +122,21 @@ fn create_write_read_placeholder_struct() {
 
     // Delete the entry written by 10, write to a different ap.
     mvtbl.data().delete(&ap1, 10);
-    mvtbl.data().write(ap2.clone(), 10, 2, (value_for(10, 2), None));
+    mvtbl
+        .data()
+        .write(ap2.clone(), 10, 2, (value_for(10, 2), None));
 
     // Read by txn 11 no longer observes entry from txn 10.
     let r_8 = mvtbl.data().fetch_data(&ap1, 11);
     assert_eq!(Ok(Versioned(Ok((8, 3)), arc_value_for(8, 3, None))), r_8);
 
     // Reads, writes for ap2 and ap3.
-    mvtbl.data().write(ap2.clone(), 5, 0, (value_for(5, 0), None));
-    mvtbl.data().write(ap3.clone(), 20, 4, (value_for(20, 4), None));
+    mvtbl
+        .data()
+        .write(ap2.clone(), 5, 0, (value_for(5, 0), None));
+    mvtbl
+        .data()
+        .write(ap3.clone(), 20, 4, (value_for(20, 4), None));
     let r_5 = mvtbl.data().fetch_data(&ap2, 10);
     assert_eq!(Ok(Versioned(Ok((5, 0)), arc_value_for(5, 0, None))), r_5);
     let r_20 = mvtbl.data().fetch_data(&ap3, 21);

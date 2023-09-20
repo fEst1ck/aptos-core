@@ -15,6 +15,7 @@ use aptos_native_interface::{
     SafeNativeResult,
 };
 use better_any::{Tid, TidAble};
+use bytes::Bytes;
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
     account_address::AccountAddress, effects::Op, gas_algebra::NumBytes, identifier::Identifier,
@@ -22,9 +23,7 @@ use move_core_types::{
 };
 // ===========================================================================================
 // Public Data Structures and Constants
-pub use move_table_extension::{
-    TableHandle, TableInfo, TableResolver,
-};
+pub use move_table_extension::{TableHandle, TableInfo, TableResolver};
 use move_vm_runtime::native_functions::NativeFunctionTable;
 use move_vm_types::{
     loaded_data::runtime_types::Type,
@@ -37,7 +36,6 @@ use std::{
     collections::{btree_map::Entry, BTreeMap, BTreeSet, VecDeque},
     mem::drop,
 };
-use bytes::Bytes;
 
 /// The native table context extension. This needs to be attached to the NativeContextExtensions
 /// value which is passed into session functions, so its accessible from natives of this

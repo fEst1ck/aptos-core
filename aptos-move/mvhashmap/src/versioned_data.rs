@@ -9,8 +9,8 @@ use aptos_types::write_set::TransactionWrite;
 use claims::assert_some;
 use crossbeam::utils::CachePadded;
 use dashmap::DashMap;
-use std::{collections::btree_map::BTreeMap, fmt::Debug, hash::Hash, sync::Arc};
 use move_core_types::value::MoveTypeLayout;
+use std::{collections::btree_map::BTreeMap, fmt::Debug, hash::Hash, sync::Arc};
 
 /// Every entry in shared multi-version data-structure has an "estimate" flag
 /// and some content.
@@ -97,7 +97,10 @@ impl<V: TransactionWrite> Default for VersionedValue<V> {
 }
 
 impl<V: TransactionWrite> VersionedValue<V> {
-    fn read(&self, txn_idx: TxnIndex) -> anyhow::Result<MVDataOutput<(V, Option<MoveTypeLayout>)>, MVDataError> {
+    fn read(
+        &self,
+        txn_idx: TxnIndex,
+    ) -> anyhow::Result<MVDataOutput<(V, Option<MoveTypeLayout>)>, MVDataError> {
         use MVDataError::*;
         use MVDataOutput::*;
 
@@ -271,7 +274,13 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
     }
 
     /// Versioned write of data at a given key (and version).
-    pub fn write(&self, key: K, txn_idx: TxnIndex, incarnation: Incarnation, data: (V, Option<MoveTypeLayout>)) {
+    pub fn write(
+        &self,
+        key: K,
+        txn_idx: TxnIndex,
+        incarnation: Incarnation,
+        data: (V, Option<MoveTypeLayout>),
+    ) {
         let mut v = self.values.entry(key).or_default();
         let prev_entry = v.versioned_map.insert(
             ShiftedTxnIndex::new(txn_idx),

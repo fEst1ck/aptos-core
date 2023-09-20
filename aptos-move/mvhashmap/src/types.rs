@@ -224,7 +224,11 @@ pub(crate) mod test {
     }
 
     // Generate the value_for txn_idx and incarnation in arc.
-    pub(crate) fn arc_value_for(txn_idx: TxnIndex, incarnation: Incarnation, layout: Option<MoveTypeLayout>) -> Arc<(TestValue, Option<MoveTypeLayout>)> {
+    pub(crate) fn arc_value_for(
+        txn_idx: TxnIndex,
+        incarnation: Incarnation,
+        layout: Option<MoveTypeLayout>,
+    ) -> Arc<(TestValue, Option<MoveTypeLayout>)> {
         // Generate a Vec deterministically based on txn_idx and incarnation.
         Arc::new((value_for(txn_idx, incarnation), layout))
     }

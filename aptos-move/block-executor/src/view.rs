@@ -89,7 +89,11 @@ impl<'a, T: Transaction, X: Executable> ParallelState<'a, T, X> {
 
     /// Captures a read from the VM execution, but not unresolved deltas, as in this case it is the
     /// callers responsibility to set the aggregator's base value and call fetch_data again.
-    fn fetch_data(&self, key: &T::Key, txn_idx: TxnIndex) -> ReadResult<(T::Value, Option<MoveTypeLayout>)> {
+    fn fetch_data(
+        &self,
+        key: &T::Key,
+        txn_idx: TxnIndex,
+    ) -> ReadResult<(T::Value, Option<MoveTypeLayout>)> {
         use MVDataError::*;
         use MVDataOutput::*;
 
@@ -266,7 +270,7 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TResourceVi
                 }
 
                 match mv_value {
-                    ReadResult::Value(v) => Ok(v.as_state_value()),
+                    ReadResult::Value(v) => Ok(v.as_ref().0.as_state_value()),
                     ReadResult::U128(v) => Ok(Some(StateValue::new_legacy(serialize(&v).into()))),
                     // ExecutionHalted indicates that the parallel execution is halted.
                     // The read should return immediately and log the error.
