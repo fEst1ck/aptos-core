@@ -10,6 +10,7 @@ use claims::assert_some;
 use crossbeam::utils::CachePadded;
 use dashmap::DashMap;
 use std::{collections::btree_map::BTreeMap, fmt::Debug, hash::Hash, sync::Arc};
+use move_core_types::value::MoveTypeLayout;
 
 /// Every entry in shared multi-version data-structure has an "estimate" flag
 /// and some content.
@@ -27,7 +28,7 @@ enum EntryCell<V> {
     /// has: 1) Incarnation number of the transaction that wrote the entry (note
     /// that TxnIndex is part of the key and not recorded here), 2) actual data
     /// stored in a shared pointer (to ensure ownership and avoid clones).
-    Write(Incarnation, Arc<V>),
+    Write(Incarnation, Arc<(V, Option<MoveTypeLayout>)>),
 
     /// Recorded in the shared multi-version data-structure for each delta.
     /// Option<u128> is a shortcut to aggregated value (to avoid traversing down
@@ -47,7 +48,7 @@ pub struct VersionedData<K, V> {
 }
 
 impl<V> Entry<V> {
-    fn new_write_from(incarnation: Incarnation, data: V) -> Entry<V> {
+    fn new_write_from(incarnation: Incarnation, data: (V, Option<MoveTypeLayout>)) -> Entry<V> {
         Entry {
             cell: EntryCell::Write(incarnation, Arc::new(data)),
             flag: Flag::Done,
@@ -96,7 +97,7 @@ impl<V: TransactionWrite> Default for VersionedValue<V> {
 }
 
 impl<V: TransactionWrite> VersionedValue<V> {
-    fn read(&self, txn_idx: TxnIndex) -> anyhow::Result<MVDataOutput<V>, MVDataError> {
+    fn read(&self, txn_idx: TxnIndex) -> anyhow::Result<MVDataOutput<(V, Option<MoveTypeLayout>)>, MVDataError> {
         use MVDataError::*;
         use MVDataOutput::*;
 
@@ -240,7 +241,7 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
         &self,
         key: &K,
         txn_idx: TxnIndex,
-    ) -> anyhow::Result<MVDataOutput<V>, MVDataError> {
+    ) -> anyhow::Result<MVDataOutput<(V, Option<MoveTypeLayout>)>, MVDataError> {
         self.values
             .get(key)
             .map(|v| v.read(txn_idx))
@@ -253,7 +254,7 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
         // For base value, incarnation is irrelevant, set to 0.
         let prev_entry = v.versioned_map.insert(
             ShiftedTxnIndex::zero(),
-            CachePadded::new(Entry::new_write_from(0, data)),
+            CachePadded::new(Entry::new_write_from(0, (data, None))),
         );
 
         assert!(prev_entry.map_or(true, |entry| -> bool {
@@ -261,7 +262,7 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
                 // base value may have already been provided due to a concurrency race,
                 // but it has to be the same as being set.
                 // Assert the length of bytes for efficiency (instead of full equality)
-                *i == 0 && v.bytes_len() == bytes_len
+                *i == 0 && v.0.bytes_len() == bytes_len
             } else {
                 true
             }
@@ -269,7 +270,7 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
     }
 
     /// Versioned write of data at a given key (and version).
-    pub fn write(&self, key: K, txn_idx: TxnIndex, incarnation: Incarnation, data: V) {
+    pub fn write(&self, key: K, txn_idx: TxnIndex, incarnation: Incarnation, data: (V, Option<MoveTypeLayout>)) {
         let mut v = self.values.entry(key).or_default();
         let prev_entry = v.versioned_map.insert(
             ShiftedTxnIndex::new(txn_idx),

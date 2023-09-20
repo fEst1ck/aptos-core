@@ -100,7 +100,10 @@ pub trait TransactionOutput: Send + Sync + Debug {
     /// aggregator_v1.
     fn resource_write_set(
         &self,
-    ) -> HashMap<<Self::Txn as Transaction>::Key, <Self::Txn as Transaction>::Value>;
+    ) -> HashMap<
+        <Self::Txn as Transaction>::Key,
+        (<Self::Txn as Transaction>::Value, Option<MoveTypeLayout>),
+    >;
 
     fn module_write_set(
         &self,

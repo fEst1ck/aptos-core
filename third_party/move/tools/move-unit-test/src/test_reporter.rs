@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::format_module_id;
+use bytes::Bytes;
 use codespan_reporting::files::{Files, SimpleFiles};
 use colored::{control, Colorize};
 use move_binary_format::{
@@ -15,7 +16,7 @@ use move_compiler::{
     diagnostics::{self, Diagnostic, Diagnostics},
     unit_test::{ModuleTestPlan, TestName, TestPlan},
 };
-use move_core_types::{effects::ChangeSet, language_storage::ModuleId, vm_status::StatusType};
+use move_core_types::{effects::Changes, language_storage::ModuleId, vm_status::StatusType};
 use move_ir_types::location::Loc;
 use move_symbol_pool::Symbol;
 use once_cell::sync::Lazy;
@@ -41,9 +42,9 @@ pub enum FailureReason {
     // The execution results of the Move VM and stackless VM does not match
     Mismatch {
         move_vm_return_values: Box<VMResult<Vec<Vec<u8>>>>,
-        move_vm_change_set: Box<VMResult<ChangeSet>>,
+        move_vm_change_set: Box<VMResult<Changes<Bytes, Bytes>>>,
         stackless_vm_return_values: Box<VMResult<Vec<Vec<u8>>>>,
-        stackless_vm_change_set: Box<VMResult<ChangeSet>>,
+        stackless_vm_change_set: Box<VMResult<Changes<Bytes, Bytes>>>,
     },
     // Property checking failed
     Property(String),
@@ -122,9 +123,9 @@ impl FailureReason {
 
     pub fn mismatch(
         move_vm_return_values: VMResult<Vec<Vec<u8>>>,
-        move_vm_change_set: VMResult<ChangeSet>,
+        move_vm_change_set: VMResult<Changes<Bytes, Bytes>>,
         stackless_vm_return_values: VMResult<Vec<Vec<u8>>>,
-        stackless_vm_change_set: VMResult<ChangeSet>,
+        stackless_vm_change_set: VMResult<Changes<Bytes, Bytes>>,
     ) -> Self {
         FailureReason::Mismatch {
             move_vm_return_values: Box::new(move_vm_return_values),

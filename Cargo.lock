@@ -2445,6 +2445,7 @@ dependencies = [
  "claims",
  "crossbeam",
  "dashmap",
+ "move-core-types",
  "proptest",
  "proptest-derive",
  "rayon",
@@ -9616,6 +9617,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "better_any",
+ "bytes",
  "clap 4.3.21",
  "codespan-reporting",
  "colored",

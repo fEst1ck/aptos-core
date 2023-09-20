@@ -17,6 +17,7 @@ use aptos_vm_types::resolver::ExecutorView;
 use move_core_types::{
     ident_str,
     language_storage::{ModuleId, CORE_CODE_ADDRESS},
+    value::MoveTypeLayout,
     vm_status::VMStatus,
 };
 

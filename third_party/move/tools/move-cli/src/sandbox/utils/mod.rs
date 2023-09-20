@@ -177,7 +177,7 @@ pub(crate) fn explain_execution_effects(
             print!("    ");
             let mut bytes_to_write = struct_tag.access_vector().len();
             match write_op {
-                Op::New(blob) => {
+                Op::New((blob, _)) => {
                     bytes_to_write += blob.len();
                     println!(
                         "Added type {}: {:?} (wrote {:?} bytes)",
@@ -188,7 +188,7 @@ pub(crate) fn explain_execution_effects(
                         MoveValueAnnotator::new(state).view_resource(struct_tag, blob)?;
                     print_struct_with_indent(&resource, 6)
                 },
-                Op::Modify(blob) => {
+                Op::Modify((blob, _)) => {
                     bytes_to_write += blob.len();
                     println!(
                         "Changed type {}: {:?} (wrote {:?} bytes)",
@@ -244,7 +244,7 @@ pub(crate) fn maybe_commit_effects(
         for (addr, account) in changeset.into_inner() {
             for (struct_tag, blob_op) in account.into_resources() {
                 match blob_op {
-                    Op::New(blob) | Op::Modify(blob) => {
+                    Op::New((blob, _)) | Op::Modify((blob, _)) => {
                         state.save_resource(addr, struct_tag, &blob)?
                     },
                     Op::Delete => state.delete_resource(addr, struct_tag)?,

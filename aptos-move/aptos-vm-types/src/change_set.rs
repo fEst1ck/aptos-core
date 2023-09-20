@@ -15,7 +15,10 @@ use aptos_types::{
     write_set::{WriteOp, WriteSetMut},
 };
 use move_binary_format::errors::Location;
-use move_core_types::vm_status::{err_msg, StatusCode, VMStatus};
+use move_core_types::{
+    value::MoveTypeLayout,
+    vm_status::{err_msg, StatusCode, VMStatus},
+};
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap,
@@ -27,7 +30,7 @@ use std::collections::{
 /// VM. For storage backends, use `ChangeSet`.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct VMChangeSet {
-    resource_write_set: HashMap<StateKey, WriteOp>,
+    resource_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
     module_write_set: HashMap<StateKey, WriteOp>,
     aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
     aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
@@ -64,7 +67,7 @@ impl VMChangeSet {
     }
 
     pub fn new(
-        resource_write_set: HashMap<StateKey, WriteOp>,
+        resource_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
         module_write_set: HashMap<StateKey, WriteOp>,
         aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
         aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
@@ -110,7 +113,7 @@ impl VMChangeSet {
                 // TODO(aggregator) While everything else must be a resource, first
                 // version of aggregators is implemented as a table item. Revisit when
                 // we split MVHashMap into data and aggregators.
-                resource_write_set.insert(state_key, write_op);
+                resource_write_set.insert(state_key, (write_op, None));
             }
         }
 
@@ -137,7 +140,11 @@ impl VMChangeSet {
         } = self;
 
         let mut write_set_mut = WriteSetMut::default();
-        write_set_mut.extend(resource_write_set);
+        write_set_mut.extend(
+            resource_write_set
+                .iter()
+                .map(|(k, (v, _))| (k.clone(), v.clone())),
+        );
         write_set_mut.extend(module_write_set);
         write_set_mut.extend(aggregator_v1_write_set);
 
@@ -165,6 +172,7 @@ impl VMChangeSet {
     pub fn write_set_iter(&self) -> impl Iterator<Item = (&StateKey, &WriteOp)> {
         self.resource_write_set()
             .iter()
+            .map(|(k, (v, _))| (k, v))
             .chain(self.module_write_set().iter())
             .chain(self.aggregator_v1_write_set().iter())
     }
@@ -178,11 +186,12 @@ impl VMChangeSet {
     pub fn write_set_iter_mut(&mut self) -> impl Iterator<Item = (&StateKey, &mut WriteOp)> {
         self.resource_write_set
             .iter_mut()
+            .map(|(k, (v, _))| (k, v))
             .chain(self.module_write_set.iter_mut())
             .chain(self.aggregator_v1_write_set.iter_mut())
     }
 
-    pub fn resource_write_set(&self) -> &HashMap<StateKey, WriteOp> {
+    pub fn resource_write_set(&self) -> &HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)> {
         &self.resource_write_set
     }
 
@@ -358,6 +367,40 @@ impl VMChangeSet {
         Ok(())
     }
 
+    fn squash_additional_resource_writes(
+        write_set: &mut HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
+        additional_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
+    ) -> anyhow::Result<(), VMStatus> {
+        for (key, additional_entry) in additional_write_set.into_iter() {
+            match write_set.entry(key) {
+                Occupied(mut entry) => {
+                    // Squash entry and addtional entries if type layouts match
+                    let (additional_write_op, additional_type_layout) = additional_entry;
+                    let (write_op, type_layout) = entry.get_mut();
+                    if *type_layout != additional_type_layout {
+                        return Err(VMStatus::error(
+                            StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
+                            err_msg("Cannot squash two writes with different type layouts."),
+                        ));
+                    }
+                    let noop = !WriteOp::squash(write_op, additional_write_op).map_err(|e| {
+                        VMStatus::error(
+                            StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
+                            err_msg(format!("Error while squashing two write ops: {}.", e)),
+                        )
+                    })?;
+                    if noop {
+                        entry.remove();
+                    }
+                },
+                Vacant(entry) => {
+                    entry.insert(additional_entry);
+                },
+            }
+        }
+        Ok(())
+    }
+
     pub fn squash_additional_change_set(
         &mut self,
         additional_change_set: Self,
@@ -381,7 +424,7 @@ impl VMChangeSet {
         if !additional_aggregator_v2_change_set.is_empty() {
             unimplemented!("Aggregator v2 change sets are not supported yet.");
         }
-        Self::squash_additional_writes(
+        Self::squash_additional_resource_writes(
             &mut self.resource_write_set,
             additional_resource_write_set,
         )?;

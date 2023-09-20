@@ -201,13 +201,13 @@ impl Harness {
                         assert!(self
                             .resource_store
                             .borrow_mut()
-                            .insert((addr, struct_tag), v)
+                            .insert((addr, struct_tag), v.0)
                             .is_none());
                     },
                     Op::Modify(v) => {
                         self.resource_store
                             .borrow_mut()
-                            .insert((addr, struct_tag), v)
+                            .insert((addr, struct_tag), v.0)
                             .unwrap();
                     },
                     Op::Delete => {

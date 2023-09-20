@@ -603,11 +603,15 @@ where
 {
     type Txn = MockTransaction<K, V, E>;
 
-    fn resource_write_set(&self) -> HashMap<K, V> {
+    // TODO: Assigning MoveTypeLayout as None for all the writes for now. That means, the
+    // the resources do not have any aggregators embededded in them. Change it to test
+    // resources with aggregators as well.
+    fn resource_write_set(&self) -> HashMap<K, (V, Option<MoveTypeLayout>)> {
         self.writes
             .iter()
             .filter(|(k, _)| k.module_path().is_none())
             .cloned()
+            .map(|(k, v)| (k, (v, None)))
             .collect()
     }
 

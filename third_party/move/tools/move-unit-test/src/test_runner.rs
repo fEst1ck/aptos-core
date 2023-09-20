@@ -110,7 +110,8 @@ fn print_resources_and_extensions(
                 writeln!(
                     &mut buf,
                     "\t{}",
-                    format!("=> {}", annotator.view_resource(tag, resource)?).replace('\n', "\n\t")
+                    format!("=> {}", annotator.view_resource(tag, &resource.0)?)
+                        .replace('\n', "\n\t")
                 )?;
             }
         }

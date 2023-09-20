@@ -26,6 +26,7 @@ use move_core_types::{
     account_address::AccountAddress,
     effects::{AccountChangeSet, ChangeSet as MoveChangeSet, Op as MoveStorageOp},
     language_storage::{ModuleId, StructTag},
+    value::MoveTypeLayout,
     vm_status::{StatusCode, VMStatus},
 };
 use move_vm_runtime::{move_vm::MoveVM, session::Session};
@@ -205,12 +206,16 @@ impl<'r, 'l> SessionExt<'r, 'l> {
     ///   * If group or data does't exist, Unreachable
     ///   * If elements remain, Modify
     ///   * Otherwise delete
+    /// TODO: Resource groups are currently not handled correctly in terms of propagating MoveTypeLayout
     fn split_and_merge_resource_groups<C: AccessPathCache>(
         runtime: &MoveVM,
         remote: &dyn AptosMoveResolver,
         change_set: MoveChangeSet,
         ap_cache: &mut C,
-    ) -> VMResult<(MoveChangeSet, HashMap<StateKey, MoveStorageOp<Bytes>>)> {
+    ) -> VMResult<(
+        MoveChangeSet,
+        HashMap<StateKey, MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>>,
+    )> {
         // The use of this implies that we could theoretically call unwrap with no consequences,
         // but using unwrap means the code panics if someone can come up with an attack.
         let common_error = || {
@@ -264,11 +269,11 @@ impl<'r, 'l> SessionExt<'r, 'l> {
                         MoveStorageOp::Delete => {
                             source_data.remove(&struct_tag).ok_or_else(common_error)?;
                         },
-                        MoveStorageOp::Modify(new_data) => {
+                        MoveStorageOp::Modify((new_data, _)) => {
                             let data = source_data.get_mut(&struct_tag).ok_or_else(common_error)?;
                             *data = new_data;
                         },
-                        MoveStorageOp::New(data) => {
+                        MoveStorageOp::New((data, _)) => {
                             let data = source_data.insert(struct_tag, data);
                             if data.is_some() {
                                 return Err(common_error());
@@ -280,17 +285,19 @@ impl<'r, 'l> SessionExt<'r, 'l> {
                 let op = if source_data.is_empty() {
                     MoveStorageOp::Delete
                 } else if create {
-                    MoveStorageOp::New(
+                    MoveStorageOp::New((
                         bcs::to_bytes(&source_data)
                             .map_err(|_| common_error())?
                             .into(),
-                    )
+                        None,
+                    ))
                 } else {
-                    MoveStorageOp::Modify(
+                    MoveStorageOp::Modify((
                         bcs::to_bytes(&source_data)
                             .map_err(|_| common_error())?
                             .into(),
-                    )
+                        None,
+                    ))
                 };
                 resource_group_change_set.insert(state_key, op);
             }
@@ -302,7 +309,10 @@ impl<'r, 'l> SessionExt<'r, 'l> {
     pub(crate) fn convert_change_set<C: AccessPathCache>(
         woc: &WriteOpConverter,
         change_set: MoveChangeSet,
-        resource_group_change_set: HashMap<StateKey, MoveStorageOp<Bytes>>,
+        resource_group_change_set: HashMap<
+            StateKey,
+            MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>,
+        >,
         events: Vec<ContractEvent>,
         table_change_set: TableChangeSet,
         aggregator_change_set: AggregatorChangeSet,
@@ -317,11 +327,11 @@ impl<'r, 'l> SessionExt<'r, 'l> {
 
         for (addr, account_changeset) in change_set.into_inner() {
             let (modules, resources) = account_changeset.into_inner();
-            for (struct_tag, blob_op) in resources {
+            for (struct_tag, blob_and_layout_op) in resources {
                 let state_key = StateKey::access_path(ap_cache.get_resource_path(addr, struct_tag));
                 let op = woc.convert_resource(
                     &state_key,
-                    blob_op,
+                    blob_and_layout_op,
                     configs.legacy_resource_creation_as_modification(),
                 )?;
 
@@ -343,6 +353,13 @@ impl<'r, 'l> SessionExt<'r, 'l> {
 
         for (handle, change) in table_change_set.changes {
             for (key, value_op) in change.entries {
+                // TODO: Need to store MoveTypeLayout in TableChange.
+                // Until then, setting MoveTypeLayout to None for TableChanges.
+                let value_op = match value_op {
+                    MoveStorageOp::New(data) => MoveStorageOp::New((data, None)),
+                    MoveStorageOp::Modify(data) => MoveStorageOp::Modify((data, None)),
+                    MoveStorageOp::Delete => MoveStorageOp::Delete,
+                };
                 let state_key = StateKey::table_item(handle.into(), key);
                 let op = woc.convert_resource(&state_key, value_op, false)?;
                 resource_write_set.insert(state_key, op);

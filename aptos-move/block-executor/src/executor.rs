@@ -143,7 +143,7 @@ where
             for (k, v) in output
                 .resource_write_set()
                 .into_iter()
-                .chain(output.aggregator_v1_write_set().into_iter())
+                .chain(output.aggregator_v1_write_set().into_iter().map(|(state_key, write_op)| (state_key, (write_op, None))))
             {
                 if prev_modified_keys.remove(&k).is_none() {
                     updates_outside = true;
@@ -673,6 +673,7 @@ where
                     for (key, write_op) in output
                         .resource_write_set()
                         .into_iter()
+                        .map(|(k, (v, _))| (k, v))
                         .chain(output.aggregator_v1_write_set().into_iter())
                         .chain(output.module_write_set().into_iter())
                     {

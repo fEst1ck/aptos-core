@@ -14,6 +14,7 @@ use aptos_types::{
 use bytes::Bytes;
 use move_core_types::{
     effects::Op as MoveStorageOp,
+    value::MoveTypeLayout,
     vm_status::{err_msg, StatusCode, VMStatus},
 };
 
@@ -30,6 +31,11 @@ macro_rules! convert_impl {
             move_storage_op: MoveStorageOp<Bytes>,
             legacy_creation_as_modification: bool,
         ) -> Result<WriteOp, VMStatus> {
+            let move_storage_op = match move_storage_op {
+                MoveStorageOp::New(data) => MoveStorageOp::New((data, None)),
+                MoveStorageOp::Modify(data) => MoveStorageOp::Modify((data, None)),
+                MoveStorageOp::Delete => MoveStorageOp::Delete,
+            };
             self.convert(
                 self.remote.$get_metadata_callback(state_key),
                 move_storage_op,
@@ -40,11 +46,27 @@ macro_rules! convert_impl {
 }
 
 impl<'r> WriteOpConverter<'r> {
-    convert_impl!(convert_resource, get_resource_state_value_metadata);
-
     convert_impl!(convert_module, get_module_state_value_metadata);
 
     convert_impl!(convert_aggregator, get_aggregator_v1_state_value_metadata);
+
+    pub(crate) fn convert_resource(
+        &self,
+        state_key: &StateKey,
+        move_storage_op: MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>,
+        legacy_creation_as_modification: bool,
+    ) -> Result<(WriteOp, Option<MoveTypeLayout>), VMStatus> {
+        let result = self.convert(
+            self.remote.get_resource_state_value_metadata(state_key),
+            move_storage_op.clone(),
+            legacy_creation_as_modification,
+        );
+        match move_storage_op {
+            MoveStorageOp::New((_, type_layout)) => Ok((result?, type_layout)),
+            MoveStorageOp::Modify((_, type_layout)) => Ok((result?, type_layout)),
+            MoveStorageOp::Delete => Ok((result?, None)),
+        }
+    }
 
     pub(crate) fn new(
         remote: &'r dyn AptosMoveResolver,
@@ -68,7 +90,7 @@ impl<'r> WriteOpConverter<'r> {
     fn convert(
         &self,
         state_value_metadata_result: anyhow::Result<Option<StateValueMetadataKind>>,
-        move_storage_op: MoveStorageOp<Bytes>,
+        move_storage_op: MoveStorageOp<(Bytes, Option<MoveTypeLayout>)>,
         legacy_creation_as_modification: bool,
     ) -> Result<WriteOp, VMStatus> {
         use MoveStorageOp::*;
@@ -96,7 +118,7 @@ impl<'r> WriteOpConverter<'r> {
                     err_msg("When converting write op: Recreating existing value."),
                 ));
             },
-            (None, New(data)) => match &self.new_slot_metadata {
+            (None, New((data, _))) => match &self.new_slot_metadata {
                 None => {
                     if legacy_creation_as_modification {
                         Modification(data)
@@ -109,7 +131,7 @@ impl<'r> WriteOpConverter<'r> {
                     metadata: metadata.clone(),
                 },
             },
-            (Some(existing_metadata), Modify(data)) => {
+            (Some(existing_metadata), Modify((data, _))) => {
                 // Inherit metadata even if the feature flags is turned off, for compatibility.
                 match existing_metadata {
                     None => Modification(data),

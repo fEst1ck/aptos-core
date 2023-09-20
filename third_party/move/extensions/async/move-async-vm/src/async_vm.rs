@@ -378,9 +378,9 @@ fn publish_actor_state(
             actor_addr,
             state_tag,
             if is_modify {
-                Op::Modify(state.into())
+                Op::Modify((state.into(), None))
             } else {
-                Op::New(state.into())
+                Op::New((state.into(), None))
             },
         )
         .map_err(|err| partial_extension_error(format!("cannot publish actor state: {}", err)))
