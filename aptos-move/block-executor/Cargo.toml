@@ -30,6 +30,7 @@ claims = { workspace = true }
 criterion = { workspace = true, optional = true }
 crossbeam = { workspace = true }
 dashmap = { workspace = true }
+derivative = { workspace = true }
 move-binary-format = { workspace = true }
 move-core-types = { workspace = true }
 num_cpus = { workspace = true }

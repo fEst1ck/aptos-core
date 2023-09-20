@@ -583,6 +583,7 @@ dependencies = [
  "criterion",
  "crossbeam",
  "dashmap",
+ "derivative",
  "itertools",
  "move-binary-format",
  "move-core-types",
