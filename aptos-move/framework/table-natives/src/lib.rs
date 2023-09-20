@@ -23,7 +23,7 @@ use move_core_types::{
 // ===========================================================================================
 // Public Data Structures and Constants
 pub use move_table_extension::{
-    TableChange, TableChangeSet, TableHandle, TableInfo, TableResolver,
+    TableHandle, TableInfo, TableResolver,
 };
 use move_vm_runtime::native_functions::NativeFunctionTable;
 use move_vm_types::{
@@ -37,6 +37,7 @@ use std::{
     collections::{btree_map::Entry, BTreeMap, BTreeSet, VecDeque},
     mem::drop,
 };
+use bytes::Bytes;
 
 /// The native table context extension. This needs to be attached to the NativeContextExtensions
 /// value which is passed into session functions, so its accessible from natives of this
@@ -88,6 +89,19 @@ struct Table {
 /// The field index of the `handle` field in the `Table` Move struct.
 const HANDLE_FIELD_INDEX: usize = 0;
 
+/// A table change set.
+#[derive(Default)]
+pub struct TableChangeSet {
+    pub new_tables: BTreeMap<TableHandle, TableInfo>,
+    pub removed_tables: BTreeSet<TableHandle>,
+    pub changes: BTreeMap<TableHandle, TableChange>,
+}
+
+/// A change of a single table.
+pub struct TableChange {
+    pub entries: BTreeMap<Vec<u8>, Op<(Bytes, Option<MoveTypeLayout>)>>,
+}
+
 // =========================================================================================
 // Implementation of Native Table Context
 
@@ -129,11 +143,17 @@ impl<'a> NativeTableContext<'a> {
                 match op {
                     Op::New(val) => {
                         let bytes = serialize(&value_layout_info.layout, &val)?;
-                        entries.insert(key, Op::New(bytes.into()));
+                        let layout = value_layout_info
+                            .has_aggregator_lifting
+                            .then(|| value_layout_info.layout.clone());
+                        entries.insert(key, Op::New((bytes.into(), layout)));
                     },
                     Op::Modify(val) => {
                         let bytes = serialize(&value_layout_info.layout, &val)?;
-                        entries.insert(key, Op::Modify(bytes.into()));
+                        let layout = value_layout_info
+                            .has_aggregator_lifting
+                            .then(|| value_layout_info.layout.clone());
+                        entries.insert(key, Op::Modify((bytes.into(), layout)));
                     },
                     Op::Delete => {
                         entries.insert(key, Op::Delete);

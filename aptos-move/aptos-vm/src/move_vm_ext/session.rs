@@ -353,13 +353,6 @@ impl<'r, 'l> SessionExt<'r, 'l> {
 
         for (handle, change) in table_change_set.changes {
             for (key, value_op) in change.entries {
-                // TODO: Need to store MoveTypeLayout in TableChange.
-                // Until then, setting MoveTypeLayout to None for TableChanges.
-                let value_op = match value_op {
-                    MoveStorageOp::New(data) => MoveStorageOp::New((data, None)),
-                    MoveStorageOp::Modify(data) => MoveStorageOp::Modify((data, None)),
-                    MoveStorageOp::Delete => MoveStorageOp::Delete,
-                };
                 let state_key = StateKey::table_item(handle.into(), key);
                 let op = woc.convert_resource(&state_key, value_op, false)?;
                 resource_write_set.insert(state_key, op);

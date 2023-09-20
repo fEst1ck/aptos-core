@@ -3477,6 +3477,7 @@ dependencies = [
  "aptos-native-interface",
  "aptos-types",
  "better_any",
+ "bytes",
  "move-binary-format",
  "move-core-types",
  "move-table-extension",
