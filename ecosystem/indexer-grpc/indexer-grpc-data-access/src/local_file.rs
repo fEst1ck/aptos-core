@@ -2,11 +2,8 @@
 
 use crate::{
     access_trait::{AccessMetadata, StorageReadError, StorageReadStatus, StorageTransactionRead},
-    get_transactions_file_name, Based64EncodedSerializedTransactionProtobuf, FileMetadata,
-    TransactionsFile,
+    get_transactions_file_name, FileMetadata, TransactionsFile,
 };
-use aptos_protos::transaction::v1::Transaction;
-use prost::Message;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -25,9 +22,22 @@ pub struct LocalFileClient {
 }
 
 impl LocalFileClient {
-    pub fn new(config: LocalFileClientConfig) -> Self {
-        Self {
+    pub fn new(config: LocalFileClientConfig) -> anyhow::Result<Self> {
+        Ok(Self {
             file_path: PathBuf::from(config.path),
+        })
+    }
+}
+
+impl From<std::io::Error> for StorageReadError {
+    fn from(err: std::io::Error) -> Self {
+        match err.kind() {
+            // Fetch an entry that is not set yet.
+            std::io::ErrorKind::NotFound => {
+                StorageReadError::PermenantError(LOCAL_FILE_STORAGE_NAME, anyhow::Error::new(err))
+            },
+            // Other errors are transient; let it retry.
+            _ => StorageReadError::TransientError(LOCAL_FILE_STORAGE_NAME, anyhow::Error::new(err)),
         }
     }
 }
@@ -64,60 +74,13 @@ impl StorageTransactionRead for LocalFileClient {
                 }
             },
         };
-        let transactions_file = match serde_json::from_slice::<TransactionsFile>(file.as_slice()) {
-            Ok(transactions_file) => transactions_file,
-            Err(e) => {
-                return Err(StorageReadError::PermenantError(
-                    LOCAL_FILE_STORAGE_NAME,
-                    anyhow::anyhow!("Failed to parse txns file '{}': {}", file_path.display(), e),
-                ));
-            },
-        };
-        let transactions = transactions_file
-            .transactions
-            .into_iter()
-            // Skip the versions that are before the batch starting version.
-            .skip((batch_starting_version - transactions_file.starting_version) as usize)
-            .map(|x: Based64EncodedSerializedTransactionProtobuf| {
-                // The protobuf bytes are base64 encoded. If not, it's a fatal error.
-                let protobuf_bytes =
-                    base64::decode(x).expect("Failed to decode base64 encoded protobuf bytes.");
-                Transaction::decode(protobuf_bytes.as_slice())
-                    .expect("Failed to decode protobuf bytes.")
-            })
-            .collect::<Vec<Transaction>>();
-        Ok(StorageReadStatus::Ok(transactions))
+        let transactions_file = TransactionsFile::from(file);
+        Ok(StorageReadStatus::Ok(transactions_file.into()))
     }
 
     async fn get_metadata(&self) -> Result<AccessMetadata, StorageReadError> {
         let file_path = self.file_path.clone().join("metadata.json");
-        let file = match tokio::fs::read(file_path.clone()).await {
-            Ok(file) => file,
-            Err(e) => {
-                // AccessMetadata is critical; if it happens, let is crash and restart.
-                return Err(StorageReadError::PermenantError(
-                    LOCAL_FILE_STORAGE_NAME,
-                    anyhow::anyhow!(
-                        "Failed to find metadata file '{}': {}",
-                        file_path.display(),
-                        e
-                    ),
-                ));
-            },
-        };
-        let metadata = match serde_json::from_slice::<FileMetadata>(file.as_slice()) {
-            Ok(metadata) => metadata,
-            Err(e) => {
-                return Err(StorageReadError::PermenantError(
-                    LOCAL_FILE_STORAGE_NAME,
-                    anyhow::anyhow!(
-                        "Failed to parse metadata file '{}': {}",
-                        file_path.display(),
-                        e
-                    ),
-                ));
-            },
-        };
+        let metadata = FileMetadata::from(tokio::fs::read(file_path.clone()).await?);
         Ok(AccessMetadata {
             chain_id: metadata.chain_id,
             next_version: metadata.version,
@@ -128,6 +91,8 @@ impl StorageTransactionRead for LocalFileClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aptos_protos::transaction::v1::Transaction;
+    use prost::Message;
     use std::{
         fs::{create_dir, File},
         io::Write,
@@ -187,7 +152,8 @@ mod tests {
 
         let local_file_client = LocalFileClient::new(LocalFileClientConfig {
             path: dir.path().to_path_buf().to_str().unwrap().to_string(),
-        });
+        })
+        .unwrap();
         let transactions = local_file_client.get_transactions(0, None).await.unwrap();
         let access_metadata = local_file_client.get_metadata().await.unwrap();
         assert_eq!(access_metadata.chain_id, 1);
@@ -228,7 +194,8 @@ mod tests {
 
         let local_file_client = LocalFileClient::new(LocalFileClientConfig {
             path: dir.path().to_path_buf().to_str().unwrap().to_string(),
-        });
+        })
+        .unwrap();
         let transactions = local_file_client.get_transactions(500, None).await.unwrap();
         let access_metadata = local_file_client.get_metadata().await.unwrap();
         assert_eq!(access_metadata.chain_id, 1);
@@ -251,7 +218,8 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let local_file_client = LocalFileClient::new(LocalFileClientConfig {
             path: dir.path().to_path_buf().to_str().unwrap().to_string(),
-        });
+        })
+        .unwrap();
         let access_metadata = local_file_client.get_metadata().await;
         assert!(access_metadata.is_err());
         assert!(matches!(
@@ -284,7 +252,8 @@ mod tests {
 
         let local_file_client = LocalFileClient::new(LocalFileClientConfig {
             path: dir.path().to_path_buf().to_str().unwrap().to_string(),
-        });
+        })
+        .unwrap();
         let transactions = local_file_client.get_transactions(0, None).await;
         let access_metadata = local_file_client.get_metadata().await.unwrap();
 

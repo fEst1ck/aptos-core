@@ -1,5 +1,7 @@
 // Copyright © Aptos Foundation
 
+use aptos_protos::transaction::v1::Transaction;
+use prost::Message;
 use serde::{Deserialize, Serialize};
 
 pub mod access_trait;
@@ -41,12 +43,36 @@ struct FileMetadata {
     pub version: u64,
 }
 
+impl From<Vec<u8>> for FileMetadata {
+    fn from(bytes: Vec<u8>) -> Self {
+        serde_json::from_slice(bytes.as_slice()).expect("Failed to deserialize FileMetadata.")
+    }
+}
+
 type Based64EncodedSerializedTransactionProtobuf = String;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct TransactionsFile {
     pub transactions: Vec<Based64EncodedSerializedTransactionProtobuf>,
     pub starting_version: u64,
+}
+
+impl From<Vec<u8>> for TransactionsFile {
+    fn from(bytes: Vec<u8>) -> Self {
+        serde_json::from_slice(bytes.as_slice()).expect("Failed to deserialize Transactions file.")
+    }
+}
+impl From<TransactionsFile> for Vec<Transaction> {
+    fn from(transactions_file: TransactionsFile) -> Self {
+        transactions_file
+            .transactions
+            .into_iter()
+            .map(|transaction| {
+                let bytes = base64::decode(transaction).expect("Failed to decode base64.");
+                Transaction::decode(bytes.as_slice()).expect("Failed to decode protobuf.")
+            })
+            .collect()
+    }
 }
 
 #[inline]

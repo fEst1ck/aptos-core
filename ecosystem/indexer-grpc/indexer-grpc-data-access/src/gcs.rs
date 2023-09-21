@@ -2,10 +2,9 @@
 
 use crate::{
     access_trait::{AccessMetadata, StorageReadError, StorageReadStatus, StorageTransactionRead},
-    get_transactions_file_name, Based64EncodedSerializedTransactionProtobuf, FileMetadata,
-    TransactionsFile,
+    get_transactions_file_name, FileMetadata, TransactionsFile,
 };
-use aptos_protos::transaction::v1::Transaction;
+use anyhow::Context;
 use google_cloud_storage::{
     client::{Client, ClientConfig},
     http::{
@@ -13,8 +12,8 @@ use google_cloud_storage::{
         Error,
     },
 };
-use prost::Message;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 
 const GCS_STORAGE_NAME: &str = "Google Cloud Storage";
 const METADATA_FILE_NAME: &str = "metadata.json";
@@ -30,11 +29,11 @@ pub struct GcsClientConfig {
 pub type GcsClient = GcsInternalClient<google_cloud_storage::client::Client>;
 
 impl GcsClient {
-    pub async fn new(config: GcsClientConfig) -> Self {
+    pub async fn new(config: GcsClientConfig) -> anyhow::Result<Self> {
         let gcs_config = ClientConfig::default()
             .with_auth()
             .await
-            .expect("Failed to create GCS client.");
+            .context("Failed to create GCS client.")?;
         let client = Client::new(gcs_config);
         GcsInternalClient::new_with_client(config.bucket_name, client).await
     }
@@ -44,83 +43,81 @@ impl GcsClient {
 pub struct GcsInternalClient<T: GcsClientTrait> {
     // Bucket name.
     pub bucket_name: String,
-    latest_metadata: FileMetadata,
-    latest_metadata_timestamp: Option<std::time::Instant>,
+    latest_metadata: Arc<Mutex<FileMetadata>>,
+    latest_metadata_timestamp: Arc<Mutex<Option<std::time::Instant>>>,
     pub gcs_client: T,
 }
 
 impl<T: GcsClientTrait + Sync + Send + Clone> GcsInternalClient<T> {
-    pub async fn new_with_client(bucket_name: String, gcs_client: T) -> Self {
-        let mut res = Self {
+    pub async fn new_with_client(bucket_name: String, gcs_client: T) -> anyhow::Result<Self> {
+        let res = Self {
             bucket_name,
-            latest_metadata: FileMetadata::default(),
-            latest_metadata_timestamp: None,
+            latest_metadata: Arc::new(Mutex::new(FileMetadata::default())),
+            latest_metadata_timestamp: Arc::new(Mutex::new(None)),
             gcs_client,
         };
         res.refresh_metadata_if_needed()
             .await
-            .expect("Failed to refresh metadata");
-        res
+            .context("Failed to refresh metadata")?;
+        Ok(res)
     }
 
-    // TODO: use this function to determine file store range.
-    async fn refresh_metadata_if_needed(&mut self) -> Result<(), StorageReadError> {
+    async fn refresh_metadata_if_needed(&self) -> Result<(), StorageReadError> {
         let now = std::time::Instant::now();
-        if let Some(timestamp) = self.latest_metadata_timestamp {
-            if now.duration_since(timestamp).as_secs() < METADATA_FILE_MAX_STALENESS_IN_SECS {
-                return Ok(());
+        {
+            let latest_metadata_timestamp = self.latest_metadata_timestamp.lock().unwrap();
+            if let Some(timestamp) = *latest_metadata_timestamp {
+                if now.duration_since(timestamp).as_secs() < METADATA_FILE_MAX_STALENESS_IN_SECS {
+                    // The metadata is fresh enough.
+                    return Ok(());
+                }
             }
         }
-        let metadata_file_name = METADATA_FILE_NAME.to_string();
-        let metadata_file = match self
-            .gcs_client
-            .download_object(
-                &GetObjectRequest {
-                    bucket: self.bucket_name.clone(),
-                    object: metadata_file_name.clone(),
-                    ..Default::default()
-                },
-                &Range::default(),
-            )
-            .await
+        let metadata = FileMetadata::from(
+            self.gcs_client
+                .download_object(
+                    &GetObjectRequest {
+                        bucket: self.bucket_name.clone(),
+                        object: METADATA_FILE_NAME.to_string(),
+                        ..Default::default()
+                    },
+                    &Range::default(),
+                )
+                .await?,
+        );
         {
-            Ok(metadata_file) => metadata_file,
-            Err(Error::HttpClient(e)) => {
-                return Err(StorageReadError::TransientError(
-                    GCS_STORAGE_NAME,
-                    anyhow::anyhow!(
-                        "Failed to download metadata file '{}': {}",
-                        metadata_file_name,
-                        e
-                    ),
-                ));
-            },
-            Err(Error::Response(e)) => {
-                return Err(StorageReadError::PermenantError(
-                    GCS_STORAGE_NAME,
-                    anyhow::anyhow!(
-                        "Failed to download metadata file '{}': {}",
-                        metadata_file_name,
-                        e
-                    ),
-                ));
-            },
-            Err(Error::TokenSource(e)) => {
-                return Err(StorageReadError::PermenantError(
-                    GCS_STORAGE_NAME,
-                    anyhow::anyhow!(
-                        "Failed to download metadata file '{}': {}",
-                        metadata_file_name,
-                        e
-                    ),
-                ));
-            },
-        };
-        let metadata = serde_json::from_slice(metadata_file.as_slice())
-            .expect("Failed to parse metadata file.");
-        self.latest_metadata = metadata;
-        self.latest_metadata_timestamp = Some(now);
+            let mut latest_metadata = self.latest_metadata.lock().unwrap();
+            *latest_metadata = metadata;
+            let mut latest_metadata_timestamp = self.latest_metadata_timestamp.lock().unwrap();
+            *latest_metadata_timestamp = Some(now);
+        }
         Ok(())
+    }
+}
+
+impl From<google_cloud_storage::http::Error> for StorageReadError {
+    fn from(err: google_cloud_storage::http::Error) -> Self {
+        match err {
+            Error::HttpClient(e) => StorageReadError::TransientError(
+                GCS_STORAGE_NAME,
+                anyhow::Error::new(e).context("Failed to download object due to network issue."),
+            ),
+            Error::Response(e) => match e.is_retriable() {
+                true => StorageReadError::TransientError(
+                    GCS_STORAGE_NAME,
+                    anyhow::Error::new(e).context("Failed to download object; it's transient."),
+                ),
+                false => StorageReadError::PermenantError(
+                    GCS_STORAGE_NAME,
+                    anyhow::Error::new(e).context("Failed to download object; it's permernant."),
+                ),
+            },
+            Error::TokenSource(e) => StorageReadError::PermenantError(
+                GCS_STORAGE_NAME,
+                anyhow::anyhow!(e.to_string())
+                    .context("Failed to download object; authenication/token error."),
+            ),
+        }
     }
 }
 
@@ -132,7 +129,7 @@ impl<T: GcsClientTrait + Sync + Send + Clone> StorageTransactionRead for GcsInte
         _size_hint: Option<usize>,
     ) -> Result<StorageReadStatus, StorageReadError> {
         let file_name = get_transactions_file_name(batch_starting_version);
-        let file = match self
+        let result = self
             .gcs_client
             .download_object(
                 &GetObjectRequest {
@@ -142,61 +139,27 @@ impl<T: GcsClientTrait + Sync + Send + Clone> StorageTransactionRead for GcsInte
                 },
                 &Range::default(),
             )
-            .await
-        {
-            Ok(transaction_file) => transaction_file,
-            Err(Error::HttpClient(e)) => {
-                return Err(StorageReadError::TransientError(
-                    GCS_STORAGE_NAME,
-                    anyhow::anyhow!("Failed to download metadata file '{}': {}", file_name, e),
-                ));
+            .await;
+        let file = match result {
+            Err(Error::Response(e)) if e.code == 404 => {
+                return Ok(StorageReadStatus::NotAvailableYet)
             },
-            Err(Error::Response(e)) => {
-                match e.code {
-                    404 => {
-                        // The file is not found. This is not an error.
-                        return Ok(StorageReadStatus::NotAvailableYet);
-                    },
-                    _ => {
-                        return Err(StorageReadError::PermenantError(
-                            GCS_STORAGE_NAME,
-                            anyhow::anyhow!(
-                                "Failed to download metadata file '{}': {}",
-                                file_name,
-                                e
-                            ),
-                        ));
-                    },
-                }
-            },
-            Err(Error::TokenSource(e)) => {
-                return Err(StorageReadError::PermenantError(
-                    GCS_STORAGE_NAME,
-                    anyhow::anyhow!("Failed to download metadata file '{}': {}", file_name, e),
-                ));
-            },
+            Err(e) => Err(e)?,
+            _ => result?,
         };
-        let transactions_file: TransactionsFile =
-            serde_json::from_slice(file.as_slice()).expect("Failed to parse transactions file.");
-        let transactions = transactions_file
-            .transactions
-            .into_iter()
-            // Skip the versions that are before the batch starting version.
-            .skip((batch_starting_version - transactions_file.starting_version) as usize)
-            .map(|x: Based64EncodedSerializedTransactionProtobuf| {
-                let protobuf_bytes =
-                    base64::decode(x).expect("Failed to decode base64 encoded protobuf.");
-                Transaction::decode(protobuf_bytes.as_slice()).expect("Failed to decode protobuf.")
-            })
-            .collect::<Vec<Transaction>>();
-        Ok(StorageReadStatus::Ok(transactions))
+        let transactions_file: TransactionsFile = TransactionsFile::from(file);
+        Ok(StorageReadStatus::Ok(transactions_file.into()))
     }
 
     async fn get_metadata(&self) -> Result<AccessMetadata, StorageReadError> {
-        Ok(AccessMetadata {
-            chain_id: self.latest_metadata.chain_id,
-            next_version: self.latest_metadata.version,
-        })
+        self.refresh_metadata_if_needed().await?;
+        let mut access_metadata = AccessMetadata::default();
+        {
+            let latest_metadata = self.latest_metadata.lock().unwrap();
+            access_metadata.chain_id = latest_metadata.chain_id;
+            access_metadata.next_version = latest_metadata.version;
+        }
+        Ok(access_metadata)
     }
 }
 
@@ -223,8 +186,9 @@ impl GcsClientTrait for google_cloud_storage::client::Client {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aptos_protos::transaction::v1::Transaction;
+    use prost::Message;
     use std::sync::atomic::{AtomicU64, Ordering};
-
     #[derive(Debug)]
     pub(crate) struct MockGcsClient {
         // Transactions to be returned.
@@ -302,8 +266,9 @@ mod tests {
             ],
             index: AtomicU64::new(0),
         };
-        let gcs_client =
-            GcsInternalClient::new_with_client("test1".to_string(), mock_gcs_client).await;
+        let gcs_client = GcsInternalClient::new_with_client("test1".to_string(), mock_gcs_client)
+            .await
+            .unwrap();
 
         let get_transactions_resp = gcs_client.get_transactions(0, None).await.unwrap();
 
@@ -357,8 +322,9 @@ mod tests {
             ],
             index: AtomicU64::new(0),
         };
-        let gcs_client =
-            GcsInternalClient::new_with_client("test2".to_string(), mock_gcs_client).await;
+        let gcs_client = GcsInternalClient::new_with_client("test2".to_string(), mock_gcs_client)
+            .await
+            .unwrap();
 
         let get_transactions_resp = gcs_client.get_transactions(500, None).await.unwrap();
 
@@ -391,8 +357,9 @@ mod tests {
             }],
             index: AtomicU64::new(0),
         };
-        let gcs_client =
-            GcsInternalClient::new_with_client("test3".to_string(), mock_gcs_client).await;
+        let gcs_client = GcsInternalClient::new_with_client("test3".to_string(), mock_gcs_client)
+            .await
+            .unwrap();
 
         let get_metadata_resp = gcs_client.get_metadata().await.unwrap();
 
@@ -418,8 +385,9 @@ mod tests {
             }],
             index: AtomicU64::new(0),
         };
-        let gcs_client =
-            GcsInternalClient::new_with_client("test3".to_string(), mock_gcs_client).await;
+        let gcs_client = GcsInternalClient::new_with_client("test3".to_string(), mock_gcs_client)
+            .await
+            .unwrap();
 
         let get_metadata_resp = gcs_client.get_metadata().await.unwrap();
 

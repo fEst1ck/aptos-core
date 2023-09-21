@@ -1,15 +1,26 @@
 // Copyright © Aptos Foundation
 
 use crate::{access_trait::AccessMetadata, REDIS_CHAIN_ID, REDIS_ENDING_VERSION_EXCLUSIVE_KEY};
+use anyhow::Context;
 use aptos_protos::transaction::v1::Transaction;
 use dashmap::DashMap;
 use prost::Message;
 use redis::AsyncCommands;
-use std::sync::{Arc, RwLock};
+use std::{
+    sync::{Arc, RwLock},
+    time::Duration,
+};
 
+// Shared data between reads and writes.
 type ThreadSafeAccessMetadata = Arc<RwLock<Option<AccessMetadata>>>;
+type ThreadSafeInMemoryStorageStatus = Arc<RwLock<anyhow::Result<()>>>;
+// Note: Arc<Transaction> is to avoid copying the transaction when operating on the map.
+type TransactionMap = Arc<DashMap<u64, Arc<Transaction>>>;
+
 // Capacity of the in-memory storage.
-pub const IN_MEMORY_STORAGE_SIZE: usize = 100_000;
+pub const IN_MEMORY_STORAGE_SIZE_SOFT_LIMIT: usize = 100_000;
+// Capacity of the in-memory storage.
+const IN_MEMORY_STORAGE_SIZE_HARD_LIMIT: usize = 120_000;
 // Redis fetch task interval in milliseconds.
 const REDIS_FETCH_TASK_INTERVAL_IN_MILLIS: u64 = 10;
 // Redis fetch MGET batch size.
@@ -17,122 +28,115 @@ const REDIS_FETCH_MGET_BATCH_SIZE: usize = 1000;
 
 // InMemoryStorage is the in-memory storage for transactions.
 pub struct InMemoryStorageInternal {
-    pub transactions_map: Arc<DashMap<u64, Arc<Transaction>>>,
+    pub transactions_map: TransactionMap,
     pub metadata: ThreadSafeAccessMetadata,
-    cancellation_token: tokio_util::sync::CancellationToken,
+    pub storage_status: ThreadSafeInMemoryStorageStatus,
+    _cancellation_token_drop_guard: tokio_util::sync::DropGuard,
 }
 
 impl InMemoryStorageInternal {
-    async fn new_with_connection<C>(redis_connection: C) -> Self
+    async fn new_with_connection<C>(redis_connection: C) -> anyhow::Result<Self>
     where
         C: redis::aio::ConnectionLike + Send + Sync + Clone + 'static,
     {
-        let transactions_map = Arc::new(DashMap::new());
-        let metadata = Arc::new(RwLock::new(None));
         let redis_connection = Arc::new(redis_connection);
+        let transactions_map = Arc::new(DashMap::new());
         let transactions_map_clone = transactions_map.clone();
+        let metadata = Arc::new(RwLock::new(None));
         let metadata_clone = metadata.clone();
         let cancellation_token = tokio_util::sync::CancellationToken::new();
-        let cloned_cancellation_token = cancellation_token.clone();
+        let cancellation_token_clone = cancellation_token.clone();
+        let storage_status = Arc::new(RwLock::new(Ok(())));
+        let storage_status_clone = storage_status.clone();
         tokio::task::spawn(async move {
-            redis_fetch_task(
+            let result = redis_fetch_task(
                 redis_connection,
                 transactions_map_clone,
                 metadata_clone,
-                cloned_cancellation_token,
+                cancellation_token_clone,
             )
             .await;
+            let mut storage_status = storage_status_clone.write().unwrap();
+            *storage_status = result;
         });
-        Self {
+        Ok(Self {
             transactions_map,
             metadata,
-            cancellation_token,
-        }
+            _cancellation_token_drop_guard: cancellation_token.drop_guard(),
+            storage_status,
+        })
     }
 
-    pub async fn new(redis_address: String) -> Self {
+    pub async fn new(redis_address: String) -> anyhow::Result<Self> {
         let redis_client =
-            redis::Client::open(redis_address).expect("Failed to open Redis client.");
+            redis::Client::open(redis_address).context("Failed to open Redis client.")?;
         let redis_connection = redis_client
             .get_tokio_connection_manager()
             .await
-            .expect("Failed to get Redis connection.");
+            .context("Failed to get Redis connection.")?;
         Self::new_with_connection(redis_connection).await
     }
 }
 
-impl Drop for InMemoryStorageInternal {
-    fn drop(&mut self) {
-        // Stop the redis fetch task.
-        self.cancellation_token.cancel();
-    }
-}
-
+/// redis_fetch_task fetches the transactions from Redis and updates the in-memory storage.
+/// It's expected to be run in a separate thread.
 async fn redis_fetch_task<C>(
     redis_connection: Arc<C>,
     transactions_map: Arc<DashMap<u64, Arc<Transaction>>>,
     metadata: ThreadSafeAccessMetadata,
     cancellation_token: tokio_util::sync::CancellationToken,
-) where
+) -> anyhow::Result<()>
+where
     C: redis::aio::ConnectionLike + Send + Sync + Clone + 'static,
 {
     let current_connection = redis_connection.clone();
     loop {
         tokio::select! {
             _ = cancellation_token.cancelled() => {
-                tracing::info!("Redis fetch task cancelled.");
-                break;
+                return Ok(());
             },
-            _ = tokio::time::sleep(std::time::Duration::from_millis(REDIS_FETCH_TASK_INTERVAL_IN_MILLIS)) => {
+            _ = tokio::time::sleep(Duration::from_millis(REDIS_FETCH_TASK_INTERVAL_IN_MILLIS)) => {
                 // Continue.
             },
         }
         let start_time = std::time::Instant::now();
         let mut conn = current_connection.as_ref().clone();
-        let redis_chain_id: u64 = match conn.get(REDIS_CHAIN_ID).await {
-            Ok(redis_chain_id) => redis_chain_id,
-            Err(err) => {
-                tracing::error!("Failed to get the chain id from Redis: {}", err);
-                println!("Failed to get the chain id from Redis: {}", err);
-                continue;
-            },
-        };
-        let redis_ending_version_exclusive: u64 =
-            match conn.get(REDIS_ENDING_VERSION_EXCLUSIVE_KEY).await {
-                Ok(redis_ending_version_exclusive) => redis_ending_version_exclusive,
-                Err(err) => {
-                    tracing::error!("Failed to get the latest version from Redis: {}", err);
-                    println!("Failed to get the latest version from Redis: {}", err);
-                    continue;
-                },
-            };
-
+        let redis_chain_id: u64 = conn
+            .get(REDIS_CHAIN_ID)
+            .await
+            .context("Failed to get the redis id")?;
+        let redis_ending_version_exclusive: u64 = conn
+            .get(REDIS_ENDING_VERSION_EXCLUSIVE_KEY)
+            .await
+            .context("Failed to get the ending version")?;
         // The new metadata to be updated.
         let new_metadata = AccessMetadata {
             chain_id: redis_chain_id,
             next_version: redis_ending_version_exclusive,
         };
-        // Determine the fetch size based on old metadata.
+        // 1. Determine the fetch size based on old metadata.
         let redis_fetch_size = match *metadata.read().unwrap() {
             Some(ref current_metadata) => {
-                if current_metadata.chain_id != redis_chain_id {
-                    panic!("Chain ID mismatch between Redis and in-memory storage.");
-                }
+                anyhow::ensure!(
+                    current_metadata.chain_id == redis_chain_id,
+                    "Chain ID mismatch."
+                );
                 redis_ending_version_exclusive.saturating_sub(current_metadata.next_version)
                     as usize
             },
-            None => {
-                // No metadata in memory; fetch everything.
-                std::cmp::min(
-                    IN_MEMORY_STORAGE_SIZE,
-                    redis_ending_version_exclusive as usize,
-                )
-            },
+            None => std::cmp::min(
+                IN_MEMORY_STORAGE_SIZE_HARD_LIMIT,
+                redis_ending_version_exclusive as usize,
+            ),
         };
-
-        // Use MGET to fetch the transactions in batches.
+        if redis_fetch_size == 0 {
+            tracing::info!("Redis is not ready for current fetch. Wait.");
+            continue;
+        }
+        // 2. Use MGET to fetch the transactions in batches.
         let starting_version = redis_ending_version_exclusive - redis_fetch_size as u64;
         let ending_version = redis_ending_version_exclusive;
+        // Order doesn't matter here; it'll be available in the map until metadata is updated.
         let keys_batches: Vec<Vec<u64>> = (starting_version..ending_version)
             .collect::<Vec<u64>>()
             .chunks(REDIS_FETCH_MGET_BATCH_SIZE)
@@ -140,14 +144,10 @@ async fn redis_fetch_task<C>(
             .collect();
 
         for keys in keys_batches {
-            let redis_transactions: Vec<String> =
-                match conn.mget::<Vec<u64>, Vec<String>>(keys).await {
-                    Ok(redis_transactions) => redis_transactions,
-                    Err(err) => {
-                        tracing::error!("Failed to get transactions from Redis: {}", err);
-                        continue;
-                    },
-                };
+            let redis_transactions: Vec<String> = conn
+                .mget::<Vec<u64>, Vec<String>>(keys)
+                .await
+                .context("Failed to MGET from redis.")?;
             let transactions: Vec<Arc<Transaction>> = redis_transactions
                 .into_iter()
                 .map(|serialized_transaction| {
@@ -161,7 +161,7 @@ async fn redis_fetch_task<C>(
             }
         }
 
-        // Update the metadata.
+        // 3. Update the metadata.
         {
             let mut current_metadata = metadata.write().unwrap();
             *current_metadata = Some(new_metadata.clone());
@@ -170,7 +170,8 @@ async fn redis_fetch_task<C>(
         // return NOT_FOUND if the version is not found.
         let current_size = transactions_map.len();
         let lowest_version = new_metadata.next_version - 1 - current_size as u64;
-        let count_of_transactions_to_remove = current_size.saturating_sub(IN_MEMORY_STORAGE_SIZE);
+        let count_of_transactions_to_remove =
+            current_size.saturating_sub(IN_MEMORY_STORAGE_SIZE_HARD_LIMIT);
         (lowest_version..lowest_version + count_of_transactions_to_remove as u64).for_each(
             |version| {
                 transactions_map.remove(&version);
@@ -216,7 +217,9 @@ mod tests {
                 Ok(0),
             ),
         ]);
-        let in_memory_storage = InMemoryStorageInternal::new_with_connection(mock_connection).await;
+        let in_memory_storage = InMemoryStorageInternal::new_with_connection(mock_connection)
+            .await
+            .unwrap();
         // Wait for the fetch task to finish.
         tokio::time::sleep(std::time::Duration::from_millis(
             REDIS_FETCH_TASK_INTERVAL_IN_MILLIS * 2,
@@ -243,7 +246,9 @@ mod tests {
             MockCmd::new(redis::cmd("MGET").arg(1000), Ok(second_batch)),
         ];
         let mock_connection = MockRedisConnection::new(cmds);
-        let in_memory_storage = InMemoryStorageInternal::new_with_connection(mock_connection).await;
+        let in_memory_storage = InMemoryStorageInternal::new_with_connection(mock_connection)
+            .await
+            .unwrap();
         // Wait for the fetch task to finish.
         tokio::time::sleep(std::time::Duration::from_millis(
             REDIS_FETCH_TASK_INTERVAL_IN_MILLIS * 2,

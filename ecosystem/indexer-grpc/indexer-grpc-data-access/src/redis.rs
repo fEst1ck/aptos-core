@@ -4,6 +4,7 @@ use crate::{
     access_trait::{AccessMetadata, StorageReadError, StorageReadStatus, StorageTransactionRead},
     REDIS_CHAIN_ID, REDIS_ENDING_VERSION_EXCLUSIVE_KEY,
 };
+use anyhow::Context;
 use aptos_protos::transaction::v1::Transaction;
 use prost::Message;
 use redis::{aio::ConnectionLike, AsyncCommands, ErrorKind};
@@ -22,14 +23,14 @@ pub struct RedisClientConfig {
 pub type RedisClient = RedisClientInternal<redis::aio::ConnectionManager>;
 
 impl RedisClient {
-    pub async fn new(config: RedisClientConfig) -> Self {
+    pub async fn new(config: RedisClientConfig) -> anyhow::Result<Self> {
         let redis_client =
-            redis::Client::open(config.redis_address).expect("Failed to create Redis client.");
+            redis::Client::open(config.redis_address).context("Failed to create Redis client.")?;
         let redis_connection = redis_client
             .get_tokio_connection_manager()
             .await
-            .expect("Failed to create Redis connection.");
-        Self::new_with_connection(redis_connection)
+            .context("Failed to create Redis connection.")?;
+        Ok(Self::new_with_connection(redis_connection))
     }
 }
 
@@ -45,6 +46,19 @@ impl<C: ConnectionLike + Sync + Send + Clone> RedisClientInternal<C> {
     }
 }
 
+impl From<redis::RedisError> for StorageReadError {
+    fn from(err: redis::RedisError) -> Self {
+        match err.kind() {
+            // Fetch an entry that is not set yet.
+            ErrorKind::TypeError => {
+                StorageReadError::PermenantError(REDIS_STORAGE_NAME, anyhow::Error::new(err))
+            },
+            // Other errors are transient; let it retry.
+            _ => StorageReadError::TransientError(REDIS_STORAGE_NAME, anyhow::Error::new(err)),
+        }
+    }
+}
+
 #[async_trait::async_trait]
 impl<C: ConnectionLike + Sync + Send + Clone> StorageTransactionRead for RedisClientInternal<C> {
     async fn get_transactions(
@@ -55,27 +69,7 @@ impl<C: ConnectionLike + Sync + Send + Clone> StorageTransactionRead for RedisCl
         // Check the latest version of the cache.
         let mut conn = self.redis_connection.clone();
         let redis_ending_version_exclusive: u64 =
-            match conn.get(REDIS_ENDING_VERSION_EXCLUSIVE_KEY).await {
-                Ok(redis_ending_version_exclusive) => redis_ending_version_exclusive,
-                Err(err) => {
-                    match err.kind() {
-                        // Redis returns NIL if the key is not set yet; fatal error.
-                        ErrorKind::TypeError => {
-                            return Err(StorageReadError::PermenantError(
-                                REDIS_STORAGE_NAME,
-                                anyhow::Error::new(err),
-                            ))
-                        },
-                        // Other errors are transient; let it retry.
-                        _ => {
-                            return Err(StorageReadError::TransientError(
-                                REDIS_STORAGE_NAME,
-                                anyhow::Error::new(err),
-                            ))
-                        },
-                    }
-                },
-            };
+            conn.get(REDIS_ENDING_VERSION_EXCLUSIVE_KEY).await?;
         if batch_starting_version >= redis_ending_version_exclusive {
             return Ok(StorageReadStatus::NotAvailableYet);
         }
@@ -118,32 +112,8 @@ impl<C: ConnectionLike + Sync + Send + Clone> StorageTransactionRead for RedisCl
 
     async fn get_metadata(&self) -> Result<AccessMetadata, StorageReadError> {
         let mut conn = self.redis_connection.clone();
-        let result = conn.get(REDIS_CHAIN_ID).await;
-        let chain_id = match result {
-            Ok(chain_id) => chain_id,
-            Err(err) => {
-                match err.kind() {
-                    // Chain ID is not set yet.
-                    ErrorKind::TypeError => {
-                        return Err(StorageReadError::PermenantError(
-                            REDIS_STORAGE_NAME,
-                            anyhow::Error::new(err),
-                        ))
-                    },
-                    // Other errors are transient; let it retry.
-                    _ => {
-                        return Err(StorageReadError::TransientError(
-                            REDIS_STORAGE_NAME,
-                            anyhow::Error::new(err),
-                        ))
-                    },
-                }
-            },
-        };
-        let next_version = conn
-            .get(REDIS_ENDING_VERSION_EXCLUSIVE_KEY)
-            .await
-            .expect("Failed to get latest version from Redis.");
+        let chain_id = conn.get(REDIS_CHAIN_ID).await?;
+        let next_version = conn.get(REDIS_ENDING_VERSION_EXCLUSIVE_KEY).await?;
         Ok(AccessMetadata {
             chain_id,
             next_version,
