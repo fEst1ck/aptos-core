@@ -633,8 +633,13 @@ where
         self.deltas.iter().cloned().collect()
     }
 
-    fn get_events(&self) -> Vec<E> {
-        self.events.clone()
+    // TODO: Currently, appending None to all events, which means none of the
+    // events have aggregators. Test it with aggregators as well.
+    fn get_events(&self) -> Vec<(E, Arc<Option<MoveTypeLayout>>)> {
+        self.events
+            .iter()
+            .map(|e| (e.clone(), Arc::new(None)))
+            .collect()
     }
 
     fn skip_output() -> Self {

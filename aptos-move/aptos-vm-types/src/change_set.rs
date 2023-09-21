@@ -19,9 +19,12 @@ use move_core_types::{
     value::MoveTypeLayout,
     vm_status::{err_msg, StatusCode, VMStatus},
 };
-use std::collections::{
-    hash_map::Entry::{Occupied, Vacant},
-    HashMap,
+use std::{
+    collections::{
+        hash_map::Entry::{Occupied, Vacant},
+        HashMap,
+    },
+    sync::Arc,
 };
 
 /// A change set produced by the VM.
@@ -35,7 +38,7 @@ pub struct VMChangeSet {
     aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
     aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
     aggregator_v2_change_set: HashMap<AggregatorID, AggregatorChange>,
-    events: Vec<ContractEvent>,
+    events: Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)>,
 }
 
 macro_rules! squash_writes_pair {
@@ -72,7 +75,7 @@ impl VMChangeSet {
         aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
         aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
         aggregator_v2_change_set: HashMap<AggregatorID, AggregatorChange>,
-        events: Vec<ContractEvent>,
+        events: Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)>,
         checker: &dyn CheckChangeSet,
     ) -> anyhow::Result<Self, VMStatus> {
         let change_set = Self {
@@ -118,7 +121,12 @@ impl VMChangeSet {
                 resource_write_set.insert(state_key, (write_op, None));
             }
         }
-
+        // TODO: Currently using MoveTypeLayout as None indicating no aggregators are in
+        // the event. Check if this causes any issues.
+        let events = events
+            .into_iter()
+            .map(|event| (event, Arc::new(None)))
+            .collect();
         let change_set = Self {
             resource_write_set,
             module_write_set,
@@ -146,6 +154,7 @@ impl VMChangeSet {
         write_set_mut.extend(module_write_set);
         write_set_mut.extend(aggregator_v1_write_set);
 
+        let events = events.into_iter().map(|(e, _)| e).collect();
         let write_set = write_set_mut
             .freeze()
             .expect("Freezing a WriteSet does not fail.");
@@ -218,7 +227,7 @@ impl VMChangeSet {
         &self.aggregator_v2_change_set
     }
 
-    pub fn events(&self) -> &[ContractEvent] {
+    pub fn events(&self) -> &[(ContractEvent, Arc<Option<MoveTypeLayout>>)] {
         &self.events
     }
 

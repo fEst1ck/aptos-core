@@ -164,7 +164,13 @@ pub fn encode_aptos_mainnet_genesis_transaction(
         "non-empty delta change set in genesis"
     );
     assert!(!change_set.write_set_iter().any(|(_, op)| op.is_deletion()));
-    verify_genesis_write_set(change_set.events());
+    verify_genesis_write_set(
+        &change_set
+            .events()
+            .iter()
+            .map(|(event, _)| event.clone())
+            .collect::<Vec<ContractEvent>>(),
+    );
 
     let change_set = change_set
         .try_into_storage_change_set()
@@ -275,7 +281,13 @@ pub fn encode_genesis_change_set(
     );
 
     assert!(!change_set.write_set_iter().any(|(_, op)| op.is_deletion()));
-    verify_genesis_write_set(change_set.events());
+    verify_genesis_write_set(
+        &change_set
+            .events()
+            .iter()
+            .map(|(event, _)| event.clone())
+            .collect::<Vec<ContractEvent>>(),
+    );
     change_set
         .try_into_storage_change_set()
         .expect("Constructing a ChangeSet from VMChangeSet should always succeed at genesis")

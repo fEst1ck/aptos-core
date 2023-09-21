@@ -25,7 +25,7 @@ use move_core_types::{
     account_address::AccountAddress,
     effects::{AccountChangeSet, ChangeSet as MoveChangeSet, Op as MoveStorageOp},
     language_storage::{ModuleId, StructTag},
-    value::BytesWithLayout,
+    value::{BytesWithLayout, MoveTypeLayout},
     vm_status::{StatusCode, VMStatus},
 };
 use move_vm_runtime::{move_vm::MoveVM, session::Session};
@@ -309,7 +309,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         woc: &WriteOpConverter,
         change_set: MoveChangeSet,
         resource_group_change_set: HashMap<StateKey, MoveStorageOp<BytesWithLayout>>,
-        events: Vec<ContractEvent>,
+        events: Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)>,
         table_change_set: TableChangeSet,
         aggregator_change_set: AggregatorChangeSet,
         ap_cache: &mut C,
