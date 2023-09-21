@@ -11,7 +11,7 @@ use move_core_types::{
     language_storage::{ModuleId, StructTag},
     metadata::Metadata,
     resolver::{ModuleResolver, MoveResolver, ResourceResolver},
-    value::{BytesWithLayout, MoveTypeLayout},
+    value::{BytesWithAggregatorLayout, MoveTypeLayout},
 };
 #[cfg(feature = "table-extension")]
 use move_table_extension::{TableChangeSet, TableHandle, TableResolver};
@@ -105,7 +105,7 @@ impl<'a, 'b, S: ModuleResolver> ModuleResolver for DeltaStorage<'a, 'b, S> {
     }
 }
 
-fn get_bytes_and_size(buf: Option<BytesWithLayout>) -> Result<(Option<Bytes>, usize)> {
+fn get_bytes_and_size(buf: Option<BytesWithAggregatorLayout>) -> Result<(Option<Bytes>, usize)> {
     let buf_bytes = buf.as_ref().map(|(bytes, _)| bytes);
     let buf_size = buf_bytes.map(|bytes| bytes.len()).unwrap_or(0);
     Ok((buf_bytes.cloned(), buf_size))
@@ -163,7 +163,7 @@ impl<'a, 'b, S: MoveResolver> DeltaStorage<'a, 'b, S> {
 /// Simple in-memory storage for modules and resources under an account.
 #[derive(Debug, Clone)]
 struct InMemoryAccountStorage {
-    resources: BTreeMap<StructTag, BytesWithLayout>,
+    resources: BTreeMap<StructTag, BytesWithAggregatorLayout>,
     modules: BTreeMap<Identifier, Bytes>,
 }
 

@@ -21,7 +21,7 @@ use move_core_types::{
     effects::Op,
     gas_algebra::NumBytes,
     identifier::Identifier,
-    value::{BytesWithLayout, MoveTypeLayout},
+    value::{BytesWithAggregatorLayout, MoveTypeLayout},
     vm_status::StatusCode,
 };
 // ===========================================================================================
@@ -100,7 +100,7 @@ pub struct TableChangeSet {
 
 /// A change of a single table.
 pub struct TableChange {
-    pub entries: BTreeMap<Vec<u8>, Op<BytesWithLayout>>,
+    pub entries: BTreeMap<Vec<u8>, Op<BytesWithAggregatorLayout>>,
 }
 
 // =========================================================================================

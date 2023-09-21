@@ -6,7 +6,7 @@ use crate::{
     account_address::AccountAddress,
     identifier::Identifier,
     language_storage::{ModuleId, StructTag},
-    value::BytesWithLayout,
+    value::BytesWithAggregatorLayout,
 };
 use anyhow::{bail, Result};
 use bytes::Bytes;
@@ -320,5 +320,5 @@ impl<Module, Resource> Changes<Module, Resource> {
 // These aliases are necessary because AccountChangeSet and ChangeSet were not
 // generic before. In order to minimise the code changes we alias new generic
 // types.
-pub type AccountChangeSet = AccountChanges<Bytes, BytesWithLayout>;
-pub type ChangeSet = Changes<Bytes, BytesWithLayout>;
+pub type AccountChangeSet = AccountChanges<Bytes, BytesWithAggregatorLayout>;
+pub type ChangeSet = Changes<Bytes, BytesWithAggregatorLayout>;

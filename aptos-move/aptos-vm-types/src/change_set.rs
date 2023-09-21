@@ -387,7 +387,11 @@ impl VMChangeSet {
                     if *type_layout != additional_type_layout {
                         return Err(VMStatus::error(
                             StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
-                            err_msg(format!("Cannot squash two writes with different type layouts. key: {:?}, type_layout: {:?}, additional_type_layout: {:?}", key, type_layout, additional_type_layout)),
+                            err_msg(format!(
+                                "Cannot squash two writes with different type layouts.
+                                key: {:?}, type_layout: {:?}, additional_type_layout: {:?}",
+                                key, type_layout, additional_type_layout
+                            )),
                         ));
                     }
                     let noop = !WriteOp::squash(write_op, additional_write_op).map_err(|e| {

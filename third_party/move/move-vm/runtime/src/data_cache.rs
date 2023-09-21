@@ -13,7 +13,7 @@ use move_core_types::{
     language_storage::{ModuleId, TypeTag},
     metadata::Metadata,
     resolver::MoveResolver,
-    value::{BytesWithLayout, MoveTypeLayout},
+    value::{BytesWithAggregatorLayout, MoveTypeLayout},
     vm_status::StatusCode,
 };
 use move_vm_types::{
@@ -71,17 +71,19 @@ impl<'r> TransactionDataCache<'r> {
     ///
     /// Gives all proper guarantees on lifetime of global data as well.
     pub(crate) fn into_effects(self, loader: &Loader) -> PartialVMResult<ChangeSet> {
-        let resource_converter =
-            |value: Value, layout: MoveTypeLayout, _: bool| -> PartialVMResult<BytesWithLayout> {
-                value
-                    .simple_serialize(&layout)
-                    .map(Into::into)
-                    .map(|bytes| (bytes, None))
-                    .ok_or_else(|| {
-                        PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                            .with_message(format!("Error when serializing resource {}.", value))
-                    })
-            };
+        let resource_converter = |value: Value,
+                                  layout: MoveTypeLayout,
+                                  _: bool|
+         -> PartialVMResult<BytesWithAggregatorLayout> {
+            value
+                .simple_serialize(&layout)
+                .map(Into::into)
+                .map(|bytes| (bytes, None))
+                .ok_or_else(|| {
+                    PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
+                        .with_message(format!("Error when serializing resource {}.", value))
+                })
+        };
         self.into_custom_effects(&resource_converter, loader)
     }
 

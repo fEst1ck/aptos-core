@@ -186,7 +186,7 @@ impl MoveValue {
     }
 }
 
-pub type BytesWithLayout = (Bytes, Option<MoveTypeLayout>);
+pub type BytesWithAggregatorLayout = (Bytes, Option<MoveTypeLayout>);
 
 pub fn serialize_values<'a, I>(vals: I) -> Vec<Vec<u8>>
 where
