@@ -20,7 +20,7 @@ use aptos_types::{
     state_store::state_key::StateKey, transaction::SignatureCheckedTransaction,
 };
 use aptos_vm_types::{change_set::VMChangeSet, storage::ChangeSetConfigs};
-use move_binary_format::errors::{Location, PartialVMError, VMResult};
+use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use move_core_types::{
     account_address::AccountAddress,
     effects::{AccountChangeSet, ChangeSet as MoveChangeSet, Op as MoveStorageOp},
@@ -29,6 +29,7 @@ use move_core_types::{
     vm_status::{StatusCode, VMStatus},
 };
 use move_vm_runtime::{move_vm::MoveVM, session::Session};
+use move_vm_types::values::Value;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
@@ -146,7 +147,32 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         configs: &ChangeSetConfigs,
     ) -> VMResult<VMChangeSet> {
         let move_vm = self.inner.get_move_vm();
-        let (change_set, mut extensions) = self.inner.finish_with_extensions()?;
+
+        let resource_converter = |value: Value,
+                                  layout: MoveTypeLayout,
+                                  has_aggregator_lifting: bool|
+         -> PartialVMResult<BytesWithLayout> {
+            value
+                .simple_serialize(&layout)
+                .map(Into::into)
+                .map(|bytes| {
+                    (
+                        bytes,
+                        if has_aggregator_lifting {
+                            Some(layout.clone())
+                        } else {
+                            None
+                        },
+                    )
+                })
+                .ok_or_else(|| {
+                    PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
+                        .with_message(format!("Error when serializing resource {}.", value))
+                })
+        };
+        let (change_set, mut extensions) = self
+            .inner
+            .finish_with_extensions_with_custom_effects(&resource_converter)?;
 
         let (change_set, resource_group_change_set) =
             Self::split_and_merge_resource_groups(move_vm, self.remote, change_set, ap_cache)?;
