@@ -63,7 +63,6 @@ def run_node(network: Network, image_repo_with_project: str):
             "aptos",
             "node",
             "run-local-testnet",
-            "--with-faucet",
         ],
         **kwargs,
     )
