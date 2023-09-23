@@ -155,7 +155,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
             value
                 .simple_serialize(&layout)
                 .map(Into::into)
-                .map(|bytes| (bytes, has_aggregator_lifting.then_some(layout)))
+                .map(|bytes| (bytes, has_aggregator_lifting.then_some(Arc::new(layout))))
                 .ok_or_else(|| {
                     PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
                         .with_message(format!("Error when serializing resource {}.", value))
@@ -326,7 +326,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         woc: &WriteOpConverter,
         change_set: MoveChangeSet,
         resource_group_change_set: HashMap<StateKey, MoveStorageOp<BytesWithAggregatorLayout>>,
-        events: Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)>,
+        events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
         table_change_set: TableChangeSet,
         aggregator_change_set: AggregatorChangeSet,
         ap_cache: &mut C,

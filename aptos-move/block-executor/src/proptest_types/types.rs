@@ -606,7 +606,7 @@ where
     // TODO: Assigning MoveTypeLayout as None for all the writes for now. That means, the
     // the resources do not have any aggregators embededded in them. Change it to test
     // resources with aggregators as well.
-    fn resource_write_set(&self) -> HashMap<K, (V, Option<MoveTypeLayout>)> {
+    fn resource_write_set(&self) -> HashMap<K, (V, Option<Arc<MoveTypeLayout>>)> {
         self.writes
             .iter()
             .filter(|(k, _)| k.module_path().is_none())
@@ -635,11 +635,8 @@ where
 
     // TODO: Currently, appending None to all events, which means none of the
     // events have aggregators. Test it with aggregators as well.
-    fn get_events(&self) -> Vec<(E, Arc<Option<MoveTypeLayout>>)> {
-        self.events
-            .iter()
-            .map(|e| (e.clone(), Arc::new(None)))
-            .collect()
+    fn get_events(&self) -> Vec<(E, Option<Arc<MoveTypeLayout>>)> {
+        self.events.iter().map(|e| (e.clone(), None)).collect()
     }
 
     fn skip_output() -> Self {

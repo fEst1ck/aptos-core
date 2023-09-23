@@ -33,12 +33,12 @@ use std::{
 /// VM. For storage backends, use `ChangeSet`.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct VMChangeSet {
-    resource_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
+    resource_write_set: HashMap<StateKey, (WriteOp, Option<Arc<MoveTypeLayout>>)>,
     module_write_set: HashMap<StateKey, WriteOp>,
     aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
     aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
     aggregator_v2_change_set: HashMap<AggregatorID, AggregatorChange>,
-    events: Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)>,
+    events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
 }
 
 macro_rules! squash_writes_pair {
@@ -70,12 +70,12 @@ impl VMChangeSet {
     }
 
     pub fn new(
-        resource_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
+        resource_write_set: HashMap<StateKey, (WriteOp, Option<Arc<MoveTypeLayout>>)>,
         module_write_set: HashMap<StateKey, WriteOp>,
         aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
         aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
         aggregator_v2_change_set: HashMap<AggregatorID, AggregatorChange>,
-        events: Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)>,
+        events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
         checker: &dyn CheckChangeSet,
     ) -> anyhow::Result<Self, VMStatus> {
         let change_set = Self {
@@ -123,10 +123,7 @@ impl VMChangeSet {
         }
         // TODO: Currently using MoveTypeLayout as None indicating no aggregators are in
         // the event. Check if this causes any issues.
-        let events = events
-            .into_iter()
-            .map(|event| (event, Arc::new(None)))
-            .collect();
+        let events = events.into_iter().map(|event| (event, None)).collect();
         let change_set = Self {
             resource_write_set,
             module_write_set,
@@ -198,7 +195,7 @@ impl VMChangeSet {
             .chain(self.aggregator_v1_write_set.iter_mut())
     }
 
-    pub fn resource_write_set(&self) -> &HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)> {
+    pub fn resource_write_set(&self) -> &HashMap<StateKey, (WriteOp, Option<Arc<MoveTypeLayout>>)> {
         &self.resource_write_set
     }
 
@@ -227,7 +224,7 @@ impl VMChangeSet {
         &self.aggregator_v2_change_set
     }
 
-    pub fn events(&self) -> &[(ContractEvent, Arc<Option<MoveTypeLayout>>)] {
+    pub fn events(&self) -> &[(ContractEvent, Option<Arc<MoveTypeLayout>>)] {
         &self.events
     }
 
@@ -375,8 +372,8 @@ impl VMChangeSet {
     }
 
     fn squash_additional_resource_writes(
-        write_set: &mut HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
-        additional_write_set: HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)>,
+        write_set: &mut HashMap<StateKey, (WriteOp, Option<Arc<MoveTypeLayout>>)>,
+        additional_write_set: HashMap<StateKey, (WriteOp, Option<Arc<MoveTypeLayout>>)>,
     ) -> anyhow::Result<(), VMStatus> {
         for (key, additional_entry) in additional_write_set.into_iter() {
             match write_set.entry(key.clone()) {

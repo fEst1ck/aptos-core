@@ -102,7 +102,10 @@ pub trait TransactionOutput: Send + Sync + Debug {
         &self,
     ) -> HashMap<
         <Self::Txn as Transaction>::Key,
-        (<Self::Txn as Transaction>::Value, Option<MoveTypeLayout>),
+        (
+            <Self::Txn as Transaction>::Value,
+            Option<Arc<MoveTypeLayout>>,
+        ),
     >;
 
     fn module_write_set(
@@ -121,7 +124,7 @@ pub trait TransactionOutput: Send + Sync + Debug {
         &self,
     ) -> Vec<(
         <Self::Txn as Transaction>::Event,
-        Arc<Option<MoveTypeLayout>>,
+        Option<Arc<MoveTypeLayout>>,
     )>;
 
     /// Execution output for transactions that comes after SkipRest signal.

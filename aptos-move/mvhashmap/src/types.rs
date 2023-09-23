@@ -4,6 +4,7 @@
 use aptos_aggregator::delta_change_set::DeltaOp;
 use aptos_crypto::hash::HashValue;
 use aptos_types::executable::ExecutableDescriptor;
+use move_core_types::value::MoveTypeLayout;
 use std::sync::{atomic::AtomicU32, Arc};
 
 pub type AtomicTxnIndex = AtomicU32;
@@ -67,7 +68,7 @@ pub enum MVDataOutput<V> {
     Resolved(u128),
     /// Information from the last versioned-write. Note that the version is returned
     /// and not the data to avoid copying big values around.
-    Versioned(Version, Arc<V>),
+    Versioned(Version, Arc<V>, Option<Arc<MoveTypeLayout>>),
 }
 
 /// Returned as Ok(..) when read successfully from the multi-version data-structure.
@@ -137,7 +138,6 @@ pub(crate) mod test {
     };
     use bytes::Bytes;
     use claims::{assert_err, assert_ok_eq};
-    use move_core_types::value::MoveTypeLayout;
     use std::{fmt::Debug, hash::Hash, sync::Arc};
 
     #[derive(Clone, Eq, Hash, PartialEq, Debug)]
@@ -224,13 +224,9 @@ pub(crate) mod test {
     }
 
     // Generate the value_for txn_idx and incarnation in arc.
-    pub(crate) fn arc_value_for(
-        txn_idx: TxnIndex,
-        incarnation: Incarnation,
-        layout: Option<MoveTypeLayout>,
-    ) -> Arc<(TestValue, Option<MoveTypeLayout>)> {
+    pub(crate) fn arc_value_for(txn_idx: TxnIndex, incarnation: Incarnation) -> Arc<TestValue> {
         // Generate a Vec deterministically based on txn_idx and incarnation.
-        Arc::new((value_for(txn_idx, incarnation), layout))
+        Arc::new(value_for(txn_idx, incarnation))
     }
 
     // Convert value for txn_idx and incarnation into u128.

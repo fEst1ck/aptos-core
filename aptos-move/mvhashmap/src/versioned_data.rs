@@ -28,7 +28,7 @@ enum EntryCell<V> {
     /// has: 1) Incarnation number of the transaction that wrote the entry (note
     /// that TxnIndex is part of the key and not recorded here), 2) actual data
     /// stored in a shared pointer (to ensure ownership and avoid clones).
-    Write(Incarnation, Arc<(V, Option<MoveTypeLayout>)>),
+    Write(Incarnation, Arc<V>, Option<Arc<MoveTypeLayout>>),
 
     /// Recorded in the shared multi-version data-structure for each delta.
     /// Option<u128> is a shortcut to aggregated value (to avoid traversing down
@@ -48,9 +48,13 @@ pub struct VersionedData<K, V> {
 }
 
 impl<V> Entry<V> {
-    fn new_write_from(incarnation: Incarnation, data: (V, Option<MoveTypeLayout>)) -> Entry<V> {
+    fn new_write_from(
+        incarnation: Incarnation,
+        data: V,
+        layout: Option<Arc<MoveTypeLayout>>,
+    ) -> Entry<V> {
         Entry {
-            cell: EntryCell::Write(incarnation, Arc::new(data)),
+            cell: EntryCell::Write(incarnation, Arc::new(data), layout),
             flag: Flag::Done,
         }
     }
@@ -97,10 +101,7 @@ impl<V: TransactionWrite> Default for VersionedValue<V> {
 }
 
 impl<V: TransactionWrite> VersionedValue<V> {
-    fn read(
-        &self,
-        txn_idx: TxnIndex,
-    ) -> anyhow::Result<MVDataOutput<(V, Option<MoveTypeLayout>)>, MVDataError> {
+    fn read(&self, txn_idx: TxnIndex) -> anyhow::Result<MVDataOutput<V>, MVDataError> {
         use MVDataError::*;
         use MVDataOutput::*;
 
@@ -121,17 +122,18 @@ impl<V: TransactionWrite> VersionedValue<V> {
             }
 
             match (&entry.cell, accumulator.as_mut()) {
-                (EntryCell::Write(incarnation, data), None) => {
+                (EntryCell::Write(incarnation, data, layout), None) => {
                     // Resolve to the write if no deltas were applied in between.
                     return Ok(Versioned(
                         idx.idx().map(|idx| (idx, *incarnation)),
                         data.clone(),
+                        layout.clone(),
                     ));
                 },
-                (EntryCell::Write(incarnation, data), Some(accumulator)) => {
+                (EntryCell::Write(incarnation, data, layout), Some(accumulator)) => {
                     // Deltas were applied. We must deserialize the value
                     // of the write and apply the aggregated delta accumulator.
-                    let (value, _) = data.as_ref();
+                    let value = data.as_ref();
                     return match value
                         .as_u128()
                         .expect("Aggregator value must deserialize to u128")
@@ -143,6 +145,7 @@ impl<V: TransactionWrite> VersionedValue<V> {
                             Ok(Versioned(
                                 idx.idx().map(|idx| (idx, *incarnation)),
                                 data.clone(),
+                                layout.clone(),
                             ))
                         },
                         Some(value) => {
@@ -245,7 +248,7 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
         &self,
         key: &K,
         txn_idx: TxnIndex,
-    ) -> anyhow::Result<MVDataOutput<(V, Option<MoveTypeLayout>)>, MVDataError> {
+    ) -> anyhow::Result<MVDataOutput<V>, MVDataError> {
         self.values
             .get(key)
             .map(|v| v.read(txn_idx))
@@ -258,15 +261,15 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
         // For base value, incarnation is irrelevant, set to 0.
         let prev_entry = v.versioned_map.insert(
             ShiftedTxnIndex::zero(),
-            CachePadded::new(Entry::new_write_from(0, (data, None))),
+            CachePadded::new(Entry::new_write_from(0, data, None)),
         );
 
         assert!(prev_entry.map_or(true, |entry| -> bool {
-            if let EntryCell::Write(i, v) = &entry.cell {
+            if let EntryCell::Write(i, v, _) = &entry.cell {
                 // base value may have already been provided due to a concurrency race,
                 // but it has to be the same as being set.
                 // Assert the length of bytes for efficiency (instead of full equality)
-                *i == 0 && v.0.bytes_len() == bytes_len
+                *i == 0 && v.bytes_len() == bytes_len
             } else {
                 true
             }
@@ -279,17 +282,17 @@ impl<K: Hash + Clone + Debug + Eq, V: TransactionWrite> VersionedData<K, V> {
         key: K,
         txn_idx: TxnIndex,
         incarnation: Incarnation,
-        data: (V, Option<MoveTypeLayout>),
+        data: (V, Option<Arc<MoveTypeLayout>>),
     ) {
         let mut v = self.values.entry(key).or_default();
         let prev_entry = v.versioned_map.insert(
             ShiftedTxnIndex::new(txn_idx),
-            CachePadded::new(Entry::new_write_from(incarnation, data)),
+            CachePadded::new(Entry::new_write_from(incarnation, data.0, data.1)),
         );
 
         // Assert that the previous entry for txn_idx, if present, had lower incarnation.
         assert!(prev_entry.map_or(true, |entry| -> bool {
-            if let EntryCell::Write(i, _) = entry.cell {
+            if let EntryCell::Write(i, _, _) = entry.cell {
                 i < incarnation
             } else {
                 true

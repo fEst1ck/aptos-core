@@ -291,8 +291,8 @@ where
                                     .data()
                                     .fetch_data(&KeyType(key.clone()), idx as TxnIndex)
                                 {
-                                    Ok(Versioned(_, v)) => {
-                                        assert_value(Arc::new(v.as_ref().clone().0));
+                                    Ok(Versioned(_, v, _)) => {
+                                        assert_value(v);
                                         break;
                                     },
                                     Ok(Resolved(v)) => {

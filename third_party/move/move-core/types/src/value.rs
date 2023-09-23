@@ -18,6 +18,7 @@ use serde::{
 use std::{
     convert::TryInto,
     fmt::{self, Debug},
+    sync::Arc,
 };
 
 /// In the `WithTypes` configuration, a Move struct gets serialized into a Serde struct with this name
@@ -186,7 +187,7 @@ impl MoveValue {
     }
 }
 
-pub type BytesWithAggregatorLayout = (Bytes, Option<MoveTypeLayout>);
+pub type BytesWithAggregatorLayout = (Bytes, Option<Arc<MoveTypeLayout>>);
 
 pub fn serialize_values<'a, I>(vals: I) -> Vec<Vec<u8>>
 where

@@ -92,7 +92,7 @@ impl BlockExecutorTransactionOutput for AptosTransactionOutput {
 
     /// Should never be called after incorporate_delta_writes, as it
     /// will consume vm_output to prepare an output with deltas.
-    fn resource_write_set(&self) -> HashMap<StateKey, (WriteOp, Option<MoveTypeLayout>)> {
+    fn resource_write_set(&self) -> HashMap<StateKey, (WriteOp, Option<Arc<MoveTypeLayout>>)> {
         self.vm_output
             .lock()
             .as_ref()
@@ -140,7 +140,7 @@ impl BlockExecutorTransactionOutput for AptosTransactionOutput {
 
     /// Should never be called after incorporate_delta_writes, as it
     /// will consume vm_output to prepare an output with deltas.
-    fn get_events(&self) -> Vec<(ContractEvent, Arc<Option<MoveTypeLayout>>)> {
+    fn get_events(&self) -> Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)> {
         self.vm_output
             .lock()
             .as_ref()

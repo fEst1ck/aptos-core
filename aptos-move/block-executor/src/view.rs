@@ -40,7 +40,7 @@ use std::{
 #[derive(Debug)]
 pub(crate) enum ReadResult<V> {
     // Successful read of a value.
-    Value(Arc<V>),
+    Value(Arc<V>, Option<Arc<MoveTypeLayout>>),
     // Similar to above, but the value was aggregated and is an integer.
     U128(u128),
     // Read did not return anything.
@@ -89,21 +89,17 @@ impl<'a, T: Transaction, X: Executable> ParallelState<'a, T, X> {
 
     /// Captures a read from the VM execution, but not unresolved deltas, as in this case it is the
     /// callers responsibility to set the aggregator's base value and call fetch_data again.
-    fn fetch_data(
-        &self,
-        key: &T::Key,
-        txn_idx: TxnIndex,
-    ) -> ReadResult<(T::Value, Option<MoveTypeLayout>)> {
+    fn fetch_data(&self, key: &T::Key, txn_idx: TxnIndex) -> ReadResult<T::Value> {
         use MVDataError::*;
         use MVDataOutput::*;
 
         loop {
             match self.versioned_map.data().fetch_data(key, txn_idx) {
-                Ok(Versioned(version, v)) => {
+                Ok(Versioned(version, v, layout)) => {
                     self.captured_reads
                         .borrow_mut()
                         .push(ReadDescriptor::from_versioned(key.clone(), version));
-                    return ReadResult::Value(v);
+                    return ReadResult::Value(v, layout);
                 },
                 Ok(Resolved(value)) => {
                     self.captured_reads
@@ -270,7 +266,7 @@ impl<'a, T: Transaction, S: TStateView<Key = T::Key>, X: Executable> TResourceVi
                 }
 
                 match mv_value {
-                    ReadResult::Value(v) => Ok(v.as_ref().0.as_state_value()),
+                    ReadResult::Value(v, _) => Ok(v.as_ref().as_state_value()),
                     ReadResult::U128(v) => Ok(Some(StateValue::new_legacy(serialize(&v).into()))),
                     // ExecutionHalted indicates that the parallel execution is halted.
                     // The read should return immediately and log the error.

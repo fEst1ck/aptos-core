@@ -17,6 +17,7 @@ use move_core_types::{
     value::{BytesWithAggregatorLayout, MoveTypeLayout},
     vm_status::{err_msg, StatusCode, VMStatus},
 };
+use std::sync::Arc;
 
 pub(crate) struct WriteOpConverter<'r> {
     remote: &'r dyn AptosMoveResolver,
@@ -38,7 +39,7 @@ macro_rules! convert_impl {
             };
             self.convert(
                 self.remote.$get_metadata_callback(state_key),
-                &move_storage_op,
+                move_storage_op,
                 legacy_creation_as_modification,
             )
         }
@@ -55,10 +56,10 @@ impl<'r> WriteOpConverter<'r> {
         state_key: &StateKey,
         move_storage_op: MoveStorageOp<BytesWithAggregatorLayout>,
         legacy_creation_as_modification: bool,
-    ) -> Result<(WriteOp, Option<MoveTypeLayout>), VMStatus> {
+    ) -> Result<(WriteOp, Option<Arc<MoveTypeLayout>>), VMStatus> {
         let result = self.convert(
             self.remote.get_resource_state_value_metadata(state_key),
-            &move_storage_op,
+            move_storage_op.clone(),
             legacy_creation_as_modification,
         );
         match move_storage_op {
@@ -90,7 +91,7 @@ impl<'r> WriteOpConverter<'r> {
     fn convert(
         &self,
         state_value_metadata_result: anyhow::Result<Option<StateValueMetadataKind>>,
-        move_storage_op: &MoveStorageOp<BytesWithAggregatorLayout>,
+        move_storage_op: MoveStorageOp<BytesWithAggregatorLayout>,
         legacy_creation_as_modification: bool,
     ) -> Result<WriteOp, VMStatus> {
         use MoveStorageOp::*;
@@ -121,24 +122,21 @@ impl<'r> WriteOpConverter<'r> {
             (None, New((data, _))) => match &self.new_slot_metadata {
                 None => {
                     if legacy_creation_as_modification {
-                        Modification(data.clone())
+                        Modification(data)
                     } else {
-                        Creation(data.clone())
+                        Creation(data)
                     }
                 },
                 Some(metadata) => CreationWithMetadata {
-                    data: data.clone(),
+                    data,
                     metadata: metadata.clone(),
                 },
             },
             (Some(existing_metadata), Modify((data, _))) => {
                 // Inherit metadata even if the feature flags is turned off, for compatibility.
                 match existing_metadata {
-                    None => Modification(data.clone()),
-                    Some(metadata) => ModificationWithMetadata {
-                        data: data.clone(),
-                        metadata,
-                    },
+                    None => Modification(data),
+                    Some(metadata) => ModificationWithMetadata { data, metadata },
                 }
             },
             (Some(existing_metadata), Delete) => {

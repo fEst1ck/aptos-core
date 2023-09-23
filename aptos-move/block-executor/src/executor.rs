@@ -234,7 +234,7 @@ where
             }
 
             match versioned_cache.data().fetch_data(r.path(), idx_to_validate) {
-                Ok(Versioned(version, _)) => r.validate_versioned(version),
+                Ok(Versioned(version, _, _)) => r.validate_versioned(version),
                 Ok(Resolved(value)) => r.validate_resolved(value),
                 Err(Uninitialized) => {
                     // Can match the current behavior for modules: the path would be considered

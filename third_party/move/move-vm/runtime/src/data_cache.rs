@@ -20,7 +20,7 @@ use move_vm_types::{
     loaded_data::runtime_types::Type,
     values::{GlobalValue, Value},
 };
-use std::collections::btree_map::BTreeMap;
+use std::{collections::btree_map::BTreeMap, sync::Arc};
 
 pub struct AccountDataCache {
     // The bool flag in the `data_map` indicates whether the resource contains
@@ -95,10 +95,11 @@ impl<'r> TransactionDataCache<'r> {
             Value,
             MoveTypeLayout,
             bool,
-        ) -> PartialVMResult<(Resource, Option<MoveTypeLayout>)>,
+        )
+            -> PartialVMResult<(Resource, Option<Arc<MoveTypeLayout>>)>,
         loader: &Loader,
-    ) -> PartialVMResult<Changes<Bytes, (Resource, Option<MoveTypeLayout>)>> {
-        let mut change_set = Changes::<Bytes, (Resource, Option<MoveTypeLayout>)>::new();
+    ) -> PartialVMResult<Changes<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>> {
+        let mut change_set = Changes::<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>::new();
         for (addr, account_data_cache) in self.account_map.into_iter() {
             let mut modules = BTreeMap::new();
             for (module_name, (module_blob, is_republishing)) in account_data_cache.module_map {

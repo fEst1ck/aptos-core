@@ -269,8 +269,9 @@ impl<'r, 'l> Session<'r, 'l> {
             Value,
             MoveTypeLayout,
             bool,
-        ) -> PartialVMResult<(Resource, Option<MoveTypeLayout>)>,
-    ) -> VMResult<Changes<Bytes, (Resource, Option<MoveTypeLayout>)>> {
+        )
+            -> PartialVMResult<(Resource, Option<Arc<MoveTypeLayout>>)>,
+    ) -> VMResult<Changes<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>> {
         self.data_cache
             .into_custom_effects(resource_converter, self.move_vm.runtime.loader())
             .map_err(|e| e.finish(Location::Undefined))
@@ -295,9 +296,10 @@ impl<'r, 'l> Session<'r, 'l> {
             Value,
             MoveTypeLayout,
             bool,
-        ) -> PartialVMResult<(Resource, Option<MoveTypeLayout>)>,
+        )
+            -> PartialVMResult<(Resource, Option<Arc<MoveTypeLayout>>)>,
     ) -> VMResult<(
-        Changes<Bytes, (Resource, Option<MoveTypeLayout>)>,
+        Changes<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>,
         NativeContextExtensions<'r>,
     )> {
         let Session {

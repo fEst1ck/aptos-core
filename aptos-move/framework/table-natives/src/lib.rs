@@ -38,6 +38,7 @@ use std::{
     cell::RefCell,
     collections::{btree_map::Entry, BTreeMap, BTreeSet, VecDeque},
     mem::drop,
+    sync::Arc,
 };
 
 /// The native table context extension. This needs to be attached to the NativeContextExtensions
@@ -75,7 +76,7 @@ struct TableData {
 /// stored in a table. Needed in order to lift aggregator and snapshot
 /// values from the value and replacing them with identifiers.
 struct LayoutInfo {
-    layout: MoveTypeLayout,
+    layout: Arc<MoveTypeLayout>,
     has_aggregator_lifting: bool,
 }
 
@@ -205,7 +206,7 @@ impl LayoutInfo {
         let (layout, has_aggregator_lifting) =
             context.type_to_type_layout_with_aggregator_lifting(value_ty)?;
         Ok(Self {
-            layout,
+            layout: Arc::new(layout),
             has_aggregator_lifting,
         })
     }
