@@ -2516,6 +2516,7 @@ dependencies = [
  "aptos-short-hex-str",
  "aptos-time-service",
  "aptos-types",
+ "arc-swap",
  "async-trait",
  "bcs 0.1.4",
  "bytes",
