@@ -11,6 +11,7 @@ use aptos_crypto::{
     ed25519::{Ed25519PublicKey, Ed25519Signature},
     hash::CryptoHash,
     multi_ed25519::{MultiEd25519PublicKey, MultiEd25519Signature},
+    secp256k1,
     traits::Signature,
     CryptoMaterialError, HashValue, ValidCryptoMaterial, ValidCryptoMaterialStringExt,
 };
@@ -41,7 +42,7 @@ pub enum AuthenticationError {
 /// under the participating signer's account address.
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum TransactionAuthenticator {
-    /// Single signature
+    /// Single Ed25519 signature
     Ed25519 {
         public_key: Ed25519PublicKey,
         signature: Ed25519Signature,
@@ -65,6 +66,11 @@ pub enum TransactionAuthenticator {
         fee_payer_address: AccountAddress,
         fee_payer_signer: AccountAuthenticator,
     },
+    /// Single Secp256k1 signature
+    Secp256k1 {
+        public_key: secp256k1::PublicKey,
+        signature: secp256k1::Signature,
+    }
 }
 
 impl TransactionAuthenticator {
@@ -114,6 +120,14 @@ impl TransactionAuthenticator {
             sender,
             secondary_signer_addresses,
             secondary_signers,
+        }
+    }
+
+    /// Create a single-signature Secp256k1 authenticator
+    pub fn secp256k1(public_key: secp256k1::PublicKey, signature: secp256k1::Signature) -> Self {
+        Self::Secp256k1 {
+            public_key,
+            signature,
         }
     }
 
@@ -173,6 +187,10 @@ impl TransactionAuthenticator {
                 }
                 Ok(())
             },
+            Self::Secp256k1 {
+                public_key,
+                signature,
+            } => signature.verify(raw_txn, public_key),
         }
     }
 
@@ -191,16 +209,21 @@ impl TransactionAuthenticator {
                 signature,
             } => AccountAuthenticator::multi_ed25519(public_key.clone(), signature.clone()),
             Self::MultiAgent { sender, .. } => sender.clone(),
+            Self::Secp256k1 {
+                public_key,
+                signature,
+            } => AccountAuthenticator::Secp256k1 {
+                public_key: public_key.clone(),
+                signature: signature.clone(),
+            },
         }
     }
 
     pub fn secondary_signer_addreses(&self) -> Vec<AccountAddress> {
         match self {
             Self::Ed25519 { .. }
-            | Self::MultiEd25519 {
-                public_key: _,
-                signature: _,
-            } => vec![],
+            | Self::MultiEd25519 { .. }
+            | Self::Secp256k1 { .. } => vec![],
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses,
@@ -217,10 +240,8 @@ impl TransactionAuthenticator {
     pub fn secondary_signers(&self) -> Vec<AccountAuthenticator> {
         match self {
             Self::Ed25519 { .. }
-            | Self::MultiEd25519 {
-                public_key: _,
-                signature: _,
-            } => vec![],
+            | Self::MultiEd25519 { .. }
+            | Self::Secp256k1 { .. } => vec![],
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses: _,
@@ -237,7 +258,7 @@ impl TransactionAuthenticator {
 
     pub fn fee_payer_address(&self) -> Option<AccountAddress> {
         match self {
-            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::MultiAgent { .. } => None,
+            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::MultiAgent { .. } | Self::Secp256k1 { .. } => None,
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses: _,
@@ -250,7 +271,7 @@ impl TransactionAuthenticator {
 
     pub fn fee_payer_signer(&self) -> Option<AccountAuthenticator> {
         match self {
-            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::MultiAgent { .. } => None,
+            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::MultiAgent { .. } | Self::Secp256k1 { .. } => None,
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses: _,
@@ -265,10 +286,7 @@ impl TransactionAuthenticator {
 impl fmt::Display for TransactionAuthenticator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Ed25519 {
-                public_key: _,
-                signature: _,
-            } => {
+            Self::Ed25519 { .. } => {
                 write!(
                     f,
                     "TransactionAuthenticator[scheme: Ed25519, sender: {}]",
@@ -302,10 +320,7 @@ impl fmt::Display for TransactionAuthenticator {
                     sender, sec_addrs, sec_signers, fee_payer_address, fee_payer_signer,
                 )
             },
-            Self::MultiEd25519 {
-                public_key: _,
-                signature: _,
-            } => {
+            Self::MultiEd25519 { .. } => {
                 write!(
                     f,
                     "TransactionAuthenticator[scheme: MultiEd25519, sender: {}]",
@@ -335,6 +350,13 @@ impl fmt::Display for TransactionAuthenticator {
                     sender, sec_addrs, sec_signers,
                 )
             },
+            Self::Secp256k1 { .. } => {
+                write!(
+                    f,
+                    "TransactionAuthenticator[scheme: Secp256k1, sender: {}]",
+                    self.sender()
+                )
+            },
         }
     }
 }
@@ -352,6 +374,7 @@ impl fmt::Display for TransactionAuthenticator {
 pub enum Scheme {
     Ed25519 = 0,
     MultiEd25519 = 1,
+    Secp256k1 = 2,
     // ... add more schemes here
     /// Scheme identifier used to derive addresses (not the authentication key) of objects and
     /// resources accounts. This application serves to domain separate hashes. Without such
@@ -369,6 +392,7 @@ impl fmt::Display for Scheme {
         let display = match self {
             Scheme::Ed25519 => "Ed25519",
             Scheme::MultiEd25519 => "MultiEd25519",
+            Scheme::Secp256k1 => "Secp256k1",
             Scheme::DeriveAuid => "DeriveAuid",
             Scheme::DeriveObjectAddressFromObject => "DeriveObjectAddressFromObject",
             Scheme::DeriveObjectAddressFromGuid => "DeriveObjectAddressFromGuid",
@@ -381,15 +405,20 @@ impl fmt::Display for Scheme {
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum AccountAuthenticator {
-    /// Single signature
+    /// Ed25519 Single signature
     Ed25519 {
         public_key: Ed25519PublicKey,
         signature: Ed25519Signature,
     },
-    /// K-of-N multisignature
+    /// Ed25519 K-of-N multisignature
     MultiEd25519 {
         public_key: MultiEd25519PublicKey,
         signature: MultiEd25519Signature,
+    },
+    /// Secp256k1 Single signature
+    Secp256k1 {
+        public_key: secp256k1::PublicKey,
+        signature: secp256k1::Signature,
     },
     // ... add more schemes here
 }
@@ -400,6 +429,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { .. } => Scheme::Ed25519,
             Self::MultiEd25519 { .. } => Scheme::MultiEd25519,
+            Self::Secp256k1 { .. } => Scheme::Secp256k1,
         }
     }
 
@@ -422,6 +452,14 @@ impl AccountAuthenticator {
         }
     }
 
+    /// Create a single-signature ed25519 authenticator
+    pub fn secp256k1(public_key: secp256k1::PublicKey, signature: secp256k1::Signature) -> Self {
+        Self::Secp256k1 {
+            public_key,
+            signature,
+        }
+    }
+
     /// Return Ok if the authenticator's public key matches its signature, Err otherwise
     pub fn verify<T: Serialize + CryptoHash>(&self, message: &T) -> Result<()> {
         match self {
@@ -433,6 +471,10 @@ impl AccountAuthenticator {
                 public_key,
                 signature,
             } => signature.verify(message, public_key),
+            Self::Secp256k1 {
+                public_key,
+                signature,
+            } => signature.verify(message, public_key),
         }
     }
 
@@ -441,6 +483,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { public_key, .. } => public_key.to_bytes().to_vec(),
             Self::MultiEd25519 { public_key, .. } => public_key.to_bytes().to_vec(),
+            Self::Secp256k1 { public_key, .. } => public_key.to_bytes().to_vec(),
         }
     }
 
@@ -449,6 +492,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { signature, .. } => signature.to_bytes().to_vec(),
             Self::MultiEd25519 { signature, .. } => signature.to_bytes().to_vec(),
+            Self::Secp256k1 { signature, .. } => Signature::to_bytes(signature).to_vec(),
         }
     }
 
@@ -467,6 +511,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { .. } => 1,
             Self::MultiEd25519 { signature, .. } => signature.signatures().len(),
+            Self::Secp256k1 { .. } => 1,
         }
     }
 }
@@ -517,6 +562,11 @@ impl AuthenticationKey {
     /// Create an authentication key from a MultiEd25519 public key
     pub fn multi_ed25519(public_key: &MultiEd25519PublicKey) -> Self {
         Self::from_preimage(&AuthenticationKeyPreimage::multi_ed25519(public_key))
+    }
+
+    /// Create an authentication key from a Secp256k1 public key
+    pub fn secp256k1(public_key: &secp256k1::PublicKey) -> AuthenticationKey {
+        Self::from_preimage(&AuthenticationKeyPreimage::secp256k1(public_key))
     }
 
     /// Return an address derived from the last `AccountAddress::LENGTH` bytes of this
@@ -581,6 +631,11 @@ impl AuthenticationKeyPreimage {
         hash_arg.extend(auid_counter.to_le_bytes().to_vec());
         hash_arg.push(Scheme::DeriveAuid as u8);
         Self(hash_arg)
+    }
+
+    /// Construct a preimage from a Secp256k1 public key
+    pub fn secp256k1(public_key: &secp256k1::PublicKey) -> AuthenticationKeyPreimage {
+        Self::new(public_key.to_bytes().to_vec(), Scheme::Secp256k1)
     }
 
     /// Construct a vector from this authentication key

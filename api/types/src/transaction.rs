@@ -11,6 +11,7 @@ use anyhow::{bail, Context as AnyhowContext};
 use aptos_crypto::{
     ed25519::{self, Ed25519PublicKey, ED25519_PUBLIC_KEY_LENGTH, ED25519_SIGNATURE_LENGTH},
     multi_ed25519::{self, MultiEd25519PublicKey, BITMAP_NUM_OF_BYTES, MAX_NUM_OF_KEYS},
+    secp256k1,
 };
 use aptos_types::{
     account_address::AccountAddress,
@@ -869,6 +870,7 @@ pub enum TransactionSignature {
     MultiEd25519Signature(MultiEd25519Signature),
     MultiAgentSignature(MultiAgentSignature),
     FeePayerSignature(FeePayerSignature),
+    Secp256k1Signature(Secp256k1Signature),
 }
 
 impl VerifyInput for TransactionSignature {
@@ -878,6 +880,7 @@ impl VerifyInput for TransactionSignature {
             TransactionSignature::MultiEd25519Signature(inner) => inner.verify(),
             TransactionSignature::MultiAgentSignature(inner) => inner.verify(),
             TransactionSignature::FeePayerSignature(inner) => inner.verify(),
+            TransactionSignature::Secp256k1Signature(inner) => inner.verify(),
         }
     }
 }
@@ -891,6 +894,7 @@ impl TryFrom<TransactionSignature> for TransactionAuthenticator {
             TransactionSignature::MultiEd25519Signature(sig) => sig.try_into()?,
             TransactionSignature::MultiAgentSignature(sig) => sig.try_into()?,
             TransactionSignature::FeePayerSignature(sig) => sig.try_into()?,
+            TransactionSignature::Secp256k1Signature(sig) => sig.try_into()?,
         })
     }
 }
@@ -1087,18 +1091,90 @@ impl TryFrom<MultiEd25519Signature> for AccountAuthenticator {
     }
 }
 
+/// A single Secp256k1 signature
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Object)]
+pub struct Secp256k1Signature {
+    pub public_key: HexEncodedBytes,
+    pub signature: HexEncodedBytes,
+}
+
+impl VerifyInput for Secp256k1Signature {
+    fn verify(&self) -> anyhow::Result<()> {
+        let public_key_len = self.public_key.inner().len();
+        let signature_len = self.signature.inner().len();
+        if public_key_len != secp256k1::PUBLIC_KEY_LENGTH {
+            bail!(
+                "Secp256k1 signature's public key is an invalid number of bytes, should be {} bytes but found {}",
+                secp256k1::PUBLIC_KEY_LENGTH, public_key_len
+            )
+        } else if signature_len != secp256k1::SIGNATURE_LENGTH {
+            bail!(
+                "Secp256k1 signature length is an invalid number of bytes, should be {} bytes but found {}",
+                secp256k1::SIGNATURE_LENGTH, signature_len
+            )
+        } else {
+            // TODO: Check if they match / parse correctly?
+            Ok(())
+        }
+    }
+}
+
+impl TryFrom<Secp256k1Signature> for TransactionAuthenticator {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Secp256k1Signature) -> Result<Self, Self::Error> {
+        let Secp256k1Signature {
+            public_key,
+            signature,
+        } = value;
+        Ok(TransactionAuthenticator::secp256k1(
+            public_key
+                .inner()
+                .try_into()
+                .context("Failed to parse given public_key bytes as a Secp256k1PublicKey")?,
+            signature
+                .inner()
+                .try_into()
+                .context("Failed to parse given signature as a Secp256k1Signature")?,
+        ))
+    }
+}
+
+impl TryFrom<Secp256k1Signature> for AccountAuthenticator {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Secp256k1Signature) -> Result<Self, Self::Error> {
+        let Secp256k1Signature {
+            public_key,
+            signature,
+        } = value;
+        Ok(AccountAuthenticator::secp256k1(
+            public_key
+                .inner()
+                .try_into()
+                .context("Failed to parse given public_key bytes as a Secp256k1PublicKey")?,
+            signature
+                .inner()
+                .try_into()
+                .context("Failed to parse given signature as a Secp256k1Signature")?,
+        ))
+    }
+}
+
 /// Account signature scheme
 ///
 /// The account signature scheme allows you to have two types of accounts:
 ///
 ///   1. A single Ed25519 key account, one private key
 ///   2. A k-of-n multi-Ed25519 key account, multiple private keys, such that k-of-n must sign a transaction.
+///   3. A single Secp256k1 key account, one private key
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Union)]
 #[serde(tag = "type", rename_all = "snake_case")]
 #[oai(one_of, discriminator_name = "type", rename_all = "snake_case")]
 pub enum AccountSignature {
     Ed25519Signature(Ed25519Signature),
     MultiEd25519Signature(MultiEd25519Signature),
+    Secp256k1Signature(Secp256k1Signature),
 }
 
 impl VerifyInput for AccountSignature {
@@ -1106,6 +1182,7 @@ impl VerifyInput for AccountSignature {
         match self {
             AccountSignature::Ed25519Signature(inner) => inner.verify(),
             AccountSignature::MultiEd25519Signature(inner) => inner.verify(),
+            AccountSignature::Secp256k1Signature(inner) => inner.verify(),
         }
     }
 }
@@ -1117,6 +1194,7 @@ impl TryFrom<AccountSignature> for AccountAuthenticator {
         Ok(match sig {
             AccountSignature::Ed25519Signature(s) => s.try_into()?,
             AccountSignature::MultiEd25519Signature(s) => s.try_into()?,
+            AccountSignature::Secp256k1Signature(s) => s.try_into()?,
         })
     }
 }
@@ -1213,6 +1291,15 @@ impl
     }
 }
 
+impl From<(&secp256k1::PublicKey, &secp256k1::Signature)> for Secp256k1Signature {
+    fn from((pk, sig): (&secp256k1::PublicKey, &secp256k1::Signature)) -> Self {
+        Self {
+            public_key: pk.to_bytes().to_vec().into(),
+            signature: sig.to_bytes().to_vec().into(),
+        }
+    }
+}
+
 impl From<&AccountAuthenticator> for AccountSignature {
     fn from(auth: &AccountAuthenticator) -> Self {
         use AccountAuthenticator::*;
@@ -1225,6 +1312,10 @@ impl From<&AccountAuthenticator> for AccountSignature {
                 public_key,
                 signature,
             } => Self::MultiEd25519Signature((public_key, signature).into()),
+            Secp256k1 {
+                public_key,
+                signature,
+            } => Self::Secp256k1Signature((public_key, signature).into()),
         }
     }
 }
@@ -1369,6 +1460,10 @@ impl From<TransactionAuthenticator> for TransactionSignature {
                 )
                     .into(),
             ),
+            Secp256k1 {
+                public_key,
+                signature,
+            } => Self::Secp256k1Signature((public_key, signature).into()),
         }
     }
 }
