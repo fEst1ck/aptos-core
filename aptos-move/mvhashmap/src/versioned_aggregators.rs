@@ -4,7 +4,6 @@
 use crate::types::{AtomicTxnIndex, MVAggregatorsError, TxnIndex};
 use aptos_aggregator::{
     aggregator_change_set::{AggregatorApplyChange, ApplyBase},
-    delta_change_set::DeltaOp,
     types::{AggregatorID, AggregatorValue},
 };
 use claims::{assert_matches, assert_none};
@@ -72,6 +71,10 @@ enum VersionedRead {
     DependentApply(AggregatorID, TxnIndex, AggregatorApplyChange),
 }
 
+fn variant_eq<T>(a: &T, b: &T) -> bool {
+    std::mem::discriminant(a) == std::mem::discriminant(b)
+}
+
 impl VersionedValue {
     // VersionedValue should only be created when base value of the corresponding aggregator
     // is known & provided to the constructor.
@@ -116,7 +119,6 @@ impl VersionedValue {
     }
 
     fn insert(&mut self, txn_idx: TxnIndex, entry: AggregatorEntry) {
-        use AggregatorApplyChange::*;
         use AggregatorEntry::*;
         use EstimatedEntry::*;
 
@@ -130,17 +132,16 @@ impl VersionedValue {
                 if !match (&**o.get(), &entry) {
                     // These are the cases where the transaction behavior with respect to the
                     // aggregator may change (based on the information recorded in the Estimate).
-                    (Estimate(Bypass(apply_l)), Apply(apply_r) | Value(_, Some(apply_r))) => match (apply_l, apply_r) {
-                        (AggregatorDelta { .. }, AggregatorDelta { .. })
-                        | (SnapshotDelta { .. }, SnapshotDelta { .. })
-                        | (SnapshotDerived { .. }, SnapshotDerived { .. }) => {
-                            println!("Checking {:?} and {:?}, match: {}", apply_l, apply_r, *apply_l == *apply_r);
+                    (Estimate(Bypass(apply_l)), Apply(apply_r) | Value(_, Some(apply_r))) => {
+                        if variant_eq(apply_l, apply_r) {
                             *apply_l == *apply_r
-                        },
-                        _ => unreachable!(
+                        } else {
+                            // TODO: change to code_invariant_error
+                            unreachable!(
                             "Storing {:?} for aggregator ID that previously had a different type of entry - {:?}",
                             apply_r, apply_l,
-                        ),
+                        )
+                        }
                     },
                     // There was a value without fallback delta bypass before and still.
                     (Estimate(NoBypass), Value(_, None)) => true,
@@ -157,11 +158,13 @@ impl VersionedValue {
                     (Value(val_l, None), Value(val_r, _)) if val_l == val_r => true,
                     (Value(_, None), Apply(_)) => true,
 
+                    // TODO: change to code_invariant_error
                     (_, _) => unreachable!(
                         "Replaced entry must be an Estimate, \
 			 or we should be recording the final committed value"
                     ),
                 } {
+                    // TODO: handle invalidation when we change read_estimate_deltas
                     self.read_estimate_deltas = false;
                 }
                 o.insert(CachePadded::new(entry));
@@ -195,26 +198,33 @@ impl VersionedValue {
             )
     }
 
-    // Traverse down from txn_idx and accumulate encountered deltas until resolving it to
-    // a value or return an error. Errors of not finding a value to resolve to take
-    // precedence over a DeltaApplicationError.
-    fn apply_delta_suffix(
+    // For an Aggregator, traverse down from txn_idx and accumulate encountered deltas
+    // until resolving it to a value or return an error.
+    // Errors of not finding a value to resolve to take precedence over a DeltaApplicationError.
+    fn apply_aggregator_change_suffix(
         &self,
         iter: &mut dyn DoubleEndedIterator<Item = (&TxnIndex, &CachePadded<AggregatorEntry>)>,
-        delta: DeltaOp,
-    ) -> Result<u128, MVAggregatorsError> {
+        suffix: &AggregatorApplyChange,
+    ) -> Result<VersionedRead, MVAggregatorsError> {
         use AggregatorApplyChange::*;
         use AggregatorEntry::*;
         use EstimatedEntry::*;
 
-        let mut accumulator = delta;
+        let mut accumulator = if let AggregatorDelta { delta } = suffix {
+            *delta
+        } else {
+            unreachable!("Only AggregatorDelta accepted in apply_aggregator_change_suffix (i.e. has no apply_base_id)")
+        };
+
         while let Some((idx, entry)) = iter.next_back() {
             let delta = match (&**entry, self.read_estimate_deltas) {
                 (Value(AggregatorValue::Aggregator(v), _), _) => {
                     // Apply accumulated delta to resolve the aggregator value.
                     return accumulator
                         .apply_to(*v)
-                        .map_err(|_| MVAggregatorsError::DeltaApplicationFailure);
+                        .map_err(|_| MVAggregatorsError::DeltaApplicationFailure)
+                        .map(AggregatorValue::Aggregator)
+                        .map(VersionedRead::Value);
                 },
                 (Value(_, _), _) => {
                     unreachable!("Value not AggregatorValue::Aggregator for Aggregator")
@@ -245,7 +255,9 @@ impl VersionedValue {
             .and_then(|base_value| match base_value {
                 AggregatorValue::Aggregator(v) => accumulator
                     .apply_to(*v)
-                    .map_err(|_| MVAggregatorsError::DeltaApplicationFailure),
+                    .map_err(|_| MVAggregatorsError::DeltaApplicationFailure)
+                    .map(AggregatorValue::Aggregator)
+                    .map(VersionedRead::Value),
                 _ => Err(MVAggregatorsError::DeltaApplicationFailure),
             })
     }
@@ -254,7 +266,6 @@ impl VersionedValue {
     // a ReadResult if successful, which is either a u128 value, or a snapshot specifying
     // a different aggregator (with ID) at a given version and a delta to apply on top.
     fn read(&self, txn_idx: TxnIndex) -> Result<VersionedRead, MVAggregatorsError> {
-        use AggregatorApplyChange::*;
         use AggregatorEntry::*;
         use EstimatedEntry::*;
         use MVAggregatorsError::*;
@@ -273,17 +284,9 @@ impl VersionedValue {
             |(idx, entry)| match (&**entry, self.read_estimate_deltas) {
                 (Value(v, _), _) => Ok(VersionedRead::Value(v.clone())),
                 (Apply(apply), _) | (Estimate(Bypass(apply)), true) => {
-                    match apply.get_apply_base_id_option() {
-                        None => {
-                            if let AggregatorDelta { delta } = apply {
-                                self.apply_delta_suffix(&mut iter, *delta)
-                                    .map(AggregatorValue::Aggregator)
-                                    .map(VersionedRead::Value)
-                            } else {
-                                unreachable!("Only AggregatorDelta has no apply_base_id")
-                            }
-                        },
-                        Some(apply_base) => {
+                    apply.get_apply_base_id_option().map_or_else(
+                        || self.apply_aggregator_change_suffix(&mut iter, apply),
+                        |apply_base| {
                             let (base_id, end_index) = match apply_base {
                                 ApplyBase::Previous(id) => (id, *idx),
                                 ApplyBase::Current(id) => (id, *idx + 1),
@@ -295,7 +298,7 @@ impl VersionedValue {
                                 apply.clone(),
                             ))
                         },
-                    }
+                    )
                 },
                 (Estimate(NoBypass), _) | (Estimate(_), false) => Err(Dependency(*idx)),
             },
@@ -390,6 +393,7 @@ impl VersionedAggregators {
             VersionedRead::Value(v) => Ok(v),
             VersionedRead::DependentApply(dependend_id, dependent_txn_idx, apply) => {
                 // Read the source aggregator of snapshot.
+                // TODO: check/limit recursion depth is not more than 2
                 let source_value = self.read(dependend_id, dependent_txn_idx)?;
                 // TODO distinguish between delta application and code invariant broken errors
                 apply
@@ -987,22 +991,4 @@ mod test {
         v.mark_estimate(2);
         assert_err_eq!(v.read(3), MVAggregatorsError::Dependency(2));
     }
-
-    // #[test]
-    // fn applicable_bypass_test() {
-    //     use EstimatedEntry::*;
-
-    //     let mut v = VersionedValue::new(None);
-    //     let delta_bypass = DeltaBypass(test_delta());
-    //     let snapshot_bypass = SnapshotBypass(AggregatorID::new(5), negative_delta());
-
-    //     assert_eq!(v.applicable_bypass(&NoBypass), NoBypass);
-    //     assert_eq!(v.applicable_bypass(&delta_bypass), delta_bypass);
-    //     assert_eq!(v.applicable_bypass(&snapshot_bypass), snapshot_bypass);
-
-    //     v.read_estimate_deltas = false;
-    //     assert_eq!(v.applicable_bypass(&NoBypass), NoBypass);
-    //     assert_eq!(v.applicable_bypass(&delta_bypass), NoBypass);
-    //     assert_eq!(v.applicable_bypass(&snapshot_bypass), NoBypass);
-    // }
 }

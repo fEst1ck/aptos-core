@@ -270,7 +270,7 @@ impl Aggregator {
         {
             // If value is Unset, we read it
             if let SpeculativeStartValue::Unset = speculative_start_value {
-                if delta.is_zero() || !history.is_empty() {
+                if !delta.is_zero() || !history.is_empty() {
                     return Err(code_invariant_error(
                         "Delta or history not empty with Unset speculative value",
                     ));
@@ -416,7 +416,7 @@ impl AggregatorData {
             .aggregators
             .entry(id.clone())
             .or_insert_with(|| Aggregator {
-                id,
+                id: id.clone(),
                 state: AggregatorState::Delta {
                     speculative_start_value: SpeculativeStartValue::Unset,
                     delta: SignedU128::Positive(0),
@@ -424,6 +424,12 @@ impl AggregatorData {
                 },
                 max_value,
             });
+        if aggregator.max_value != max_value {
+            return Err(code_invariant_error(format!(
+                "Max value for the aggregator {:?} changed ({} -> {})",
+                id, aggregator.max_value, max_value
+            )));
+        }
         Ok(aggregator)
     }
 
@@ -463,8 +469,6 @@ impl AggregatorData {
     }
 
     pub fn snapshot(&mut self, id: AggregatorID, max_value: u128) -> PartialVMResult<AggregatorID> {
-        let snapshot_id = self.generate_id();
-
         let aggregator = self.get_aggregator(AggregatorVersionedID::V2(id), max_value)?;
 
         let snapshot_state = match aggregator.state {
@@ -478,6 +482,7 @@ impl AggregatorData {
             },
         };
 
+        let snapshot_id = self.generate_id();
         self.aggregator_snapshots
             .insert(snapshot_id, AggregatorSnapshot {
                 id: snapshot_id,

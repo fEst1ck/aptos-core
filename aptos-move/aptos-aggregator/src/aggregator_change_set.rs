@@ -33,8 +33,15 @@ pub enum AggregatorChange {
     Apply(AggregatorApplyChange),
 }
 
+// Contains information on top of which value should AggregatorApplyChange be applied.
 pub enum ApplyBase {
+    // Apply on top of the value end the end of the previous transaction
+    // (basically value at the start of the transaction.
+    // all changes in this transaction are captured in the Apply itself)
     Previous(AggregatorID),
+    // Apply on top of the value at the end of the current transaction
+    // I.e. if this transaction changes the aggregator under wrapped ID,
+    // that apply needs to be applied first, before the current one is applied.
     Current(AggregatorID),
 }
 
@@ -74,6 +81,15 @@ impl AggregatorApplyChange {
 }
 
 impl AggregatorChange {
+    // When squashing a new change on top of the old one, sometimes we need to know the change
+    // from a different AggregatorID to be able to merge them together.
+    // In particular SnapshotDelta represents a change from the aggregator at the beginning of the transaction,
+    // and squashing changes where the aggregator will be at the beginning of the transaction.
+    // For example, let’s say we have two change sets that we need to squash:
+    // change1: agg1 -> Delta(+3)
+    // change2: agg1 -> Delta(+6), snap1 -> (base=agg1, Delta(+2))
+    // the correct squashing of snapshot depends on the change for the base aggregator. I.e. the correct output would be:
+    // agg1 -> Delta(+9), snap(base=agg1, Delta(+5))
     pub fn get_merge_dependent_id(&self) -> Option<AggregatorID> {
         use AggregatorApplyChange::*;
         use AggregatorChange::*;
@@ -87,7 +103,9 @@ impl AggregatorChange {
         }
     }
 
-    /// Applies next aggregator change on top of self, merging two changes together.
+    /// Applies next AggregatorChange on top of the previous state.
+    /// prev_change is AggregatorChange for the same AggregatorID
+    /// prev_dependent_change is AggregatorChange for the get_merge_dependent_id()
     pub fn merge_two_changes(
         prev_change: Option<&AggregatorChange>,
         prev_dependent_change: Option<&AggregatorChange>,
@@ -102,7 +120,7 @@ impl AggregatorChange {
         // - next_change being SnapshotDelta, and prev_dependent_change being Aggregator Create or Delta
         // everything else is invalid for various reasons
         match (&prev_change, &prev_dependent_change, next_change) {
-            (None, None, _) => unreachable!("We should be only merging, if there is something to merge"),
+            (None, None, v) => Ok(v.clone()),
             (_ , _, Create(_)) => Err(code_invariant_error(
                 "Trying to merge Create with an older change. Create should always be the first change.",
             )),
@@ -381,6 +399,47 @@ mod test {
                     max_achieved_positive_delta: 20,
                     min_achieved_negative_delta: 60,
                     min_overflow_positive_delta: None,
+                    max_underflow_negative_delta: None,
+                },)
+            })
+        );
+    }
+
+    #[test]
+    fn test_merge_two_changes_with_dependent_change() {
+        let aggregator_change1 = Apply(AggregatorDelta {
+            delta: DeltaOp::new(SignedU128::Positive(3), 100, DeltaHistory {
+                max_achieved_positive_delta: 3,
+                min_achieved_negative_delta: 0,
+                min_overflow_positive_delta: Some(10),
+                max_underflow_negative_delta: None,
+            }),
+        });
+        let snapshot_change_2 = Apply(SnapshotDelta {
+            base_aggregator: AggregatorID::new(1),
+            delta: DeltaOp::new(SignedU128::Positive(2), 100, DeltaHistory {
+                max_achieved_positive_delta: 6,
+                min_achieved_negative_delta: 0,
+                min_overflow_positive_delta: Some(8),
+                max_underflow_negative_delta: None,
+            }),
+        });
+
+        let result = AggregatorChange::merge_two_changes(
+            None,
+            Some(&aggregator_change1),
+            &snapshot_change_2,
+        );
+        assert_ok!(&result);
+
+        assert_eq!(
+            result.unwrap(),
+            Apply(SnapshotDelta {
+                base_aggregator: AggregatorID::new(1),
+                delta: DeltaOp::new(SignedU128::Positive(5), 100, DeltaHistory {
+                    max_achieved_positive_delta: 9,
+                    min_achieved_negative_delta: 0,
+                    min_overflow_positive_delta: Some(10),
                     max_underflow_negative_delta: None,
                 },)
             })
