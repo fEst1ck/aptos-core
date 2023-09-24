@@ -70,7 +70,7 @@ pub enum TransactionAuthenticator {
     Secp256k1 {
         public_key: secp256k1::PublicKey,
         signature: secp256k1::Signature,
-    }
+    },
 }
 
 impl TransactionAuthenticator {
@@ -221,9 +221,7 @@ impl TransactionAuthenticator {
 
     pub fn secondary_signer_addreses(&self) -> Vec<AccountAddress> {
         match self {
-            Self::Ed25519 { .. }
-            | Self::MultiEd25519 { .. }
-            | Self::Secp256k1 { .. } => vec![],
+            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::Secp256k1 { .. } => vec![],
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses,
@@ -239,9 +237,7 @@ impl TransactionAuthenticator {
 
     pub fn secondary_signers(&self) -> Vec<AccountAuthenticator> {
         match self {
-            Self::Ed25519 { .. }
-            | Self::MultiEd25519 { .. }
-            | Self::Secp256k1 { .. } => vec![],
+            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::Secp256k1 { .. } => vec![],
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses: _,
@@ -258,7 +254,10 @@ impl TransactionAuthenticator {
 
     pub fn fee_payer_address(&self) -> Option<AccountAddress> {
         match self {
-            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::MultiAgent { .. } | Self::Secp256k1 { .. } => None,
+            Self::Ed25519 { .. }
+            | Self::MultiEd25519 { .. }
+            | Self::MultiAgent { .. }
+            | Self::Secp256k1 { .. } => None,
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses: _,
@@ -271,7 +270,10 @@ impl TransactionAuthenticator {
 
     pub fn fee_payer_signer(&self) -> Option<AccountAuthenticator> {
         match self {
-            Self::Ed25519 { .. } | Self::MultiEd25519 { .. } | Self::MultiAgent { .. } | Self::Secp256k1 { .. } => None,
+            Self::Ed25519 { .. }
+            | Self::MultiEd25519 { .. }
+            | Self::MultiAgent { .. }
+            | Self::Secp256k1 { .. } => None,
             Self::FeePayer {
                 sender: _,
                 secondary_signer_addresses: _,
@@ -496,14 +498,9 @@ impl AccountAuthenticator {
         }
     }
 
-    /// Return an authentication key preimage derived from `self`'s public key and scheme id
-    pub fn authentication_key_preimage(&self) -> AuthenticationKeyPreimage {
-        AuthenticationKeyPreimage::new(self.public_key_bytes(), self.scheme())
-    }
-
     /// Return an authentication key derived from `self`'s public key and scheme id
     pub fn authentication_key(&self) -> AuthenticationKey {
-        AuthenticationKey::from_preimage(&self.authentication_key_preimage())
+        AuthenticationKey::from_preimage(self.public_key_bytes(), self.scheme())
     }
 
     /// Return the number of signatures included in this account authenticator.
@@ -550,23 +547,32 @@ impl AuthenticationKey {
     }
 
     /// Create an authentication key from a preimage by taking its sha3 hash
-    pub fn from_preimage(preimage: &AuthenticationKeyPreimage) -> AuthenticationKey {
-        AuthenticationKey::new(*HashValue::sha3_256_of(&preimage.0).as_ref())
+    pub fn from_preimage(mut public_key_bytes: Vec<u8>, scheme: Scheme) -> AuthenticationKey {
+        public_key_bytes.push(scheme as u8);
+        AuthenticationKey::new(*HashValue::sha3_256_of(&public_key_bytes).as_ref())
+    }
+
+    /// Construct a preimage from a transaction-derived AUID as (txn_hash || auid_scheme_id)
+    pub fn auid(txn_hash: Vec<u8>, auid_counter: u64) -> Self {
+        let mut hash_arg = Vec::new();
+        hash_arg.extend(txn_hash);
+        hash_arg.extend(auid_counter.to_le_bytes().to_vec());
+        Self::from_preimage(hash_arg, Scheme::DeriveAuid)
     }
 
     /// Create an authentication key from an Ed25519 public key
     pub fn ed25519(public_key: &Ed25519PublicKey) -> AuthenticationKey {
-        Self::from_preimage(&AuthenticationKeyPreimage::ed25519(public_key))
+        Self::from_preimage(public_key.to_bytes().to_vec(), Scheme::Ed25519)
     }
 
     /// Create an authentication key from a MultiEd25519 public key
     pub fn multi_ed25519(public_key: &MultiEd25519PublicKey) -> Self {
-        Self::from_preimage(&AuthenticationKeyPreimage::multi_ed25519(public_key))
+        Self::from_preimage(public_key.to_bytes(), Scheme::MultiEd25519)
     }
 
     /// Create an authentication key from a Secp256k1 public key
     pub fn secp256k1(public_key: &secp256k1::PublicKey) -> AuthenticationKey {
-        Self::from_preimage(&AuthenticationKeyPreimage::secp256k1(public_key))
+        Self::from_preimage(public_key.to_bytes().to_vec(), Scheme::Secp256k1)
     }
 
     /// Return an address derived from the last `AccountAddress::LENGTH` bytes of this
@@ -601,46 +607,6 @@ impl AuthenticationKey {
 impl ValidCryptoMaterial for AuthenticationKey {
     fn to_bytes(&self) -> Vec<u8> {
         self.to_vec()
-    }
-}
-
-/// A value that can be hashed to produce an authentication key
-pub struct AuthenticationKeyPreimage(Vec<u8>);
-
-impl AuthenticationKeyPreimage {
-    /// Return bytes for (public_key | scheme_id)
-    fn new(mut public_key_bytes: Vec<u8>, scheme: Scheme) -> Self {
-        public_key_bytes.push(scheme as u8);
-        Self(public_key_bytes)
-    }
-
-    /// Construct a preimage from an Ed25519 public key
-    pub fn ed25519(public_key: &Ed25519PublicKey) -> AuthenticationKeyPreimage {
-        Self::new(public_key.to_bytes().to_vec(), Scheme::Ed25519)
-    }
-
-    /// Construct a preimage from a MultiEd25519 public key
-    pub fn multi_ed25519(public_key: &MultiEd25519PublicKey) -> AuthenticationKeyPreimage {
-        Self::new(public_key.to_bytes(), Scheme::MultiEd25519)
-    }
-
-    /// Construct a preimage from a transaction-derived AUID as (txn_hash || auid_scheme_id)
-    pub fn auid(txn_hash: Vec<u8>, auid_counter: u64) -> AuthenticationKeyPreimage {
-        let mut hash_arg = Vec::new();
-        hash_arg.extend(txn_hash);
-        hash_arg.extend(auid_counter.to_le_bytes().to_vec());
-        hash_arg.push(Scheme::DeriveAuid as u8);
-        Self(hash_arg)
-    }
-
-    /// Construct a preimage from a Secp256k1 public key
-    pub fn secp256k1(public_key: &secp256k1::PublicKey) -> AuthenticationKeyPreimage {
-        Self::new(public_key.to_bytes().to_vec(), Scheme::Secp256k1)
-    }
-
-    /// Construct a vector from this authentication key
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0
     }
 }
 
