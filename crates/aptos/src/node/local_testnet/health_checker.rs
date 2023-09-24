@@ -17,7 +17,7 @@ const WAIT_INTERVAL_MS: u64 = 150;
 #[derive(Clone, Debug, Serialize)]
 pub enum HealthChecker {
     /// Check that an HTTP API is up. The second param is the name of the HTTP service.
-    Http(Url, &'static str),
+    Http(Url, String),
     /// Check that the node API is up. This is just a specific case of Http for extra
     /// guarantees around liveliness.
     NodeApi(Url),

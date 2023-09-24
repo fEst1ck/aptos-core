@@ -278,6 +278,7 @@ dependencies = [
  "move-vm-runtime",
  "once_cell",
  "poem",
+ "processor",
  "rand 0.7.3",
  "regex",
  "reqwest",
@@ -285,6 +286,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml 0.8.26",
+ "server-framework",
  "shadow-rs",
  "tempfile",
  "termcolor",
@@ -518,7 +520,7 @@ dependencies = [
  "move-bytecode-verifier",
  "num_cpus",
  "once_cell",
- "pin-project",
+ "pin-project 1.0.12",
  "proptest",
  "rand 0.7.3",
  "regex",
@@ -1884,7 +1886,7 @@ dependencies = [
  "aptos-indexer-grpc-server-framework",
  "aptos-indexer-grpc-utils",
  "aptos-metrics-core",
- "aptos-moving-average",
+ "aptos-moving-average 0.1.0",
  "aptos-protos",
  "aptos-runtimes",
  "async-trait",
@@ -1916,7 +1918,7 @@ dependencies = [
  "aptos-indexer-grpc-utils",
  "aptos-logger",
  "aptos-metrics-core",
- "aptos-moving-average",
+ "aptos-moving-average 0.1.0",
  "aptos-protos",
  "aptos-runtimes",
  "async-trait",
@@ -1945,7 +1947,7 @@ dependencies = [
  "aptos-indexer-grpc-server-framework",
  "aptos-indexer-grpc-utils",
  "aptos-metrics-core",
- "aptos-moving-average",
+ "aptos-moving-average 0.1.0",
  "aptos-runtimes",
  "async-trait",
  "clap 4.3.21",
@@ -1981,7 +1983,7 @@ dependencies = [
  "aptos-mempool",
  "aptos-mempool-notifications",
  "aptos-metrics-core",
- "aptos-moving-average",
+ "aptos-moving-average 0.1.0",
  "aptos-proptest-helpers",
  "aptos-protos",
  "aptos-runtimes",
@@ -2140,6 +2142,18 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "warp",
+]
+
+[[package]]
+name = "aptos-indexer-protos"
+version = "1.0.9"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processors.git?branch=banool/use-from-cli#4de3befffdab5afff22accfa0a97b5301c64e6ff"
+dependencies = [
+ "pbjson",
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "serde",
+ "tonic 0.9.2",
 ]
 
 [[package]]
@@ -2446,6 +2460,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aptos-moving-average"
+version = "0.1.0"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processors.git?branch=banool/use-from-cli#4de3befffdab5afff22accfa0a97b5301c64e6ff"
+dependencies = [
+ "chrono",
+]
+
+[[package]]
 name = "aptos-mvhashmap"
 version = "0.1.0"
 dependencies = [
@@ -2489,7 +2511,7 @@ dependencies = [
  "aptos-types",
  "bytes",
  "futures",
- "pin-project",
+ "pin-project 1.0.12",
  "serde",
  "tokio",
  "tokio-util 0.7.3",
@@ -2529,7 +2551,7 @@ dependencies = [
  "itertools",
  "maplit",
  "once_cell",
- "pin-project",
+ "pin-project 1.0.12",
  "proptest",
  "proptest-derive",
  "rand 0.7.3",
@@ -2966,7 +2988,7 @@ dependencies = [
  "aptos-logger",
  "aptos-metrics-core",
  "futures",
- "pin-project",
+ "pin-project 1.0.12",
  "tokio",
  "tokio-util 0.7.3",
 ]
@@ -3629,7 +3651,7 @@ dependencies = [
  "aptos-infallible",
  "enum_dispatch",
  "futures",
- "pin-project",
+ "pin-project 1.0.12",
  "thiserror",
  "tokio",
  "tokio-test",
@@ -4246,6 +4268,19 @@ dependencies = [
  "concurrent-queue",
  "event-listener",
  "futures-core",
+]
+
+[[package]]
+name = "async-compression"
+version = "0.3.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "942c7cd7ae39e91bde4820d74132e9862e62c2f386c3aa90ccf55949f5bad63a"
+dependencies = [
+ "flate2",
+ "futures-core",
+ "memchr",
+ "pin-project-lite",
+ "tokio",
 ]
 
 [[package]]
@@ -6247,14 +6282,14 @@ dependencies = [
 
 [[package]]
 name = "enum_dispatch"
-version = "0.3.8"
+version = "0.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0eb359f1476bf611266ac1f5355bc14aeca37b299d0ebccc038ee7058891c9cb"
+checksum = "8f33313078bb8d4d05a2733a94ac4c2d8a0df9a2b84424ebf4f33bfc224a890e"
 dependencies = [
  "once_cell",
  "proc-macro2 1.0.64",
  "quote 1.0.29",
- "syn 1.0.105",
+ "syn 2.0.25",
 ]
 
 [[package]]
@@ -6359,7 +6394,7 @@ dependencies = [
  "impl-codec 0.6.0",
  "impl-rlp",
  "impl-serde",
- "scale-info 1.0.0",
+ "scale-info 2.9.0",
  "tiny-keccak",
 ]
 
@@ -6428,7 +6463,7 @@ dependencies = [
  "impl-rlp",
  "impl-serde",
  "primitive-types 0.11.1",
- "scale-info 1.0.0",
+ "scale-info 2.9.0",
  "uint",
 ]
 
@@ -6725,7 +6760,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "nanorand",
- "pin-project",
+ "pin-project 1.0.12",
  "spin 0.9.4",
 ]
 
@@ -6920,6 +6955,49 @@ name = "gcc"
 version = "0.3.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f5f3913fa0bfe7ee1fd8248b6b9f42a5af4b9d65ec2dd2c3c26132b950ecfc2"
+
+[[package]]
+name = "gcemeta"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47d460327b24cc34c86d53d60a90e9e6044817f7906ebd9baa5c3d0ee13e1ecf"
+dependencies = [
+ "bytes",
+ "hyper",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "gcloud-sdk"
+version = "0.20.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a24376e7850e7864bb326debc5765a1dda4fc47603c22e2bc0ebf30ff59141b"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "futures",
+ "gcemeta",
+ "hyper",
+ "jsonwebtoken 8.1.1",
+ "once_cell",
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "reqwest",
+ "secret-vault-value",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tonic 0.9.2",
+ "tower",
+ "tower-layer",
+ "tower-util",
+ "tracing",
+ "url",
+]
 
 [[package]]
 name = "gcp-bigquery-client"
@@ -8184,7 +8262,7 @@ dependencies = [
  "k8s-openapi",
  "kube-core",
  "pem 1.1.0",
- "pin-project",
+ "pin-project 1.0.12",
  "rustls 0.20.6",
  "rustls-pemfile 0.2.1",
  "serde",
@@ -10703,11 +10781,31 @@ checksum = "db8bcd96cb740d03149cbad5518db9fd87126a10ab519c011893b1754134c468"
 
 [[package]]
 name = "pin-project"
+version = "0.4.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ef0f924a5ee7ea9cbcea77529dba45f8a9ba9f622419fe3386ca581a3ae9d5a"
+dependencies = [
+ "pin-project-internal 0.4.30",
+]
+
+[[package]]
+name = "pin-project"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad29a609b6bcd67fee905812e544992d216af9d755757c05ed2d0e15a74c6ecc"
 dependencies = [
- "pin-project-internal",
+ "pin-project-internal 1.0.12",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "0.4.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "851c8d0ce9bebe43790dedfc86614c23494ac9f423dd618d3a61fc693eafe61e"
+dependencies = [
+ "proc-macro2 1.0.64",
+ "quote 1.0.29",
+ "syn 1.0.105",
 ]
 
 [[package]]
@@ -11084,7 +11182,7 @@ dependencies = [
  "impl-codec 0.6.0",
  "impl-rlp",
  "impl-serde",
- "scale-info 1.0.0",
+ "scale-info 2.9.0",
  "uint",
 ]
 
@@ -11151,6 +11249,48 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78803b62cbf1f46fde80d7c0e803111524b9877184cfe7c3033659490ac7a7da"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "processor"
+version = "1.0.0"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processors.git?branch=banool/use-from-cli#4de3befffdab5afff22accfa0a97b5301c64e6ff"
+dependencies = [
+ "anyhow",
+ "aptos-indexer-protos",
+ "aptos-moving-average 0.1.0 (git+https://github.com/aptos-labs/aptos-indexer-processors.git?branch=banool/use-from-cli)",
+ "async-trait",
+ "base64 0.13.0",
+ "bcs 0.1.4",
+ "bigdecimal",
+ "chrono",
+ "clap 4.3.21",
+ "diesel",
+ "diesel_migrations",
+ "enum_dispatch",
+ "field_count",
+ "futures",
+ "futures-util",
+ "gcloud-sdk",
+ "google-cloud-googleapis",
+ "google-cloud-pubsub",
+ "hex",
+ "once_cell",
+ "prometheus",
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "regex",
+ "serde",
+ "serde_json",
+ "server-framework",
+ "sha2 0.9.9",
+ "sha3 0.9.1",
+ "strum",
+ "tokio",
+ "tonic 0.9.2",
+ "tracing",
+ "unescape",
+ "url",
 ]
 
 [[package]]
@@ -11726,6 +11866,7 @@ version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b75aa69a3f06bbcc66ede33af2af253c6f7a86b1ca0033f60c580a27074fbf92"
 dependencies = [
+ "async-compression",
  "base64 0.13.0",
  "bytes",
  "cookie",
@@ -12234,6 +12375,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c107b6f4780854c8b126e228ea8869f4d7b71260f962fefb57b996b8959ba6b"
 
 [[package]]
+name = "secret-vault-value"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eddaf2631e82016a3262ce75575ec245ceef9a7115ddf8576851302efe6bdece"
+dependencies = [
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "serde",
+ "serde_json",
+ "zeroize",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12488,6 +12642,27 @@ dependencies = [
  "move-core-types",
  "proptest",
  "proptest-derive",
+]
+
+[[package]]
+name = "server-framework"
+version = "1.0.0"
+source = "git+https://github.com/aptos-labs/aptos-indexer-processors.git?branch=banool/use-from-cli#4de3befffdab5afff22accfa0a97b5301c64e6ff"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "backtrace",
+ "clap 4.3.21",
+ "futures",
+ "prometheus",
+ "serde",
+ "serde_yaml 0.8.26",
+ "tempfile",
+ "tokio",
+ "toml 0.7.4",
+ "tracing",
+ "tracing-subscriber",
+ "warp",
 ]
 
 [[package]]
@@ -12990,6 +13165,9 @@ name = "strum"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
+dependencies = [
+ "strum_macros",
+]
 
 [[package]]
 name = "strum_macros"
@@ -13499,7 +13677,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f57eb36ecbe0fc510036adff84824dd3c24bb781e21bfa67b69d556aa85214f"
 dependencies = [
- "pin-project",
+ "pin-project 1.0.12",
  "rand 0.8.5",
  "tokio",
 ]
@@ -13664,7 +13842,7 @@ dependencies = [
  "hyper",
  "hyper-timeout",
  "percent-encoding",
- "pin-project",
+ "pin-project 1.0.12",
  "prost 0.11.9",
  "prost-derive 0.11.9",
  "tokio",
@@ -13697,8 +13875,9 @@ dependencies = [
  "hyper",
  "hyper-timeout",
  "percent-encoding",
- "pin-project",
+ "pin-project 1.0.12",
  "prost 0.11.9",
+ "rustls-native-certs",
  "rustls-pemfile 1.0.1",
  "tokio",
  "tokio-rustls 0.24.1",
@@ -13728,7 +13907,7 @@ dependencies = [
  "hyper",
  "hyper-timeout",
  "percent-encoding",
- "pin-project",
+ "pin-project 1.0.12",
  "prost 0.12.1",
  "rustls-native-certs",
  "rustls-pemfile 1.0.1",
@@ -13763,7 +13942,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "indexmap",
- "pin-project",
+ "pin-project 1.0.12",
  "pin-project-lite",
  "rand 0.8.5",
  "slab",
@@ -13826,6 +14005,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 
 [[package]]
+name = "tower-util"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1093c19826d33807c72511e68f73b4a0469a3f22c2bd5f7d5212178b4b89674"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "pin-project 0.4.30",
+ "tower-service",
+]
+
+[[package]]
 name = "trace"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13876,7 +14067,7 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
- "pin-project",
+ "pin-project 1.0.12",
  "tracing",
 ]
 
@@ -14054,6 +14245,12 @@ checksum = "09b01702b0fd0b3fadcf98e098780badda8742d4f4a7676615cad90e8ac73622"
 dependencies = [
  "version_check",
 ]
+
+[[package]]
+name = "unescape"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ccb97dac3243214f8d8507998906ca3e2e0b900bf9bf4870477f125b82e68f6e"
 
 [[package]]
 name = "unic-char-property"
@@ -14359,7 +14556,7 @@ dependencies = [
  "mime_guess",
  "multer",
  "percent-encoding",
- "pin-project",
+ "pin-project 1.0.12",
  "rustls-pemfile 1.0.1",
  "scoped-tls",
  "serde",

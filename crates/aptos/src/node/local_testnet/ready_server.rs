@@ -17,7 +17,7 @@ use std::net::{Ipv4Addr, SocketAddrV4};
 
 #[derive(Debug, Clone, Parser)]
 pub struct ReadyServerConfig {
-    #[clap(long, default_value_t = 8090)]
+    #[clap(long, default_value_t = 8070)]
     pub ready_server_listen_port: u16,
 }
 
