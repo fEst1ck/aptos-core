@@ -33,8 +33,7 @@ export class Aptos {
   }
 }
 
-export interface Aptos extends Account {}
-export interface Aptos extends General {}
+export interface Aptos extends Account, General {}
 
 /**
 In TypeScript, we can’t inherit or extend from more than one class,

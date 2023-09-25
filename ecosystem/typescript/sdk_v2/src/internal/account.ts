@@ -16,13 +16,39 @@ import {
   TransactionResponse,
   HexInput,
   GetAccountTokensCountQueryResponse,
-  GetAccountTokensCountQueryResult,
+  GetAccountTokensCountQuery,
+  TokenStandard,
+  OrderBy,
+  GetAccountOwnedTokensQueryResponse,
+  IndexerPaginationArgs,
+  GetAccountOwnedTokensFromCollectionAddressResponse,
+  CurrentTokenOwnership,
+  CurrentCollectionOwnership,
+  GetAccountCollectionsWithOwnedTokenResponse,
+  GetAccountTransactionsCountResponse,
+  GetAccountTransactionsCountQuery,
+  GetAccountCoinsDataResponse,
+  GetAccountCoinsDataQuery,
+  GetAccountCoinsCountQuery,
+  GetAccountCoinsCountResponse,
+  GetAccountOwnedObjectsResponse,
+  GetAccountOwnedObjectsQuery,
 } from "../types";
-import { get, post } from "../client";
+import {
+  GetAccountTokensCount,
+  GetAccountOwnedTokens,
+  GetAccountOwnedTokensFromCollectionAddress,
+  GetCollectionsWithOwnedTokens,
+  GetAccountTransactionsCount,
+  GetAccountCoinsData,
+  GetAccountCoinsCount,
+  GetAccountOwnedObjects,
+} from "./queries";
+import { get } from "../client";
 import { paginateWithCursor } from "../utils/paginate_with_cursor";
-import { AccountAddress } from "../core";
+import { AccountAddress, Hex } from "../core";
 import { AptosApiType } from "../utils/const";
-import { GetAccountTokensCount } from "./queries/getAccountTokensAcount";
+import { queryIndexer } from "./general";
 
 export async function getInfo(args: { aptosConfig: AptosConfig; accountAddress: HexInput }): Promise<AccountData> {
   const { aptosConfig, accountAddress } = args;
@@ -128,7 +154,7 @@ export async function getResource(args: {
 export async function getAccountTokensCount(args: {
   aptosConfig: AptosConfig;
   accountAddress: HexInput;
-}): Promise<GetAccountTokensCountQueryResult> {
+}): Promise<GetAccountTokensCountQueryResponse> {
   const { aptosConfig, accountAddress } = args;
 
   const address = AccountAddress.fromHexInput({ input: accountAddress }).toString();
@@ -138,11 +164,248 @@ export async function getAccountTokensCount(args: {
     amount: { _gt: "0" },
   };
 
-  const { data } = await post<{}, GetAccountTokensCountQueryResponse>({
-    url: aptosConfig.getRequestUrl(AptosApiType.INDEXER),
-    body: { query: GetAccountTokensCount, variables: { where_condition: whereCondition } },
+  const graphqlQuery = {
+    query: GetAccountTokensCount,
+    variables: { where_condition: whereCondition },
+  };
+
+  const data = await queryIndexer<GetAccountTokensCountQuery>({
+    aptosConfig,
+    query: graphqlQuery,
     originMethod: "getAccountTokensCount",
-    overrides: { ...aptosConfig.clientConfig },
   });
-  return data.current_token_ownerships_v2_aggregate.aggregate?.count;
+
+  return data.current_token_ownerships_v2_aggregate.aggregate;
+}
+
+export async function getAccountOwnedTokens(args: {
+  aptosConfig: AptosConfig;
+  accountAddress: HexInput;
+  options?: {
+    tokenStandard?: TokenStandard;
+    pagination?: IndexerPaginationArgs;
+    orderBy?: OrderBy<GetAccountOwnedTokensQueryResponse[0]>;
+  };
+}): Promise<GetAccountOwnedTokensQueryResponse> {
+  const { aptosConfig, accountAddress, options } = args;
+  const address = AccountAddress.fromHexInput({ input: accountAddress }).toString();
+
+  const whereCondition: any = {
+    owner_address: { _eq: address },
+    amount: { _gt: 0 },
+  };
+
+  if (options?.tokenStandard) {
+    whereCondition.token_standard = { _eq: options?.tokenStandard };
+  }
+
+  const graphqlQuery = {
+    query: GetAccountOwnedTokens,
+    variables: {
+      where_condition: whereCondition,
+      offset: options?.pagination?.offset,
+      limit: options?.pagination?.limit,
+      order_by: options?.orderBy,
+    },
+  };
+
+  const data = await queryIndexer<CurrentTokenOwnership>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountOwnedTokens",
+  });
+
+  return data.current_token_ownerships_v2;
+}
+
+export async function getAccountOwnedTokensFromCollectionAddress(args: {
+  aptosConfig: AptosConfig;
+  ownerAddress: HexInput;
+  collectionAddress: HexInput;
+  options?: {
+    tokenStandard?: TokenStandard;
+    pagination?: IndexerPaginationArgs;
+    orderBy?: OrderBy<GetAccountOwnedTokensFromCollectionAddressResponse[0]>;
+  };
+}): Promise<GetAccountOwnedTokensFromCollectionAddressResponse> {
+  const { aptosConfig, ownerAddress, collectionAddress, options } = args;
+  const accountAddress = AccountAddress.fromHexInput({ input: ownerAddress }).toString();
+  const collAddress = Hex.fromHexInput({ hexInput: collectionAddress }).toString();
+
+  const whereCondition: any = {
+    owner_address: { _eq: accountAddress },
+    current_token_data: { collection_id: { _eq: collAddress } },
+    amount: { _gt: 0 },
+  };
+
+  if (options?.tokenStandard) {
+    whereCondition.token_standard = { _eq: options?.tokenStandard };
+  }
+
+  const graphqlQuery = {
+    query: GetAccountOwnedTokensFromCollectionAddress,
+    variables: {
+      where_condition: whereCondition,
+      offset: options?.pagination?.offset,
+      limit: options?.pagination?.limit,
+      order_by: options?.orderBy,
+    },
+  };
+
+  const data = await queryIndexer<CurrentTokenOwnership>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountOwnedTokensFromCollectionAddress",
+  });
+
+  return data.current_token_ownerships_v2;
+}
+
+export async function getAccountCollectionsWithOwnedTokens(args: {
+  aptosConfig: AptosConfig;
+  accountAddress: HexInput;
+  options?: {
+    tokenStandard?: TokenStandard;
+    pagination?: IndexerPaginationArgs;
+    orderBy?: OrderBy<GetAccountCollectionsWithOwnedTokenResponse[0]>;
+  };
+}): Promise<GetAccountCollectionsWithOwnedTokenResponse> {
+  const { aptosConfig, accountAddress, options } = args;
+  const address = AccountAddress.fromHexInput({ input: accountAddress }).toString();
+
+  const whereCondition: any = {
+    owner_address: { _eq: address },
+    amount: { _gt: 0 },
+  };
+
+  if (options?.tokenStandard) {
+    whereCondition.token_standard = { _eq: options?.tokenStandard };
+  }
+
+  const graphqlQuery = {
+    query: GetCollectionsWithOwnedTokens,
+    variables: {
+      where_condition: whereCondition,
+      offset: options?.pagination?.offset,
+      limit: options?.pagination?.limit,
+      order_by: options?.orderBy,
+    },
+  };
+
+  const data = await queryIndexer<CurrentCollectionOwnership>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountCollectionsWithOwnedTokens",
+  });
+
+  return data.current_collection_ownership_v2_view;
+}
+
+export async function getAccountTransactionsCount(args: {
+  aptosConfig: AptosConfig;
+  accountAddress: HexInput;
+}): Promise<GetAccountTransactionsCountResponse> {
+  const { aptosConfig, accountAddress } = args;
+
+  const address = AccountAddress.fromHexInput({ input: accountAddress }).toString();
+
+  const graphqlQuery = {
+    query: GetAccountTransactionsCount,
+    variables: { address },
+  };
+
+  const data = await queryIndexer<GetAccountTransactionsCountQuery>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountTransactionsCount",
+  });
+
+  return data.account_transactions_aggregate.aggregate;
+}
+
+export async function getAccountCoinsData(args: {
+  aptosConfig: AptosConfig;
+  accountAddress: HexInput;
+  options?: {
+    pagination?: IndexerPaginationArgs;
+    orderBy?: OrderBy<GetAccountCoinsDataResponse[0]>;
+  };
+}): Promise<GetAccountCoinsDataResponse> {
+  const { aptosConfig, accountAddress, options } = args;
+  const address = AccountAddress.fromHexInput({ input: accountAddress }).toString();
+
+  const whereCondition: any = {
+    owner_address: { _eq: address },
+  };
+
+  const graphqlQuery = {
+    query: GetAccountCoinsData,
+    variables: {
+      where_condition: whereCondition,
+      offset: options?.pagination?.offset,
+      limit: options?.pagination?.limit,
+      order_by: options?.orderBy,
+    },
+  };
+
+  const data = await queryIndexer<GetAccountCoinsDataQuery>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountCoinsData",
+  });
+
+  return data.current_fungible_asset_balances;
+}
+
+export async function getAccountCoinsCount(args: {
+  aptosConfig: AptosConfig;
+  accountAddress: HexInput;
+}): Promise<GetAccountCoinsCountResponse> {
+  const { aptosConfig, accountAddress } = args;
+  const address = AccountAddress.fromHexInput({ input: accountAddress }).toString();
+
+  const graphqlQuery = {
+    query: GetAccountCoinsCount,
+    variables: { address },
+  };
+
+  const data = await queryIndexer<GetAccountCoinsCountQuery>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountCoinsCount",
+  });
+
+  return data.current_fungible_asset_balances_aggregate.aggregate;
+}
+
+export async function getAccountOwnedObjects(args: {
+  aptosConfig: AptosConfig;
+  ownerAddress: HexInput;
+  options?: {
+    pagination?: IndexerPaginationArgs;
+    orderBy?: OrderBy<GetAccountOwnedObjectsResponse[0]>;
+  };
+}): Promise<GetAccountOwnedObjectsResponse> {
+  const { aptosConfig, ownerAddress, options } = args;
+  const address = AccountAddress.fromHexInput({ input: ownerAddress }).toString();
+
+  const whereCondition: any = {
+    owner_address: { _eq: address },
+  };
+  const graphqlQuery = {
+    query: GetAccountOwnedObjects,
+    variables: {
+      where_condition: whereCondition,
+      offset: options?.pagination?.offset,
+      limit: options?.pagination?.limit,
+      order_by: options?.orderBy,
+    },
+  };
+  const data = await queryIndexer<GetAccountOwnedObjectsQuery>({
+    aptosConfig,
+    query: graphqlQuery,
+    originMethod: "getAccountOwnedObjects",
+  });
+
+  return data.current_objects;
 }
