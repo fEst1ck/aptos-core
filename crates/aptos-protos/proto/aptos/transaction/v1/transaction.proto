@@ -426,6 +426,11 @@ message MultiEd25519Signature {
   repeated uint32 public_key_indices = 4;
 }
 
+message WebAuthnP256Signature {
+  bytes public_key = 1;
+  bytes signature = 2;
+}
+
 message MultiAgentSignature {
   AccountSignature sender = 1;
   repeated string secondary_signer_addresses = 2;
@@ -445,11 +450,13 @@ message AccountSignature {
     TYPE_UNSPECIFIED = 0;
     TYPE_ED25519 = 1;
     TYPE_MULTI_ED25519 = 2;
+    TYPE_WEBAUTHN_P256 = 3;
   }
 
   Type type = 1;
   oneof signature {
     Ed25519Signature ed25519 = 2;
     MultiEd25519Signature multi_ed25519 = 3;
+    WebAuthnP256Signature webauthn_p256 = 4;
   }
 }

@@ -7,6 +7,7 @@ use crate::{
     transaction::{RawTransaction, RawTransactionWithData},
 };
 use anyhow::{ensure, Error, Result};
+use aptos_crypto::webauthn::{WebAuthnP256PublicKey, WebAuthnP256Signature};
 use aptos_crypto::{
     ed25519::{Ed25519PublicKey, Ed25519Signature},
     hash::CryptoHash,
@@ -352,6 +353,7 @@ impl fmt::Display for TransactionAuthenticator {
 pub enum Scheme {
     Ed25519 = 0,
     MultiEd25519 = 1,
+    WebAuthnP256 = 2,
     // ... add more schemes here
     /// Scheme identifier used to derive addresses (not the authentication key) of objects and
     /// resources accounts. This application serves to domain separate hashes. Without such
@@ -369,6 +371,7 @@ impl fmt::Display for Scheme {
         let display = match self {
             Scheme::Ed25519 => "Ed25519",
             Scheme::MultiEd25519 => "MultiEd25519",
+            Scheme::WebAuthnP256 => "WebAuthnP256",
             Scheme::DeriveAuid => "DeriveAuid",
             Scheme::DeriveObjectAddressFromObject => "DeriveObjectAddressFromObject",
             Scheme::DeriveObjectAddressFromGuid => "DeriveObjectAddressFromGuid",
@@ -391,6 +394,11 @@ pub enum AccountAuthenticator {
         public_key: MultiEd25519PublicKey,
         signature: MultiEd25519Signature,
     },
+    /// WebAuthn P256 signature
+    WebAuthnP256 {
+        public_key: WebAuthnP256PublicKey,
+        signature: WebAuthnP256Signature,
+    },
     // ... add more schemes here
 }
 
@@ -400,6 +408,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { .. } => Scheme::Ed25519,
             Self::MultiEd25519 { .. } => Scheme::MultiEd25519,
+            Self::WebAuthnP256 { .. } => Scheme::WebAuthnP256,
         }
     }
 
@@ -422,6 +431,17 @@ impl AccountAuthenticator {
         }
     }
 
+    /// Create a WebAuthn P256 authenticator
+    pub fn webauthn_p256(
+        public_key: WebAuthnP256PublicKey,
+        signature: WebAuthnP256Signature,
+    ) -> Self {
+        Self::WebAuthnP256 {
+            public_key,
+            signature,
+        }
+    }
+
     /// Return Ok if the authenticator's public key matches its signature, Err otherwise
     pub fn verify<T: Serialize + CryptoHash>(&self, message: &T) -> Result<()> {
         match self {
@@ -433,6 +453,10 @@ impl AccountAuthenticator {
                 public_key,
                 signature,
             } => signature.verify(message, public_key),
+            Self::WebAuthnP256 {
+                public_key,
+                signature,
+            } => signature.verify(message, public_key),
         }
     }
 
@@ -441,6 +465,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { public_key, .. } => public_key.to_bytes().to_vec(),
             Self::MultiEd25519 { public_key, .. } => public_key.to_bytes().to_vec(),
+            Self::WebAuthnP256 { public_key, .. } => public_key.to_bytes().to_vec(),
         }
     }
 
@@ -449,6 +474,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { signature, .. } => signature.to_bytes().to_vec(),
             Self::MultiEd25519 { signature, .. } => signature.to_bytes().to_vec(),
+            Self::WebAuthnP256 { signature, .. } => signature.to_bytes().to_vec(),
         }
     }
 
@@ -467,6 +493,7 @@ impl AccountAuthenticator {
         match self {
             Self::Ed25519 { .. } => 1,
             Self::MultiEd25519 { signature, .. } => signature.signatures().len(),
+            Self::WebAuthnP256 { .. } => 1,
         }
     }
 }
@@ -517,6 +544,11 @@ impl AuthenticationKey {
     /// Create an authentication key from a MultiEd25519 public key
     pub fn multi_ed25519(public_key: &MultiEd25519PublicKey) -> Self {
         Self::from_preimage(&AuthenticationKeyPreimage::multi_ed25519(public_key))
+    }
+
+    /// Create an authentication key from a WebAuthnP256 public key
+    pub fn webauthn_p256(public_key: &WebAuthnP256PublicKey) -> Self {
+        Self::from_preimage(&AuthenticationKeyPreimage::webauthn_p256(public_key))
     }
 
     /// Return an address derived from the last `AccountAddress::LENGTH` bytes of this
@@ -572,6 +604,11 @@ impl AuthenticationKeyPreimage {
     /// Construct a preimage from a MultiEd25519 public key
     pub fn multi_ed25519(public_key: &MultiEd25519PublicKey) -> AuthenticationKeyPreimage {
         Self::new(public_key.to_bytes(), Scheme::MultiEd25519)
+    }
+
+    /// Construct a preimage from a WebAuthnP256 public key
+    pub fn webauthn_p256(public_key: &WebAuthnP256PublicKey) -> AuthenticationKeyPreimage {
+        Self::new(public_key.to_bytes().to_vec(), Scheme::WebAuthnP256)
     }
 
     /// Construct a preimage from a transaction-derived AUID as (txn_hash || auid_scheme_id)

@@ -11,6 +11,8 @@ use anyhow::{bail, Context as AnyhowContext};
 use aptos_crypto::{
     ed25519::{self, Ed25519PublicKey, ED25519_PUBLIC_KEY_LENGTH, ED25519_SIGNATURE_LENGTH},
     multi_ed25519::{self, MultiEd25519PublicKey, BITMAP_NUM_OF_BYTES, MAX_NUM_OF_KEYS},
+    p256::{self, P256_PUBLIC_KEY_LENGTH, P256_SIGNATURE_LENGTH},
+    webauthn::{self, WebAuthnP256PublicKey},
 };
 use aptos_types::{
     account_address::AccountAddress,
@@ -1067,18 +1069,87 @@ impl TryFrom<MultiEd25519Signature> for AccountAuthenticator {
     }
 }
 
+/// A single WebAuthnP256 signature
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Object)]
+pub struct WebAuthnP256Signature {
+    pub public_key: HexEncodedBytes,
+    pub signature: HexEncodedBytes,
+}
+
+impl VerifyInput for WebAuthnP256Signature {
+    fn verify(&self) -> anyhow::Result<()> {
+        let public_key_len = self.public_key.inner().len();
+        if public_key_len != P256_PUBLIC_KEY_LENGTH {
+            bail!(
+                "P256 signature's public key is an invalid number of bytes, should be {} bytes but found {}",
+                P256_PUBLIC_KEY_LENGTH, public_key_len
+            )
+        }
+        // DOUBLE CHECK: There is no assertion on signature length here because signatures
+        // are not fixed size for WebAuthn
+        else {
+            // TODO: Check if they match / parse correctly?
+            Ok(())
+        }
+    }
+}
+
+impl TryFrom<WebAuthnP256Signature> for TransactionAuthenticator {
+    type Error = anyhow::Error;
+
+    fn try_from(value: WebAuthnP256Signature) -> Result<Self, Self::Error> {
+        let WebAuthnP256Signature {
+            public_key,
+            signature,
+        } = value;
+        Ok(TransactionAuthenticator::ed25519(
+            public_key
+                .inner()
+                .try_into()
+                .context("Failed to parse given public_key bytes as a Ed25519PublicKey")?,
+            signature
+                .inner()
+                .try_into()
+                .context("Failed to parse given signature as a Ed25519Signature")?,
+        ))
+    }
+}
+
+impl TryFrom<WebAuthnP256Signature> for AccountAuthenticator {
+    type Error = anyhow::Error;
+
+    fn try_from(value: WebAuthnP256Signature) -> Result<Self, Self::Error> {
+        let WebAuthnP256Signature {
+            public_key,
+            signature,
+        } = value;
+        Ok(AccountAuthenticator::webauthn_p256(
+            public_key
+                .inner()
+                .try_into()
+                .context("Failed to parse given public_key bytes as a Ed25519PublicKey")?,
+            signature
+                .inner()
+                .try_into()
+                .context("Failed to parse given signature as a Ed25519Signature")?,
+        ))
+    }
+}
+
 /// Account signature scheme
 ///
-/// The account signature scheme allows you to have two types of accounts:
+/// The account signature scheme allows you to have three types of accounts:
 ///
 ///   1. A single Ed25519 key account, one private key
 ///   2. A k-of-n multi-Ed25519 key account, multiple private keys, such that k-of-n must sign a transaction.
+///   3. A single WebAuthn P256 key account, one private key
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Union)]
 #[serde(tag = "type", rename_all = "snake_case")]
 #[oai(one_of, discriminator_name = "type", rename_all = "snake_case")]
 pub enum AccountSignature {
     Ed25519Signature(Ed25519Signature),
     MultiEd25519Signature(MultiEd25519Signature),
+    WebAuthnP256Signature(WebAuthnP256Signature),
 }
 
 impl VerifyInput for AccountSignature {
@@ -1086,6 +1157,7 @@ impl VerifyInput for AccountSignature {
         match self {
             AccountSignature::Ed25519Signature(inner) => inner.verify(),
             AccountSignature::MultiEd25519Signature(inner) => inner.verify(),
+            AccountSignature::WebAuthnP256Signature(inner) => inner.verify(),
         }
     }
 }
@@ -1097,6 +1169,7 @@ impl TryFrom<AccountSignature> for AccountAuthenticator {
         Ok(match sig {
             AccountSignature::Ed25519Signature(s) => s.try_into()?,
             AccountSignature::MultiEd25519Signature(s) => s.try_into()?,
+            AccountSignature::WebAuthnP256Signature(s) => s.try_into()?,
         })
     }
 }
@@ -1193,6 +1266,15 @@ impl
     }
 }
 
+impl From<(&WebAuthnP256PublicKey, &webauthn::WebAuthnP256Signature)> for WebAuthnP256Signature {
+    fn from((pk, sig): (&WebAuthnP256PublicKey, &webauthn::WebAuthnP256Signature)) -> Self {
+        Self {
+            public_key: pk.to_bytes().to_vec().into(),
+            signature: sig.to_bytes().to_vec().into(),
+        }
+    }
+}
+
 impl From<&AccountAuthenticator> for AccountSignature {
     fn from(auth: &AccountAuthenticator) -> Self {
         use AccountAuthenticator::*;
@@ -1205,6 +1287,10 @@ impl From<&AccountAuthenticator> for AccountSignature {
                 public_key,
                 signature,
             } => Self::MultiEd25519Signature((public_key, signature).into()),
+            WebAuthnP256 {
+                public_key,
+                signature,
+            } => Self::WebAuthnP256Signature((public_key, signature).into()),
         }
     }
 }
