@@ -16,7 +16,7 @@ pub fn socket_addr_to_url(socket_addr: &SocketAddr, scheme: &str) -> Result<Url>
 }
 
 #[derive(Clone, Parser)]
-pub struct HostPostgresConfig {
+pub struct HostPostgresArgs {
     #[clap(long, default_value = "127.0.0.1")]
     pub postgres_host: String,
 
@@ -33,7 +33,7 @@ pub struct HostPostgresConfig {
     pub postgres_database: String,
 }
 
-impl HostPostgresConfig {
+impl HostPostgresArgs {
     /// Get the connection string for the postgres database. If `database` is specified
     /// we will use that rather than `postgres_database`.
     pub fn get_connection_string(&self, database: Option<&str>) -> String {

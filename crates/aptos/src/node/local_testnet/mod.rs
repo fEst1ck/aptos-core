@@ -1,16 +1,22 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+mod faucet;
 mod health_checker;
 mod logging;
+mod node;
 mod ready_server;
+mod processors;
+mod types;
 mod utils;
 
 use self::{
+    faucet::FaucetArgs,
     health_checker::HealthChecker,
     logging::ThreadNameMakeWriter,
-    ready_server::{run_ready_server, ReadyServerConfig},
-    utils::{socket_addr_to_url, HostPostgresConfig, IndexerApiConfig},
+    node::NodeArgs,
+    ready_server::{run_ready_server, ReadyServerArgs},
+    utils::{socket_addr_to_url, HostPostgresArgs, IndexerApiConfig},
 };
 use crate::{
     common::{
@@ -22,7 +28,7 @@ use crate::{
 };
 use anyhow::{bail, Context};
 use aptos_config::config::{NodeConfig, DEFAULT_GRPC_STREAM_PORT};
-use aptos_faucet_core::server::{FunderKeyEnum, RunConfig as FaucetConfig};
+use aptos_faucet_core::server::FunderKeyEnum;
 use aptos_indexer_grpc_server_framework::setup_logging;
 use aptos_node::create_single_node_test_config;
 use async_trait::async_trait;
@@ -60,31 +66,11 @@ const HASURA_METADATA: &str = include_str!("hasura_metadata.json");
 /// you specify otherwise with --no-faucet and --no-txn-stream respectively.
 #[derive(Parser)]
 pub struct RunLocalTestnet {
-    /// An overridable config template for the test node
-    ///
-    /// If provided, the config will be used, and any needed configuration for the local testnet
-    /// will override the config's values
-    #[clap(long, value_parser)]
-    config_path: Option<PathBuf>,
-
     /// The directory to save all files for the node
     ///
     /// Defaults to .aptos/testnet
     #[clap(long, value_parser)]
     test_dir: Option<PathBuf>,
-
-    /// Path to node configuration file override for local test mode.
-    ///
-    /// If provided, the default node config will be overridden by the config in the given file.
-    /// Cannot be used with --config-path
-    #[clap(long, value_parser, conflicts_with("config_path"))]
-    test_config_override: Option<PathBuf>,
-
-    /// Random seed for key generation in test mode
-    ///
-    /// This allows you to have deterministic keys for testing
-    #[clap(long, value_parser = aptos_node::load_seed)]
-    seed: Option<[u8; 32]>,
 
     /// Clean the state and start with a new chain at genesis
     ///
@@ -94,41 +80,11 @@ pub struct RunLocalTestnet {
     #[clap(long)]
     force_restart: bool,
 
-    /// Port to run the faucet on.
-    ///
-    /// When running, you'll be able to use the faucet at `http://127.0.0.1:<port>/mint` e.g.
-    /// `http//127.0.0.1:8081/mint`
-    #[clap(long, default_value_t = 8081)]
-    faucet_port: u16,
+    #[clap(flatten)]
+    node_args: NodeArgs,
 
-    /// Do not run a faucet alongside the node.
-    ///
-    /// Running a faucet alongside the node allows you to create and fund accounts
-    /// for testing.
-    #[clap(long)]
-    no_faucet: bool,
-
-    /// This does nothing, we already run a faucet by default. We only keep this here
-    /// for backwards compatibility with tests. We will remove this once the commit
-    /// that added --no-faucet makes its way to the testnet branch.
-    #[clap(long, hide = true)]
-    with_faucet: bool,
-
-    /// Disable the delegation of faucet minting to a dedicated account.
-    #[clap(long)]
-    do_not_delegate: bool,
-
-    /// Do not run a transaction stream service alongside the node.
-    ///
-    /// Note: In reality this is not the same as running a Transaction Stream Service,
-    /// it is just using the stream from the node, but in practice this distinction
-    /// shouldn't matter.
-    #[clap(long)]
-    no_txn_stream: bool,
-
-    /// The port at which to expose the grpc transaction stream.
-    #[clap(long, default_value_t = DEFAULT_GRPC_STREAM_PORT)]
-    txn_stream_port: u16,
+    #[clap(flatten)]
+    faucet_args: FaucetArgs,
 
     /// If set, we will run a postgres DB using Docker (unless
     /// --use-host-postgres is set), run the standard set of indexer processors (see
@@ -137,27 +93,6 @@ pub struct RunLocalTestnet {
     /// Docker to be installed in the host system.
     #[clap(long, conflicts_with = "no_txn_stream")]
     with_indexer_api: bool,
-
-    /// The value of this flag determines which processors we will run if
-    /// --with-indexer-api is set. Note that some processors are not supported in the
-    /// local testnet (e.g. ANS). If you try to set those, an error will be thrown
-    /// immediately.
-    #[clap(
-        long,
-        value_enum,
-        default_values_t = vec![
-            ProcessorNames::CoinProcessor,
-            ProcessorNames::DefaultProcessor,
-            ProcessorNames::EventsProcessor,
-            ProcessorNames::FungibleAssetProcessor,
-            ProcessorNames::StakeProcessor,
-            ProcessorNames::TokenProcessor,
-            ProcessorNames::TokenV2Processor,
-            ProcessorNames::UserTransactionProcessor,
-        ],
-        requires = "with_indexer_api"
-    )]
-    processors: Vec<ProcessorNames>,
 
     /// If set, connect to the postgres instance specified in `postgres_args` (e.g.
     /// --postgres-host, --postgres-user, etc) rather than running a new one with
@@ -168,13 +103,13 @@ pub struct RunLocalTestnet {
     use_host_postgres: bool,
 
     #[clap(flatten)]
-    postgres_args: HostPostgresConfig,
+    postgres_args: HostPostgresArgs,
 
     #[clap(flatten)]
-    indexer_api_config: IndexerApiConfig,
+    indexer_api_args: IndexerApiConfig,
 
     #[clap(flatten)]
-    ready_server_config: ReadyServerConfig,
+    ready_server_args: ReadyServerArgs,
 
     #[clap(flatten)]
     prompt_options: PromptOptions,
@@ -182,9 +117,9 @@ pub struct RunLocalTestnet {
 
 #[derive(Debug)]
 struct AllConfigs {
-    ready_server_config: ReadyServerConfig,
+    ready_server_config: ReadyServerArgs,
     node_config: NodeConfig,
-    faucet_config: Option<FaucetConfig>,
+    faucet_config: Option<FaucetArgs>,
     processor_configs: Vec<GenericConfig<IndexerGrpcProcessorConfig>>,
 }
 
@@ -199,6 +134,17 @@ impl AllConfigs {
 }
 
 impl RunLocalTestnet {
+    pub fn get_postgres_connection_string(&self) -> String {
+        match self.use_host_postgres {
+            true => self.postgres_args.get_connection_string(None),
+            false => {
+                // TODO: Create config to run postgres with Docker. Try to use 5432 but
+                // pick another open port otherwise.
+                unimplemented!("You must set --use-host-postgres for now");
+            }
+        }
+    }
+
     /// This function builds all the configs we need to run each of the requested
     /// services. We separate creating configs and spawning services to keep the
     /// code clean. This could also allow us to one day have two phases for starting
@@ -246,7 +192,7 @@ impl RunLocalTestnet {
         } else {
             // TODO: --with-faucet doesn't work without --force-restart now. Perhaps
             // related to the changes I made to building the node configs.
-            Some(FaucetConfig::build_for_cli(
+            Some(FaucetArgs::build_for_cli(
                 node_api_url.clone(),
                 self.faucet_port,
                 FunderKeyEnum::KeyFile(test_dir.join("mint.key")),
@@ -313,72 +259,11 @@ impl RunLocalTestnet {
         }
 
         Ok(AllConfigs {
-            ready_server_config: self.ready_server_config.clone(),
+            ready_server_config: self.ready_server_args.clone(),
             node_config,
             faucet_config,
             processor_configs,
         })
-    }
-
-    // Note: These start_* functions (e.g. start_node) can run checks prior to
-    // returning the future for the service, for example to ensure that a prerequisite
-    // service has started. They cannot however do anything afterwards. For that,
-    // you probably want to define a HealthCheck to register with wait_for_startup.
-
-    /// Spawn the node on a thread and then create a future that just waits for it to
-    /// exit (which should never happen) forever. This is necessary because there is
-    /// no async function we can use to run the node.
-    async fn start_node(
-        &self,
-        test_dir: PathBuf,
-        config: NodeConfig,
-    ) -> CliTypedResult<impl Future<Output = ()>> {
-        let rng = self
-            .seed
-            .map(StdRng::from_seed)
-            .unwrap_or_else(StdRng::from_entropy);
-
-        let node_thread_handle = thread::spawn(move || {
-            let result = aptos_node::setup_test_environment_and_start_node(
-                None,
-                None,
-                Some(config),
-                Some(test_dir),
-                false,
-                false,
-                aptos_cached_packages::head_release_bundle(),
-                rng,
-            );
-            eprintln!("Node stopped unexpectedly {:#?}", result);
-        });
-
-        // This just waits for the node thread forever.
-        let node_future = async move {
-            loop {
-                if node_thread_handle.is_finished() {
-                    return;
-                }
-                tokio::time::sleep(Duration::from_millis(500)).await;
-            }
-        };
-
-        Ok(node_future)
-    }
-
-    /// Run the faucet.
-    async fn start_faucet(
-        &self,
-        config: FaucetConfig,
-        node_api_url: Url,
-    ) -> CliTypedResult<impl Future<Output = ()>> {
-        HealthChecker::NodeApi(node_api_url)
-            .wait(Some("Faucet"))
-            .await?;
-
-        // Start the faucet
-        Ok(config.run().map(|result| {
-            eprintln!("Faucet stopped unexpectedly {:#?}", result);
-        }))
     }
 
     /// Run a processor.
@@ -515,7 +400,7 @@ impl RunLocalTestnet {
         &self,
         health_checks: Vec<HealthChecker>,
     ) -> CliTypedResult<impl Future<Output = ()>> {
-        let config = self.ready_server_config.clone();
+        let config = self.ready_server_args.clone();
         Ok(run_ready_server(health_checks, config).map(|result| {
             eprintln!("Faucet stopped unexpectedly {:#?}", result);
         }))
@@ -693,7 +578,7 @@ impl CliCommand<()> for RunLocalTestnet {
             health_checks.push(HealthChecker::Http(
                 Url::parse(&format!(
                     "http://127.0.0.1:{}/",
-                    self.indexer_api_config.indexer_api_port
+                    self.indexer_api_args.indexer_api_port
                 ))
                 .unwrap(),
                 "Indexer API".to_string(),
@@ -745,7 +630,7 @@ impl CliCommand<()> for RunLocalTestnet {
             tasks.push(tokio::spawn(
                 self.start_indexer_api(
                     test_dir.clone(),
-                    self.indexer_api_config.clone(),
+                    self.indexer_api_args.clone(),
                     &self.postgres_args.get_connection_string(None),
                 )
                 .await
@@ -794,7 +679,7 @@ impl CliCommand<()> for RunLocalTestnet {
         self.wait_for_startup(&health_checks).await?;
 
         // Execute post startup steps.
-        post_metadata(HASURA_METADATA, self.indexer_api_config.indexer_api_port)
+        post_metadata(HASURA_METADATA, self.indexer_api_args.indexer_api_port)
             .await
             .context("Failed to apply Hasura metadata for Indexer API")?;
 
