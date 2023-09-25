@@ -10,8 +10,8 @@ use move_core_types::{
     identifier::Identifier,
     language_storage::{ModuleId, StructTag},
     metadata::Metadata,
-    resolver::{ModuleResolver, MoveResolver, ResourceResolver},
-    value::{BytesWithAggregatorLayout, MoveTypeLayout},
+    resolver::{resource_size, ModuleResolver, MoveResolver, ResourceResolver},
+    value::MoveTypeLayout,
 };
 #[cfg(feature = "table-extension")]
 use move_table_extension::{TableChangeSet, TableHandle, TableResolver};
@@ -105,12 +105,6 @@ impl<'a, 'b, S: ModuleResolver> ModuleResolver for DeltaStorage<'a, 'b, S> {
     }
 }
 
-fn get_bytes_and_size(buf: Option<BytesWithAggregatorLayout>) -> Result<(Option<Bytes>, usize)> {
-    let buf_bytes = buf.as_ref().map(|(bytes, _)| bytes);
-    let buf_size = buf_bytes.map(|bytes| bytes.len()).unwrap_or(0);
-    Ok((buf_bytes.cloned(), buf_size))
-}
-
 impl<'a, 'b, S: ResourceResolver> ResourceResolver for DeltaStorage<'a, 'b, S> {
     fn get_resource_bytes_with_metadata(
         &self,
@@ -121,7 +115,8 @@ impl<'a, 'b, S: ResourceResolver> ResourceResolver for DeltaStorage<'a, 'b, S> {
         if let Some(account_storage) = self.change_set.accounts().get(address) {
             if let Some(blob_opt) = account_storage.resources().get(tag) {
                 let buf = blob_opt.clone().ok();
-                return get_bytes_and_size(buf);
+                let buf_size = resource_size(&buf);
+                return Ok((buf, buf_size));
             }
         }
         self.base
@@ -163,7 +158,7 @@ impl<'a, 'b, S: MoveResolver> DeltaStorage<'a, 'b, S> {
 /// Simple in-memory storage for modules and resources under an account.
 #[derive(Debug, Clone)]
 struct InMemoryAccountStorage {
-    resources: BTreeMap<StructTag, BytesWithAggregatorLayout>,
+    resources: BTreeMap<StructTag, Bytes>,
     modules: BTreeMap<Identifier, Bytes>,
 }
 
@@ -318,7 +313,7 @@ impl InMemoryStorage {
         blob: Vec<u8>,
     ) {
         let account = get_or_insert(&mut self.accounts, addr, InMemoryAccountStorage::new);
-        account.resources.insert(struct_tag, (blob.into(), None));
+        account.resources.insert(struct_tag, blob.into());
     }
 }
 
@@ -344,7 +339,8 @@ impl ResourceResolver for InMemoryStorage {
     ) -> Result<(Option<Bytes>, usize)> {
         if let Some(account_storage) = self.accounts.get(address) {
             let buf = account_storage.resources.get(tag).cloned();
-            return get_bytes_and_size(buf);
+            let buf_size = resource_size(&buf);
+            return Ok((buf, buf_size));
         }
         Ok((None, 0))
     }

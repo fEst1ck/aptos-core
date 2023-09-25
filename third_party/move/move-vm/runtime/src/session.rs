@@ -292,16 +292,8 @@ impl<'r, 'l> Session<'r, 'l> {
 
     pub fn finish_with_extensions_with_custom_effects<Resource>(
         self,
-        resource_converter: &dyn Fn(
-            Value,
-            MoveTypeLayout,
-            bool,
-        )
-            -> PartialVMResult<(Resource, Option<Arc<MoveTypeLayout>>)>,
-    ) -> VMResult<(
-        Changes<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>,
-        NativeContextExtensions<'r>,
-    )> {
+        resource_converter: &dyn Fn(Value, MoveTypeLayout, bool) -> PartialVMResult<Resource>,
+    ) -> VMResult<(Changes<Bytes, Resource>, NativeContextExtensions<'r>)> {
         let Session {
             data_cache,
             native_extensions,

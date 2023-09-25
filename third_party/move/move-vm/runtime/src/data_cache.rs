@@ -13,14 +13,14 @@ use move_core_types::{
     language_storage::{ModuleId, TypeTag},
     metadata::Metadata,
     resolver::MoveResolver,
-    value::{BytesWithAggregatorLayout, MoveTypeLayout},
+    value::MoveTypeLayout,
     vm_status::StatusCode,
 };
 use move_vm_types::{
     loaded_data::runtime_types::Type,
     values::{GlobalValue, Value},
 };
-use std::{collections::btree_map::BTreeMap, sync::Arc};
+use std::collections::btree_map::BTreeMap;
 
 pub struct AccountDataCache {
     // The bool flag in the `data_map` indicates whether the resource contains
@@ -71,19 +71,16 @@ impl<'r> TransactionDataCache<'r> {
     ///
     /// Gives all proper guarantees on lifetime of global data as well.
     pub(crate) fn into_effects(self, loader: &Loader) -> PartialVMResult<ChangeSet> {
-        let resource_converter = |value: Value,
-                                  layout: MoveTypeLayout,
-                                  _: bool|
-         -> PartialVMResult<BytesWithAggregatorLayout> {
-            value
-                .simple_serialize(&layout)
-                .map(Into::into)
-                .map(|bytes| (bytes, None))
-                .ok_or_else(|| {
-                    PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                        .with_message(format!("Error when serializing resource {}.", value))
-                })
-        };
+        let resource_converter =
+            |value: Value, layout: MoveTypeLayout, _: bool| -> PartialVMResult<Bytes> {
+                value
+                    .simple_serialize(&layout)
+                    .map(Into::into)
+                    .ok_or_else(|| {
+                        PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
+                            .with_message(format!("Error when serializing resource {}.", value))
+                    })
+            };
         self.into_custom_effects(&resource_converter, loader)
     }
 
@@ -91,15 +88,10 @@ impl<'r> TransactionDataCache<'r> {
     /// produced effects for resources.
     pub(crate) fn into_custom_effects<Resource>(
         self,
-        resource_converter: &dyn Fn(
-            Value,
-            MoveTypeLayout,
-            bool,
-        )
-            -> PartialVMResult<(Resource, Option<Arc<MoveTypeLayout>>)>,
+        resource_converter: &dyn Fn(Value, MoveTypeLayout, bool) -> PartialVMResult<Resource>,
         loader: &Loader,
-    ) -> PartialVMResult<Changes<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>> {
-        let mut change_set = Changes::<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>::new();
+    ) -> PartialVMResult<Changes<Bytes, Resource>> {
+        let mut change_set = Changes::<Bytes, Resource>::new();
         for (addr, account_data_cache) in self.account_map.into_iter() {
             let mut modules = BTreeMap::new();
             for (module_name, (module_blob, is_republishing)) in account_data_cache.module_map {

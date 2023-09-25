@@ -20,12 +20,13 @@ use aptos_types::{
     state_store::state_key::StateKey, transaction::SignatureCheckedTransaction,
 };
 use aptos_vm_types::{change_set::VMChangeSet, storage::ChangeSetConfigs};
+use bytes::Bytes;
 use move_binary_format::errors::{Location, PartialVMError, PartialVMResult, VMResult};
 use move_core_types::{
     account_address::AccountAddress,
-    effects::{AccountChangeSet, ChangeSet as MoveChangeSet, Op as MoveStorageOp},
+    effects::{AccountChanges, Changes, Op as MoveStorageOp},
     language_storage::{ModuleId, StructTag},
-    value::{BytesWithAggregatorLayout, MoveTypeLayout},
+    value::MoveTypeLayout,
     vm_status::{StatusCode, VMStatus},
 };
 use move_vm_runtime::{move_vm::MoveVM, session::Session};
@@ -36,6 +37,10 @@ use std::{
     ops::{Deref, DerefMut},
     sync::Arc,
 };
+
+type AccountChangeSet = AccountChanges<Bytes, BytesWithAggregatorLayout>;
+type ChangeSet = Changes<Bytes, BytesWithAggregatorLayout>;
+pub type BytesWithAggregatorLayout = (Bytes, Option<Arc<MoveTypeLayout>>);
 
 #[derive(BCSCryptoHash, CryptoHasher, Deserialize, Serialize)]
 pub enum SessionId {
@@ -226,10 +231,10 @@ impl<'r, 'l> SessionExt<'r, 'l> {
     fn split_and_merge_resource_groups<C: AccessPathCache>(
         runtime: &MoveVM,
         remote: &dyn AptosMoveResolver,
-        change_set: MoveChangeSet,
+        change_set: ChangeSet,
         ap_cache: &mut C,
     ) -> VMResult<(
-        MoveChangeSet,
+        ChangeSet,
         HashMap<StateKey, MoveStorageOp<BytesWithAggregatorLayout>>,
     )> {
         // The use of this implies that we could theoretically call unwrap with no consequences,
@@ -239,7 +244,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
                 .with_message("split_and_merge_resource_groups error".to_string())
                 .finish(Location::Undefined)
         };
-        let mut change_set_filtered = MoveChangeSet::new();
+        let mut change_set_filtered = ChangeSet::new();
 
         let mut resource_group_change_set = HashMap::new();
         let mut resource_group_cache = remote.release_resource_group_cache();
@@ -324,7 +329,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
 
     pub(crate) fn convert_change_set<C: AccessPathCache>(
         woc: &WriteOpConverter,
-        change_set: MoveChangeSet,
+        change_set: ChangeSet,
         resource_group_change_set: HashMap<StateKey, MoveStorageOp<BytesWithAggregatorLayout>>,
         events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
         table_change_set: TableChangeSet,

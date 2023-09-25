@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::move_vm_ext::AptosMoveResolver;
+use crate::move_vm_ext::{session::BytesWithAggregatorLayout, AptosMoveResolver};
 use aptos_aggregator::delta_change_set::serialize;
 use aptos_types::{
     on_chain_config::{CurrentTimeMicroseconds, OnChainConfig},
@@ -14,7 +14,7 @@ use aptos_types::{
 use bytes::Bytes;
 use move_core_types::{
     effects::Op as MoveStorageOp,
-    value::{BytesWithAggregatorLayout, MoveTypeLayout},
+    value::MoveTypeLayout,
     vm_status::{err_msg, StatusCode, VMStatus},
 };
 use std::sync::Arc;

@@ -9,7 +9,6 @@ use crate::{
     u256,
 };
 use anyhow::{anyhow, bail, Result as AResult};
-use bytes::Bytes;
 use serde::{
     de::Error as DeError,
     ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeTuple},
@@ -18,7 +17,6 @@ use serde::{
 use std::{
     convert::TryInto,
     fmt::{self, Debug},
-    sync::Arc,
 };
 
 /// In the `WithTypes` configuration, a Move struct gets serialized into a Serde struct with this name
@@ -186,8 +184,6 @@ impl MoveValue {
         }
     }
 }
-
-pub type BytesWithAggregatorLayout = (Bytes, Option<Arc<MoveTypeLayout>>);
 
 pub fn serialize_values<'a, I>(vals: I) -> Vec<Vec<u8>>
 where
