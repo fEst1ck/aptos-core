@@ -38,9 +38,9 @@ use std::{
     sync::Arc,
 };
 
-type AccountChangeSet = AccountChanges<Bytes, BytesWithAggregatorLayout>;
-type ChangeSet = Changes<Bytes, BytesWithAggregatorLayout>;
-pub type BytesWithAggregatorLayout = (Bytes, Option<Arc<MoveTypeLayout>>);
+type AccountChangeSet = AccountChanges<Bytes, BytesWithResourceLayout>;
+type ChangeSet = Changes<Bytes, BytesWithResourceLayout>;
+pub type BytesWithResourceLayout = (Bytes, Option<Arc<MoveTypeLayout>>);
 
 #[derive(BCSCryptoHash, CryptoHasher, Deserialize, Serialize)]
 pub enum SessionId {
@@ -156,7 +156,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         let resource_converter = |value: Value,
                                   layout: MoveTypeLayout,
                                   has_aggregator_lifting: bool|
-         -> PartialVMResult<BytesWithAggregatorLayout> {
+         -> PartialVMResult<BytesWithResourceLayout> {
             value
                 .simple_serialize(&layout)
                 .map(Into::into)
@@ -235,7 +235,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         ap_cache: &mut C,
     ) -> VMResult<(
         ChangeSet,
-        HashMap<StateKey, MoveStorageOp<BytesWithAggregatorLayout>>,
+        HashMap<StateKey, MoveStorageOp<BytesWithResourceLayout>>,
     )> {
         // The use of this implies that we could theoretically call unwrap with no consequences,
         // but using unwrap means the code panics if someone can come up with an attack.
@@ -330,7 +330,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
     pub(crate) fn convert_change_set<C: AccessPathCache>(
         woc: &WriteOpConverter,
         change_set: ChangeSet,
-        resource_group_change_set: HashMap<StateKey, MoveStorageOp<BytesWithAggregatorLayout>>,
+        resource_group_change_set: HashMap<StateKey, MoveStorageOp<BytesWithResourceLayout>>,
         events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
         table_change_set: TableChangeSet,
         aggregator_change_set: AggregatorChangeSet,

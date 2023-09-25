@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::move_vm_ext::{session::BytesWithAggregatorLayout, AptosMoveResolver};
+use crate::move_vm_ext::{session::BytesWithResourceLayout, AptosMoveResolver};
 use aptos_aggregator::delta_change_set::serialize;
 use aptos_types::{
     on_chain_config::{CurrentTimeMicroseconds, OnChainConfig},
@@ -54,7 +54,7 @@ impl<'r> WriteOpConverter<'r> {
     pub(crate) fn convert_resource(
         &self,
         state_key: &StateKey,
-        move_storage_op: MoveStorageOp<BytesWithAggregatorLayout>,
+        move_storage_op: MoveStorageOp<BytesWithResourceLayout>,
         legacy_creation_as_modification: bool,
     ) -> Result<(WriteOp, Option<Arc<MoveTypeLayout>>), VMStatus> {
         let result = self.convert(
@@ -91,7 +91,7 @@ impl<'r> WriteOpConverter<'r> {
     fn convert(
         &self,
         state_value_metadata_result: anyhow::Result<Option<StateValueMetadataKind>>,
-        move_storage_op: MoveStorageOp<BytesWithAggregatorLayout>,
+        move_storage_op: MoveStorageOp<BytesWithResourceLayout>,
         legacy_creation_as_modification: bool,
     ) -> Result<WriteOp, VMStatus> {
         use MoveStorageOp::*;

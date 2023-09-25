@@ -265,13 +265,8 @@ impl<'r, 'l> Session<'r, 'l> {
 
     pub fn finish_with_custom_effects<Resource>(
         self,
-        resource_converter: &dyn Fn(
-            Value,
-            MoveTypeLayout,
-            bool,
-        )
-            -> PartialVMResult<(Resource, Option<Arc<MoveTypeLayout>>)>,
-    ) -> VMResult<Changes<Bytes, (Resource, Option<Arc<MoveTypeLayout>>)>> {
+        resource_converter: &dyn Fn(Value, MoveTypeLayout, bool) -> PartialVMResult<Resource>,
+    ) -> VMResult<Changes<Bytes, Resource>> {
         self.data_cache
             .into_custom_effects(resource_converter, self.move_vm.runtime.loader())
             .map_err(|e| e.finish(Location::Undefined))
