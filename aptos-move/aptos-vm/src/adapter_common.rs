@@ -6,11 +6,8 @@ use crate::move_vm_ext::{AptosMoveResolver, SessionExt, SessionId};
 use anyhow::Result;
 use aptos_types::{
     block_metadata::BlockMetadata,
-    transaction::{
-        SignatureCheckedTransaction, SignedTransaction, Transaction, TransactionStatus,
-        WriteSetPayload,
-    },
-    vm_status::{StatusCode, VMStatus},
+    transaction::{SignatureCheckedTransaction, SignedTransaction, Transaction, WriteSetPayload},
+    vm_status::VMStatus,
 };
 use aptos_vm_logging::log_schema::AdapterLogSchema;
 use aptos_vm_types::output::VMOutput;
@@ -33,9 +30,6 @@ pub trait VMAdapter {
 
     /// Check if the transaction format is supported.
     fn check_transaction_format(&self, txn: &SignedTransaction) -> Result<(), VMStatus>;
-
-    /// TODO: maybe remove this after more refactoring of execution logic.
-    fn should_restart_execution(output: &VMOutput) -> bool;
 
     /// Execute a single transaction.
     fn execute_single_transaction(
@@ -77,14 +71,4 @@ pub fn preprocess_transaction<A: VMAdapter>(txn: Transaction) -> PreprocessedTra
         },
         Transaction::StateCheckpoint(_) => PreprocessedTransaction::StateCheckpoint,
     }
-}
-
-pub(crate) fn discard_error_vm_status(err: VMStatus) -> (VMStatus, VMOutput) {
-    let vm_status = err.clone();
-    (vm_status, discard_error_output(err.status_code()))
-}
-
-pub(crate) fn discard_error_output(err: StatusCode) -> VMOutput {
-    // Since this transaction will be discarded, no write set will be included.
-    VMOutput::empty_with_status(TransactionStatus::Discard(err))
 }
