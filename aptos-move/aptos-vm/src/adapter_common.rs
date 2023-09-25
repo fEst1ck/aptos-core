@@ -34,15 +34,6 @@ pub trait VMAdapter {
     /// Check if the transaction format is supported.
     fn check_transaction_format(&self, txn: &SignedTransaction) -> Result<(), VMStatus>;
 
-    /// Runs the prologue for the given transaction.
-    fn run_prologue(
-        &self,
-        session: &mut SessionExt,
-        resolver: &impl AptosMoveResolver,
-        transaction: &SignatureCheckedTransaction,
-        log_context: &AdapterLogSchema,
-    ) -> Result<(), VMStatus>;
-
     /// TODO: maybe remove this after more refactoring of execution logic.
     fn should_restart_execution(output: &VMOutput) -> bool;
 
@@ -53,27 +44,6 @@ pub trait VMAdapter {
         data_cache: &impl AptosMoveResolver,
         log_context: &AdapterLogSchema,
     ) -> Result<(VMStatus, VMOutput, Option<String>), VMStatus>;
-
-    fn validate_signature_checked_transaction(
-        &self,
-        session: &mut SessionExt,
-        resolver: &impl AptosMoveResolver,
-        transaction: &SignatureCheckedTransaction,
-        allow_too_new: bool,
-        log_context: &AdapterLogSchema,
-    ) -> Result<(), VMStatus> {
-        self.check_transaction_format(transaction)?;
-
-        let prologue_status = self.run_prologue(session, resolver, transaction, log_context);
-        match prologue_status {
-            Err(err)
-                if !allow_too_new || err.status_code() != StatusCode::SEQUENCE_NUMBER_TOO_NEW =>
-            {
-                Err(err)
-            },
-            _ => Ok(()),
-        }
-    }
 }
 
 /// Transactions after signature checking:
