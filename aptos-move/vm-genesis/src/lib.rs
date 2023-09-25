@@ -36,7 +36,7 @@ use move_core_types::{
     account_address::AccountAddress,
     identifier::Identifier,
     language_storage::{ModuleId, TypeTag},
-    value::{serialize_values, MoveValue},
+    value::{serialize_values, MoveTypeLayout, MoveValue},
 };
 use move_vm_types::gas::UnmeteredGasMeter;
 use once_cell::sync::Lazy;
@@ -164,13 +164,7 @@ pub fn encode_aptos_mainnet_genesis_transaction(
         "non-empty delta change set in genesis"
     );
     assert!(!change_set.write_set_iter().any(|(_, op)| op.is_deletion()));
-    verify_genesis_write_set(
-        &change_set
-            .events()
-            .iter()
-            .map(|(event, _)| event.clone())
-            .collect::<Vec<ContractEvent>>(),
-    );
+    verify_genesis_write_set(change_set.events());
 
     let change_set = change_set
         .try_into_storage_change_set()
@@ -281,13 +275,7 @@ pub fn encode_genesis_change_set(
     );
 
     assert!(!change_set.write_set_iter().any(|(_, op)| op.is_deletion()));
-    verify_genesis_write_set(
-        &change_set
-            .events()
-            .iter()
-            .map(|(event, _)| event.clone())
-            .collect::<Vec<ContractEvent>>(),
-    );
+    verify_genesis_write_set(change_set.events());
     change_set
         .try_into_storage_change_set()
         .expect("Constructing a ChangeSet from VMChangeSet should always succeed at genesis")
@@ -651,10 +639,10 @@ fn emit_new_block_and_epoch_event(session: &mut SessionExt) {
 }
 
 /// Verify the consistency of the genesis `WriteSet`
-fn verify_genesis_write_set(events: &[ContractEvent]) {
+fn verify_genesis_write_set(events: &[(ContractEvent, Option<MoveTypeLayout>)]) {
     let new_epoch_events: Vec<&ContractEventV1> = events
         .iter()
-        .filter_map(|e| {
+        .filter_map(|(e, _)| {
             if e.event_key() == Some(&NewEpochEvent::event_key()) {
                 Some(e.v1().unwrap())
             } else {
