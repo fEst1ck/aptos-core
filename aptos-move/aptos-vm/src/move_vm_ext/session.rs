@@ -331,7 +331,7 @@ impl<'r, 'l> SessionExt<'r, 'l> {
         woc: &WriteOpConverter,
         change_set: ChangeSet,
         resource_group_change_set: HashMap<StateKey, MoveStorageOp<BytesWithResourceLayout>>,
-        events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
+        events: Vec<(ContractEvent, Option<MoveTypeLayout>)>,
         table_change_set: TableChangeSet,
         aggregator_change_set: AggregatorChangeSet,
         ap_cache: &mut C,

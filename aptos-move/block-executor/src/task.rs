@@ -120,12 +120,7 @@ pub trait TransactionOutput: Send + Sync + Debug {
     fn aggregator_v1_delta_set(&self) -> HashMap<<Self::Txn as Transaction>::Key, DeltaOp>;
 
     /// Get the events of a transaction from its output.
-    fn get_events(
-        &self,
-    ) -> Vec<(
-        <Self::Txn as Transaction>::Event,
-        Option<Arc<MoveTypeLayout>>,
-    )>;
+    fn get_events(&self) -> Vec<(<Self::Txn as Transaction>::Event, Option<MoveTypeLayout>)>;
 
     /// Execution output for transactions that comes after SkipRest signal.
     fn skip_output() -> Self;

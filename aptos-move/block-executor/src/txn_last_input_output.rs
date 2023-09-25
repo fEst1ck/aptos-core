@@ -318,14 +318,14 @@ impl<K: Debug + ModulePath, T: TransactionOutput, E: Debug + Send + Clone>
         dyn Iterator<
             Item = (
                 <<T as TransactionOutput>::Txn as Transaction>::Event,
-                Option<Arc<MoveTypeLayout>>,
+                Option<MoveTypeLayout>,
             ),
         >,
     > {
         self.outputs[txn_idx as usize].load().as_ref().map_or(
             Box::new(empty::<(
                 <<T as TransactionOutput>::Txn as Transaction>::Event,
-                Option<Arc<MoveTypeLayout>>,
+                Option<MoveTypeLayout>,
             )>()),
             |txn_output| match &txn_output.output_status {
                 ExecutionStatus::Success(t) | ExecutionStatus::SkipRest(t) => {
@@ -334,7 +334,7 @@ impl<K: Debug + ModulePath, T: TransactionOutput, E: Debug + Send + Clone>
                 },
                 ExecutionStatus::Abort(_) => Box::new(empty::<(
                     <<T as TransactionOutput>::Txn as Transaction>::Event,
-                    Option<Arc<MoveTypeLayout>>,
+                    Option<MoveTypeLayout>,
                 )>()),
             },
         )

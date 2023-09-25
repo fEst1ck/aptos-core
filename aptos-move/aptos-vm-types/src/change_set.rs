@@ -38,7 +38,7 @@ pub struct VMChangeSet {
     aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
     aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
     aggregator_v2_change_set: HashMap<AggregatorID, AggregatorChange>,
-    events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
+    events: Vec<(ContractEvent, Option<MoveTypeLayout>)>,
 }
 
 macro_rules! squash_writes_pair {
@@ -75,7 +75,7 @@ impl VMChangeSet {
         aggregator_v1_write_set: HashMap<StateKey, WriteOp>,
         aggregator_v1_delta_set: HashMap<StateKey, DeltaOp>,
         aggregator_v2_change_set: HashMap<AggregatorID, AggregatorChange>,
-        events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
+        events: Vec<(ContractEvent, Option<MoveTypeLayout>)>,
         checker: &dyn CheckChangeSet,
     ) -> anyhow::Result<Self, VMStatus> {
         let change_set = Self {
@@ -224,7 +224,7 @@ impl VMChangeSet {
         &self.aggregator_v2_change_set
     }
 
-    pub fn events(&self) -> &[(ContractEvent, Option<Arc<MoveTypeLayout>>)] {
+    pub fn events(&self) -> &[(ContractEvent, Option<MoveTypeLayout>)] {
         &self.events
     }
 

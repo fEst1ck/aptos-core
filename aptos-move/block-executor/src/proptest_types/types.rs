@@ -635,7 +635,7 @@ where
 
     // TODO: Currently, appending None to all events, which means none of the
     // events have aggregators. Test it with aggregators as well.
-    fn get_events(&self) -> Vec<(E, Option<Arc<MoveTypeLayout>>)> {
+    fn get_events(&self) -> Vec<(E, Option<MoveTypeLayout>)> {
         self.events.iter().map(|e| (e.clone(), None)).collect()
     }
 

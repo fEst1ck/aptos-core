@@ -19,16 +19,16 @@ use move_vm_runtime::native_functions::NativeFunction;
 use move_vm_types::values::{Reference, Struct, StructRef};
 use move_vm_types::{loaded_data::runtime_types::Type, values::Value};
 use smallvec::{smallvec, SmallVec};
-use std::{collections::VecDeque, sync::Arc};
+use std::collections::VecDeque;
 
 /// Cached emitted module events.
 #[derive(Default, Tid)]
 pub struct NativeEventContext {
-    events: Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)>,
+    events: Vec<(ContractEvent, Option<MoveTypeLayout>)>,
 }
 
 impl NativeEventContext {
-    pub fn into_events(self) -> Vec<(ContractEvent, Option<Arc<MoveTypeLayout>>)> {
+    pub fn into_events(self) -> Vec<(ContractEvent, Option<MoveTypeLayout>)> {
         self.events
     }
 
@@ -97,7 +97,7 @@ fn native_write_to_event_store(
     })?;
 
     let ctx = context.extensions_mut().get_mut::<NativeEventContext>();
-    let ty_layout = has_aggregator_lifting.then(|| Arc::new(ty_layout));
+    let ty_layout = has_aggregator_lifting.then_some(ty_layout);
     ctx.events
         .push((ContractEvent::new_v1(key, seq_num, ty_tag, blob), ty_layout));
     Ok(smallvec![])
@@ -235,7 +235,7 @@ fn native_write_module_event_to_store(
                 .with_message("Event serialization failure".to_string()),
         )
     })?;
-    let ty_layout = has_aggregator_lifting.then(|| Arc::new(ty_layout));
+    let ty_layout = has_aggregator_lifting.then_some(ty_layout);
     let ctx = context.extensions_mut().get_mut::<NativeEventContext>();
     ctx.events
         .push((ContractEvent::new_v2(type_tag, blob), ty_layout));
