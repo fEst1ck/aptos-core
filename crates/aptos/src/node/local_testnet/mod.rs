@@ -10,7 +10,7 @@ use self::{
     health_checker::HealthChecker,
     logging::ThreadNameMakeWriter,
     ready_server::{run_ready_server, ReadyServerConfig},
-    utils::{socket_addr_to_url, HostPostgresArgs},
+    utils::{socket_addr_to_url, HostPostgresConfig, IndexerApiConfig},
 };
 use crate::{
     common::{
@@ -18,12 +18,12 @@ use crate::{
         utils::prompt_yes_with_override,
     },
     config::GlobalConfig,
+    node::local_testnet::utils::post_metadata,
 };
 use anyhow::{bail, Context};
 use aptos_config::config::{NodeConfig, DEFAULT_GRPC_STREAM_PORT};
 use aptos_faucet_core::server::{FunderKeyEnum, RunConfig as FaucetConfig};
 use aptos_indexer_grpc_server_framework::setup_logging;
-use aptos_logger::debug;
 use aptos_node::create_single_node_test_config;
 use async_trait::async_trait;
 use clap::Parser;
@@ -40,13 +40,18 @@ use std::{
     fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
     pin::Pin,
+    process::Stdio,
     thread,
     time::Duration,
 };
-use tokio::task::JoinHandle;
+use tokio::{process::Command, task::JoinHandle};
+use tracing::info;
 use tracing_subscriber::fmt::MakeWriter;
 
 const TESTNET_FOLDER: &str = "testnet";
+
+const INDEXER_API_CONTAINER_NAME: &str = "indexer-api";
+const HASURA_METADATA: &str = include_str!("hasura_metadata.json");
 
 /// Run a local testnet
 ///
@@ -130,7 +135,7 @@ pub struct RunLocalTestnet {
     /// --processors) and configure them to write to this DB, and run an API that lets
     /// you access the data they write to storage. This is opt in because it requires
     /// Docker to be installed in the host system.
-    #[clap(long)]
+    #[clap(long, conflicts_with = "no_txn_stream")]
     with_indexer_api: bool,
 
     /// The value of this flag determines which processors we will run if
@@ -163,7 +168,10 @@ pub struct RunLocalTestnet {
     use_host_postgres: bool,
 
     #[clap(flatten)]
-    postgres_args: HostPostgresArgs,
+    postgres_args: HostPostgresConfig,
+
+    #[clap(flatten)]
+    indexer_api_config: IndexerApiConfig,
 
     #[clap(flatten)]
     ready_server_config: ReadyServerConfig,
@@ -381,6 +389,9 @@ impl RunLocalTestnet {
     ) -> CliTypedResult<impl Future<Output = ()>> {
         let processor_name = config.server_config.processor_config.name();
         let svc = format!("processor_{}", processor_name);
+        // TODO: It's sort of janky that we build these health checkers here and again
+        // later. We should build this when we start the fullnode and use it later on
+        // in this function / the ready server / etc.
         HealthChecker::DataServiceGrpc(data_service_url)
             .wait(Some(&svc))
             .await?;
@@ -394,6 +405,109 @@ impl RunLocalTestnet {
                 processor_name, result
             );
         }))
+    }
+
+    /// Run the Indexer API (Hasura).
+    // The standard unified Hasura metadata doesn't work if we don't have all the
+    // necessary tables populated, which we don't do because some come from the
+    // Python processors. So we use a modified metadata. As such, if you update
+    // the processors you will likely have to update the metadata too.
+    async fn start_indexer_api(
+        &self,
+        test_dir: PathBuf,
+        config: IndexerApiConfig,
+        postgres_connection_string: &str,
+    ) -> CliTypedResult<impl Future<Output = ()>> {
+        let log_dir = test_dir.join("indexer-api");
+        create_dir_all(log_dir.as_path())
+            .map_err(|err| CliError::IO(format!("Failed to create {}", log_dir.display()), err))?;
+
+        let data = format!(
+            "To see logs for the Indexer API run the following command:\n\ndocker logs {}",
+            INDEXER_API_CONTAINER_NAME
+        );
+        std::fs::write(log_dir.join("README.md"), data).expect("Unable to write file");
+
+        // TODO: The processor liveness port doesn't really do anything. It should only
+        // return ready when it is actually at the point where it is processing
+        // transactions successfully. Once we have that, wait for all the processors.
+        // TODO: Look at the old code I had for how I configured Redis and use that,
+        // particularly for logging.
+        // If we're on Mac, replace 127.0.0.1 with host.docker.internal.
+        // https://stackoverflow.com/a/24326540/3846032
+        let postgres_connection_string = if cfg!(target_os = "macos") {
+            postgres_connection_string.replace("127.0.0.1", "host.docker.internal")
+        } else {
+            postgres_connection_string.to_string()
+        };
+        // TODO: Confirm the above works on Linux and Windows.
+
+        // TODO: Try docker run and then docker attach --no-stdin
+        // TODO: Consider using --cidfile and making sure to stop any
+        // old container that might have been running.
+
+        // TODO: Check for internet access if the image doesn't exist locally.
+        // TODO: Pull the image separately in a previous step so it isn't subject
+        // to the 30 second timeout.
+
+        // https://stackoverflow.com/q/77171786/3846032
+        let child = Command::new("docker")
+            .arg("run")
+            .arg("-q")
+            .arg("--rm")
+            .arg("--tty")
+            .arg("--no-healthcheck")
+            .arg("--name")
+            .arg(INDEXER_API_CONTAINER_NAME)
+            .arg("-p")
+            .arg(format!(
+                "{}:{}",
+                config.indexer_api_port, config.indexer_api_port
+            ))
+            .arg("-e")
+            .arg(format!("PG_DATABASE_URL={}", postgres_connection_string))
+            .arg("-e")
+            .arg(format!(
+                "HASURA_GRAPHQL_METADATA_DATABASE_URL={}",
+                postgres_connection_string
+            ))
+            .arg("-e")
+            .arg(format!(
+                "INDEXER_V2_POSTGRES_URL={}",
+                postgres_connection_string
+            ))
+            .arg("-e")
+            .arg("HASURA_GRAPHQL_DEV_MODE=true")
+            .arg("-e")
+            .arg("HASURA_GRAPHQL_ENABLE_CONSOLE=true")
+            .arg("-e")
+            .arg("HASURA_GRAPHQL_CONSOLE_ASSETS_DIR=/srv/console-assets")
+            .arg("-e")
+            .arg(format!(
+                "HASURA_GRAPHQL_SERVER_PORT={}",
+                config.indexer_api_port
+            ))
+            .arg("hasura/graphql-engine:v2.33.0")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|err| {
+                CliError::UnexpectedError(format!("Failed to start indexer API: {}", err))
+            })?;
+
+        let fut = async move {
+            match child.wait_with_output().await {
+                Ok(output) => {
+                    // Print nothing, this probably implies ctrl+C.
+                    info!("Indexer API stopped with output: {:?}", output);
+                },
+                Err(err) => {
+                    eprintln!("Indexer API stopped unexpectedly with error: {}", err);
+                },
+            }
+        };
+
+        Ok(fut)
     }
 
     /// Run the ready server.
@@ -450,7 +564,7 @@ impl RunLocalTestnet {
             })?;
         }
 
-        eprintln!("\nAll services are running, you can now use the local testnet!");
+        eprintln!("\nApplying post startup steps...");
 
         Ok(())
     }
@@ -477,6 +591,24 @@ impl CliCommand<()> for RunLocalTestnet {
                 .join(TESTNET_FOLDER),
         };
 
+        // TODO: Run pre steps here, e.g. deleting any existing container.
+        let status = Command::new("docker")
+            .arg("rm")
+            .arg("-f")
+            .arg(INDEXER_API_CONTAINER_NAME)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .await
+            .context("Failed to start container for indexer API")?;
+
+        if !status.success() {
+            return Err(CliError::UnexpectedError(format!(
+                "Failed to delete any existing container for indexer API: {:?}",
+                status
+            )));
+        }
+
         // If asked, remove the current test directory and start with a new node.
         if self.force_restart && test_dir.exists() {
             prompt_yes_with_override(
@@ -486,15 +618,15 @@ impl CliCommand<()> for RunLocalTestnet {
             remove_dir_all(test_dir.as_path()).map_err(|err| {
                 CliError::IO(format!("Failed to delete {}", test_dir.display()), err)
             })?;
-            debug!("Deleted test directory at: {:?}", test_dir);
+            info!("Deleted test directory at: {:?}", test_dir);
         }
 
         if !test_dir.exists() {
-            debug!("Test directory does not exist, creating it: {:?}", test_dir);
+            info!("Test directory does not exist, creating it: {:?}", test_dir);
             create_dir_all(test_dir.as_path()).map_err(|err| {
                 CliError::IO(format!("Failed to create {}", test_dir.display()), err)
             })?;
-            debug!("Created test directory: {:?}", test_dir);
+            info!("Created test directory: {:?}", test_dir);
         }
 
         // Set up logging for anything that uses tracing. These logs will go to
@@ -513,14 +645,14 @@ impl CliCommand<()> for RunLocalTestnet {
         // we can drop the database we'll actually use.
         if self.force_restart && self.use_host_postgres {
             let connection_string = self.postgres_args.get_connection_string(Some("postgres"));
-            debug!("Dropping database {}", self.postgres_args.postgres_database);
+            info!("Dropping database {}", self.postgres_args.postgres_database);
             let pg_pool = new_db_pool(&connection_string).context("Failed to connect to DB")?;
             let mut connection = pg_pool.get().context("Failed to create connection to DB")?;
             recreate_database(&mut connection, &self.postgres_args.postgres_database)
                 .with_context(|| {
                     format!("Failed to drop DB {}", self.postgres_args.postgres_database)
                 })?;
-            debug!("Dropped database {}", self.postgres_args.postgres_database);
+            info!("Dropped database {}", self.postgres_args.postgres_database);
         }
 
         let node_api_url = all_configs.get_node_api_url();
@@ -554,6 +686,17 @@ impl CliCommand<()> for RunLocalTestnet {
             health_checks.push(HealthChecker::Http(
                 Url::parse(&format!("http://127.0.0.1:{}", config.health_check_port)).unwrap(),
                 config.server_config.processor_config.name().to_string(),
+            ));
+        }
+
+        if self.with_indexer_api {
+            health_checks.push(HealthChecker::Http(
+                Url::parse(&format!(
+                    "http://127.0.0.1:{}/",
+                    self.indexer_api_config.indexer_api_port
+                ))
+                .unwrap(),
+                "Indexer API".to_string(),
             ));
         }
 
@@ -597,6 +740,51 @@ impl CliCommand<()> for RunLocalTestnet {
             ));
         }
 
+        // Run the indexer API (Hasura).
+        if self.with_indexer_api {
+            tasks.push(tokio::spawn(
+                self.start_indexer_api(
+                    test_dir.clone(),
+                    self.indexer_api_config.clone(),
+                    &self.postgres_args.get_connection_string(None),
+                )
+                .await
+                .context("Failed to create future to run the indexer API")?,
+            ));
+            tokio::spawn(async move {
+                tokio::signal::ctrl_c()
+                    .await
+                    .context("Failed to await ctrl+C")?;
+
+                eprintln!("\nReceived ctrl+C, stopping spawned services...");
+
+                let status = Command::new("docker")
+                    .arg("rm")
+                    .arg("-f")
+                    .arg(INDEXER_API_CONTAINER_NAME)
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .await
+                    .context("Failed to stop indexer API")?;
+
+                if !status.success() {
+                    return Err(CliError::UnexpectedError(format!(
+                        "Failed to stop indexer API: {:?}",
+                        status
+                    )));
+                }
+
+                eprintln!("Done, goodbye!");
+
+                std::process::exit(status.code().unwrap_or(1));
+
+                // This helps the compiler figure out the return type of this closure.
+                #[allow(unreachable_code)]
+                Ok(())
+            });
+        }
+
         eprintln!(
             "Readiness endpoint: http://0.0.0.0:{}/\n",
             ready_server_config.ready_server_listen_port
@@ -605,11 +793,19 @@ impl CliCommand<()> for RunLocalTestnet {
         // Wait for all the services to start up.
         self.wait_for_startup(&health_checks).await?;
 
+        // Execute post startup steps.
+        post_metadata(HASURA_METADATA, self.indexer_api_config.indexer_api_port)
+            .await
+            .context("Failed to apply Hasura metadata for Indexer API")?;
+
+        eprintln!("\nSetup is complete, you can now use the local testnet!");
+
         // Wait for all of the futures for the tasks. We should never get past this
         // point unless something goes wrong or the user signals for the process to
         // end.
         let result = futures::future::select_all(tasks).await;
 
+        // TODO: Try to join all of them to see what happened.
         Err(CliError::UnexpectedError(format!(
             "One of the components stopped unexpectedly: {:?}",
             result
@@ -627,3 +823,5 @@ impl CliCommand<()> for RunLocalTestnet {
 // whatnot we need to do that check across component boundaries.
 //
 // If you do this, consider getting rid of the AllConfigs struct.
+//
+// We need some kind of post healthy hook too, e.g. to apply the hasura metadata.

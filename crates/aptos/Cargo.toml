@@ -72,8 +72,8 @@ move-symbol-pool = { workspace = true }
 move-unit-test = { workspace = true, features = [ "debugging" ] }
 move-vm-runtime = { workspace = true, features = [ "testing" ] }
 once_cell = { workspace = true }
-processor = { git = "https://github.com/aptos-labs/aptos-indexer-processors.git", branch = "banool/use-from-cli" }
 poem = { workspace = true }
+processor = { git = "https://github.com/aptos-labs/aptos-indexer-processors.git", branch = "banool/use-from-cli" }
 rand = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true }
@@ -88,6 +88,7 @@ thiserror = { workspace = true }
 tokio = { workspace = true }
 toml = { workspace = true }
 tonic = { workspace = true }
+tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 walkdir = { workspace = true }
 
