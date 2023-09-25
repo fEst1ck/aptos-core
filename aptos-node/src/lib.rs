@@ -228,7 +228,21 @@ pub fn start(
     Ok(())
 }
 
-/// Creates a simple test environment and starts the node
+/// Creates a simple test environment and starts the node.
+///
+/// You will notice many args referring to configs. Let's explain them:
+/// - `test_config_override_path` is the path to a config file that will be used as
+///   a template when building the final config. If not provided, a default template
+///   will be used. Many overrides are applied on top of this base config.
+/// - `config_path` is similar to `test_config_override_path`, but many of the
+///   overrides that are applied when using `test_config_override_path` are not
+///   applied when using `config_path`. Read the code for more info.
+/// - `config` is a complete NodeConfig. No overrides are applied on top of this if
+///    it is provided. If both `config` and `test_dir` are provided, if a config
+///    is found in `test_dir` it will be preferred to `config.
+/// - `test_dir` is a directory that contains a config file. Much like `config`, the
+///   config read from this file is used without any overrides. This takes precedence
+///   over `config.`
 pub fn setup_test_environment_and_start_node<R>(
     config_path: Option<PathBuf>,
     test_config_override_path: Option<PathBuf>,
@@ -254,12 +268,11 @@ where
     let validator_config_path = test_dir.join("0").join("node.yaml");
     let aptos_root_key_path = test_dir.join("mint.key");
 
-    // If there's already a config, use it. Otherwise create a test one.
-    let config = if let Some(config) = config {
-        config
-    } else if validator_config_path.exists() {
+    let config = if validator_config_path.exists() {
         NodeConfig::load_from_path(&validator_config_path)
             .map_err(|error| anyhow!("Unable to load config: {:?}", error))?
+    } else if let Some(config) = config {
+        config
     } else {
         // Create a test only config for a single validator node.
         create_single_node_test_config(
