@@ -16,6 +16,7 @@ pub struct GrpcResponseStream {
 }
 
 impl GrpcResponseStream {
+    #[allow(dead_code)]
     pub fn new(
         starting_version: u64,
         transaction_count: Option<u64>,
@@ -36,12 +37,11 @@ impl GrpcResponseStream {
                 storages.as_slice(),
             );
             match response_dispatcher.run().await {
-                Ok(_) => {},
-                Err(err) => {
-                    tracing::warn!(
-                        "Failed to run response dispatcher; connection is going to end: {:?}",
-                        err
-                    );
+                Ok(_) => {
+                    tracing::info!("Response dispatcher finished successfully.");
+                },
+                Err(e) => {
+                    tracing::error!("Response dispatcher failed: {}", e);
                 },
             }
         });
