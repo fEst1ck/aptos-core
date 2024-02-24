@@ -453,6 +453,70 @@ impl<'env> ModelBuilder<'env> {
         }
     }
 
+    /// Checks if struct is
+    ///
+    /// Returns true iff no resursive definition for `checking` is found at this level.
+    fn check_recusive_struct_with_parents(
+        &self,
+        ty: &Type,
+        loc: &Loc,
+        parents: &mut Vec<(QualifiedId<StructId>, Loc)>,
+        checking: QualifiedId<StructId>
+    ) -> bool {
+        match ty {
+            Type::Struct(mid, sid, insts) => {
+                let this_struct_id = mid.qualified(*sid);
+                let this_struct_entry = self.lookup_struct_entry(this_struct_id);
+                for (parent_id, _parent_loc) in parents.iter() {
+                    if *parent_id == this_struct_id {
+                        if checking == this_struct_id {
+                            // TODO: refactor
+                            let checked_struct_name = self
+                                .reverse_struct_table
+                                .get(&(*mid, *sid))
+                                .expect("invalid Type::Struct");
+                            self.error(loc, &format!("recursive definition {}", checked_struct_name.display(self.env)));
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+                if let Some(fields) = &this_struct_entry.fields {
+                    parents.push((this_struct_id, loc.clone()));
+                    for (_field_name, (field_loc, _field_idx, field_ty_uninstantiated)) in fields.iter() {
+                        let field_ty_instantiated = field_ty_uninstantiated.instantiate(insts);
+                        // short-curcuit upon first recursive occurence found
+                        if !self.check_recusive_struct_with_parents(&field_ty_instantiated, field_loc, parents, checking) {
+                            return false;
+                        }
+                    }
+                    parents.pop();
+                    true
+                } else {
+                    true
+                }
+            },
+            Type::Vector(ty) => {
+                self.check_recusive_struct_with_parents(ty, loc, parents, checking)
+            },
+            Type::Primitive(..) | Type::TypeParameter(..) => true,
+            _ => panic!("ICE: invalid type in struct"),
+        }
+    }
+
+    pub fn check_resursive_struct(&self, struct_entry: &StructEntry) {
+        let params = (0..struct_entry.type_params.len()).map(|i| Type::TypeParameter(i as u16)).collect_vec();
+        let struct_ty = Type::Struct(struct_entry.module_id.clone(), struct_entry.struct_id.clone(), params);
+        let mut parents = Vec::new();
+        self.check_recusive_struct_with_parents(
+            &struct_ty,
+            &struct_entry.loc,
+            &mut parents,
+            struct_entry.module_id.qualified(struct_entry.struct_id)
+        );
+    }
+
     // Generate warnings about unused schemas.
     pub fn warn_unused_schemas(&self) {
         for name in &self.unused_schema_set {
