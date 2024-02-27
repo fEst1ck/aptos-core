@@ -8,7 +8,7 @@
 //! system, as well as type checking it and translating it to the spec language ast.
 
 use crate::{
-    ast::{Address, Attribute, ModuleName, Operation, QualifiedSymbol, Spec, Value},
+    ast::{Address, Attribute, ModuleName, Operation, QualifiedSymbol, QualifiedSymbolDisplay, Spec, Value},
     builder::builtins,
     intrinsics::IntrinsicDecl,
     model::{
@@ -386,10 +386,7 @@ impl<'env> ModelBuilder<'env> {
 
     /// Looks up the StructEntry for a qualified id.
     pub fn lookup_struct_entry(&self, id: QualifiedId<StructId>) -> &StructEntry {
-        let struct_name = self
-            .reverse_struct_table
-            .get(&(id.module_id, id.id))
-            .expect("invalid Type::Struct");
+        let struct_name = self.get_struct_name(id);
         self.struct_table
             .get(struct_name)
             .expect("invalid Type::Struct")
@@ -453,29 +450,55 @@ impl<'env> ModelBuilder<'env> {
         }
     }
 
-    /// Checks if struct is
+    /// Gets the name of the struct
+    fn get_struct_name(&self, qid: QualifiedId<StructId>) -> &QualifiedSymbol {
+        self
+            .reverse_struct_table
+            .get(&(qid.module_id, qid.id))
+            .expect("invalid Type::Struct")
+    }
+
+    /// Gets the display name of the struct
+    fn get_struct_display_name(&self, qid: QualifiedId<StructId>) -> QualifiedSymbolDisplay {
+        self.get_struct_name(qid).display(&self.env)
+    }
+
+    fn gen_error_msg_for_fields_loop(
+        &self,
+        parents: &Vec<QualifiedId<StructId>>,
+        this_struct_id: QualifiedId<StructId>
+    ) -> Vec<String> {
+        let mut loop_notes = Vec::new();
+        for i in 0..parents.len() - 1 {
+            let parent_name = self.get_struct_display_name(parents[i]);
+            let child_name = self.get_struct_display_name(parents[i + 1]);
+            loop_notes.push(format!("{} contains {}...", parent_name, child_name));
+        }
+        loop_notes.push(format!("{} contains {}, which forms a loop.", self.get_struct_display_name(*parents.last().unwrap()), self.get_struct_display_name(this_struct_id)));
+        loop_notes
+    }
+
+    /// Checks if struct is recursive
     ///
     /// Returns true iff no resursive definition for `checking` is found at this level.
     fn check_recusive_struct_with_parents(
         &self,
         ty: &Type,
         loc: &Loc,
-        parents: &mut Vec<(QualifiedId<StructId>, Loc)>,
-        checking: QualifiedId<StructId>
+        parents: &mut Vec<QualifiedId<StructId>>,
+        checking: QualifiedId<StructId>,
+        loc_checking: &Loc,
     ) -> bool {
         match ty {
             Type::Struct(mid, sid, insts) => {
                 let this_struct_id = mid.qualified(*sid);
                 let this_struct_entry = self.lookup_struct_entry(this_struct_id);
-                for (parent_id, _parent_loc) in parents.iter() {
+                for parent_id in parents.iter() {
                     if *parent_id == this_struct_id {
                         if checking == this_struct_id {
-                            // TODO: refactor
-                            let checked_struct_name = self
-                                .reverse_struct_table
-                                .get(&(*mid, *sid))
-                                .expect("invalid Type::Struct");
-                            self.error(loc, &format!("recursive definition {}", checked_struct_name.display(self.env)));
+                            let loop_notes = self.gen_error_msg_for_fields_loop(&parents, this_struct_id);
+                            self.error_with_notes(loc_checking, &format!("recursive definition {}", self.get_struct_name(this_struct_id).display(self.env)),
+                        loop_notes);
                             return true;
                         } else {
                             return false;
@@ -483,11 +506,11 @@ impl<'env> ModelBuilder<'env> {
                     }
                 }
                 if let Some(fields) = &this_struct_entry.fields {
-                    parents.push((this_struct_id, loc.clone()));
+                    parents.push(this_struct_id);
                     for (_field_name, (field_loc, _field_idx, field_ty_uninstantiated)) in fields.iter() {
                         let field_ty_instantiated = field_ty_uninstantiated.instantiate(insts);
                         // short-curcuit upon first recursive occurence found
-                        if !self.check_recusive_struct_with_parents(&field_ty_instantiated, field_loc, parents, checking) {
+                        if !self.check_recusive_struct_with_parents(&field_ty_instantiated, field_loc, parents, checking, loc_checking) {
                             return false;
                         }
                     }
@@ -498,7 +521,7 @@ impl<'env> ModelBuilder<'env> {
                 }
             },
             Type::Vector(ty) => {
-                self.check_recusive_struct_with_parents(ty, loc, parents, checking)
+                self.check_recusive_struct_with_parents(ty, loc, parents, checking, loc_checking)
             },
             Type::Primitive(..) | Type::TypeParameter(..) => true,
             _ => panic!("ICE: invalid type in struct"),
@@ -513,7 +536,8 @@ impl<'env> ModelBuilder<'env> {
             &struct_ty,
             &struct_entry.loc,
             &mut parents,
-            struct_entry.module_id.qualified(struct_entry.struct_id)
+            struct_entry.module_id.qualified(struct_entry.struct_id),
+            &struct_entry.loc
         );
     }
 
