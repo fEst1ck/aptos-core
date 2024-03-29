@@ -116,7 +116,9 @@ const TEST_CONFIGS: Lazy<BTreeMap<&str, TestConfig>> = Lazy::new(|| {
             // TODO: move `inlining` tests to top-level test directory
             exclude: vec!["/inlining/"],
             exp_suffix: None,
-            options: opts.clone(),
+            options: opts
+                .clone()
+                .set_experiment(Experiment::ACQUIRES_CHECK, false),
             stop_after: StopAfter::AstPipeline,
             dump_ast: DumpLevel::EndStage,
             dump_bytecode: DumpLevel::None,
@@ -307,9 +309,7 @@ const TEST_CONFIGS: Lazy<BTreeMap<&str, TestConfig>> = Lazy::new(|| {
             include: vec!["/acquires-checker/"],
             exclude: vec![],
             exp_suffix: None,
-            options: opts
-                .clone()
-                .set_experiment(Experiment::ACQUIRES_CHECK, true),
+            options: opts.clone(),
             stop_after: StopAfter::AstPipeline,
             dump_ast: DumpLevel::None,
             dump_bytecode: DumpLevel::None,
