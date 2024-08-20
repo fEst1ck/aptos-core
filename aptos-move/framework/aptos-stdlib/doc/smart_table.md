@@ -376,7 +376,7 @@ Aborts if it's not empty.
         <a href="../../move-stdlib/doc/vector.md#0x1_vector_destroy_empty">vector::destroy_empty</a>(<a href="table_with_length.md#0x1_table_with_length_remove">table_with_length::remove</a>(&<b>mut</b> <a href="table.md#0x1_table">table</a>.buckets, i));
         i = i + 1;
     };
-    <b>let</b> <a href="smart_table.md#0x1_smart_table_SmartTable">SmartTable</a> { buckets, num_buckets: _, level: _, size: _, split_load_threshold: _, target_bucket_size: _ } = <a href="table.md#0x1_table">table</a>;
+    <b>let</b> <a href="smart_table.md#0x1_smart_table_SmartTable">SmartTable</a> { buckets, .. } = <a href="table.md#0x1_table">table</a>;
     <a href="table_with_length.md#0x1_table_with_length_destroy_empty">table_with_length::destroy_empty</a>(buckets);
 }
 </code></pre>
@@ -967,7 +967,7 @@ Aborts if there is no entry for <code>key</code>.
     <b>while</b> (i &lt; len) {
         <b>let</b> entry = <a href="../../move-stdlib/doc/vector.md#0x1_vector_borrow">vector::borrow</a>(bucket, i);
         <b>if</b> (&entry.key == &key) {
-            <b>let</b> <a href="smart_table.md#0x1_smart_table_Entry">Entry</a> { <a href="../../move-stdlib/doc/hash.md#0x1_hash">hash</a>: _, key: _, value } = <a href="../../move-stdlib/doc/vector.md#0x1_vector_swap_remove">vector::swap_remove</a>(bucket, i);
+            <b>let</b> <a href="smart_table.md#0x1_smart_table_Entry">Entry</a> { value, .. } = <a href="../../move-stdlib/doc/vector.md#0x1_vector_swap_remove">vector::swap_remove</a>(bucket, i);
             <a href="table.md#0x1_table">table</a>.size = <a href="table.md#0x1_table">table</a>.size - 1;
             <b>return</b> value
         };

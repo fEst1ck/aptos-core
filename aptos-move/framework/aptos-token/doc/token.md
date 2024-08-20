@@ -2248,7 +2248,7 @@ The token is owned at address owner
     <b>assert</b>!(burn_by_creator_flag, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_permission_denied">error::permission_denied</a>(<a href="token.md#0x3_token_ECREATOR_CANNOT_BURN_TOKEN">ECREATOR_CANNOT_BURN_TOKEN</a>));
 
     // Burn the tokens.
-    <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { id: _, amount: burned_amount, token_properties: _ } = <a href="token.md#0x3_token_withdraw_with_event_internal">withdraw_with_event_internal</a>(owner, token_id, amount);
+    <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { amount: burned_amount, .. } = <a href="token.md#0x3_token_withdraw_with_event_internal">withdraw_with_event_internal</a>(owner, token_id, amount);
     <b>let</b> token_store = <b>borrow_global_mut</b>&lt;<a href="token.md#0x3_token_TokenStore">TokenStore</a>&gt;(owner);
     <b>if</b> (std::features::module_event_migration_enabled()) {
         <a href="../../aptos-framework/doc/event.md#0x1_event_emit">event::emit</a>(<a href="token.md#0x3_token_BurnToken">BurnToken</a> { id: token_id, amount: burned_amount });
@@ -2337,7 +2337,7 @@ Burn a token by the token owner
     <b>assert</b>!(burn_by_owner_flag, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_permission_denied">error::permission_denied</a>(<a href="token.md#0x3_token_EOWNER_CANNOT_BURN_TOKEN">EOWNER_CANNOT_BURN_TOKEN</a>));
 
     // Burn the tokens.
-    <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { id: _, amount: burned_amount, token_properties: _ } = <a href="token.md#0x3_token_withdraw_token">withdraw_token</a>(owner, token_id, amount);
+    <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { amount: burned_amount, .. } = <a href="token.md#0x3_token_withdraw_token">withdraw_token</a>(owner, token_id, amount);
     <b>let</b> token_store = <b>borrow_global_mut</b>&lt;<a href="token.md#0x3_token_TokenStore">TokenStore</a>&gt;(<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(owner));
     <b>if</b> (std::features::module_event_migration_enabled()) {
         <a href="../../aptos-framework/doc/event.md#0x1_event_emit">event::emit</a>(<a href="token.md#0x3_token_BurnToken">BurnToken</a> { id: token_id, amount: burned_amount });
@@ -2758,7 +2758,7 @@ Mutate the token_properties of one token.
 
         token_data.largest_property_version = cur_property_version;
         // burn the orignial property_version 0 <a href="token.md#0x3_token">token</a> after mutation
-        <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { id: _, amount: _, token_properties: _ } = <a href="token.md#0x3_token">token</a>;
+        <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { .. } = <a href="token.md#0x3_token">token</a>;
         new_token_id
     } <b>else</b> {
         // only 1 <b>copy</b> for the <a href="token.md#0x3_token">token</a> <b>with</b> property verion bigger than 0
@@ -2959,7 +2959,7 @@ direct deposit if user opt in direct transfer
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x3_token_merge">merge</a>(dst_token: &<b>mut</b> <a href="token.md#0x3_token_Token">Token</a>, source_token: <a href="token.md#0x3_token_Token">Token</a>) {
     <b>assert</b>!(&dst_token.id == &source_token.id, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="token.md#0x3_token_EINVALID_TOKEN_MERGE">EINVALID_TOKEN_MERGE</a>));
     dst_token.amount = dst_token.amount + source_token.amount;
-    <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { id: _, amount: _, token_properties: _ } = source_token;
+    <b>let</b> <a href="token.md#0x3_token_Token">Token</a> { .. } = source_token;
 }
 </code></pre>
 

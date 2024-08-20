@@ -274,7 +274,7 @@ Destroy a unique handle.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="event.md#0x1_event_destroy_handle">destroy_handle</a>&lt;T: drop + store&gt;(handle: <a href="event.md#0x1_event_EventHandle">EventHandle</a>&lt;T&gt;) {
-    <a href="event.md#0x1_event_EventHandle">EventHandle</a>&lt;T&gt; { counter: _, <a href="guid.md#0x1_guid">guid</a>: _ } = handle;
+    <b>let</b> <a href="event.md#0x1_event_EventHandle">EventHandle</a>&lt;T&gt; { .. } = handle;
 }
 </code></pre>
 
