@@ -76,7 +76,7 @@ module aptos_framework::event {
     #[deprecated]
     /// Destroy a unique handle.
     public fun destroy_handle<T: drop + store>(handle: EventHandle<T>) {
-        EventHandle<T> { counter: _, guid: _ } = handle;
+        let EventHandle<T> { .. } = handle;
     }
 
     #[deprecated]

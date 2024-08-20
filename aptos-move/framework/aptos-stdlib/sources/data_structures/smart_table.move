@@ -102,7 +102,7 @@ module aptos_std::smart_table {
             vector::destroy_empty(table_with_length::remove(&mut table.buckets, i));
             i = i + 1;
         };
-        let SmartTable { buckets, num_buckets: _, level: _, size: _, split_load_threshold: _, target_bucket_size: _ } = table;
+        let SmartTable { buckets, .. } = table;
         table_with_length::destroy_empty(buckets);
     }
 
@@ -373,7 +373,7 @@ module aptos_std::smart_table {
         while (i < len) {
             let entry = vector::borrow(bucket, i);
             if (&entry.key == &key) {
-                let Entry { hash: _, key: _, value } = vector::swap_remove(bucket, i);
+                let Entry { value, .. } = vector::swap_remove(bucket, i);
                 table.size = table.size - 1;
                 return value
             };

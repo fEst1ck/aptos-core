@@ -597,7 +597,7 @@ module aptos_token::token {
         assert!(burn_by_creator_flag, error::permission_denied(ECREATOR_CANNOT_BURN_TOKEN));
 
         // Burn the tokens.
-        let Token { id: _, amount: burned_amount, token_properties: _ } = withdraw_with_event_internal(owner, token_id, amount);
+        let Token { amount: burned_amount, .. } = withdraw_with_event_internal(owner, token_id, amount);
         let token_store = borrow_global_mut<TokenStore>(owner);
         if (std::features::module_event_migration_enabled()) {
             event::emit(BurnToken { id: token_id, amount: burned_amount });
@@ -666,7 +666,7 @@ module aptos_token::token {
         assert!(burn_by_owner_flag, error::permission_denied(EOWNER_CANNOT_BURN_TOKEN));
 
         // Burn the tokens.
-        let Token { id: _, amount: burned_amount, token_properties: _ } = withdraw_token(owner, token_id, amount);
+        let Token { amount: burned_amount, .. } = withdraw_token(owner, token_id, amount);
         let token_store = borrow_global_mut<TokenStore>(signer::address_of(owner));
         if (std::features::module_event_migration_enabled()) {
             event::emit(BurnToken { id: token_id, amount: burned_amount });
@@ -913,7 +913,7 @@ module aptos_token::token {
 
             token_data.largest_property_version = cur_property_version;
             // burn the orignial property_version 0 token after mutation
-            let Token { id: _, amount: _, token_properties: _ } = token;
+            let Token { .. } = token;
             new_token_id
         } else {
             // only 1 copy for the token with property verion bigger than 0
@@ -994,7 +994,7 @@ module aptos_token::token {
     public fun merge(dst_token: &mut Token, source_token: Token) {
         assert!(&dst_token.id == &source_token.id, error::invalid_argument(EINVALID_TOKEN_MERGE));
         dst_token.amount = dst_token.amount + source_token.amount;
-        let Token { id: _, amount: _, token_properties: _ } = source_token;
+        let Token { .. } = source_token;
     }
 
     public fun split(dst_token: &mut Token, amount: u64): Token {

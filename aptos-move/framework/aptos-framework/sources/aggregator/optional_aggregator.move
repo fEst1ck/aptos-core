@@ -57,7 +57,7 @@ module aptos_framework::optional_aggregator {
 
     /// Destroys an integer.
     fun destroy_integer(integer: Integer) {
-        let Integer { value: _, limit: _ } = integer;
+        let Integer { .. } = integer;
     }
 
     /// Contains either an aggregator or a normal integer, both overflowing on limit.
