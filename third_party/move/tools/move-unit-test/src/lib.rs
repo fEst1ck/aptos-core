@@ -187,7 +187,7 @@ impl UnitTestingConfig {
         let (units, warnings) =
             diagnostics::unwrap_or_report_diagnostics(&files, compilation_result);
         diagnostics::report_warnings(&files, warnings);
-        test_plan.map(|tests| TestPlan::new(tests, files, units))
+        test_plan.map(|tests| TestPlan::new(tests, files, units, todo!()))
     }
 
     /// Build a test plan from a unit test config
