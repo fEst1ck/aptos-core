@@ -588,11 +588,11 @@ pub enum StatusCode {
     GAS_PARAMS_MISSING = 38,
     REQUIRED_DEPOSIT_INCONSISTENT_WITH_TXN_MAX_GAS = 39,
     MULTISIG_TRANSACTION_PAYLOAD_DOES_NOT_MATCH = 40,
-    // Reserved error code for future use
-    RESERVED_VALIDATION_ERROR_6 = 41,
-    RESERVED_VALIDATION_ERROR_7 = 42,
-    RESERVED_VALIDATION_ERROR_8 = 43,
-    RESERVED_VALIDATION_ERROR_9 = 44,
+
+    ACCOUNT_AUTHENTICATION_GAS_LIMIT_EXCEEDED = 41,
+    NONCE_ALREADY_USED = 42,
+    EMPTY_PAYLOAD_PROVIDED = 43,
+    TRANSACTION_EXPIRATION_TOO_FAR_IN_FUTURE = 44,
     // Failed to identify active automated task by provided index/sequence-number
     NO_ACTIVE_AUTOMATED_TASK = 45,
     // Length of program field of automation payload in raw transaction exceeded max length
@@ -609,6 +609,14 @@ pub enum StatusCode {
     // Gas unit price capacity submitted for the automation-task is above the maximum
     // gas price set in the VM.
     AUTOMATION_TASK_GAS_PRICE_CAP_ABOVE_MAX_BOUND = 50,
+
+    // Reserved error code for future use
+    RESERVED_VALIDATION_ERROR_10 = 51,
+    RESERVED_VALIDATION_ERROR_11 = 52,
+    RESERVED_VALIDATION_ERROR_12 = 53,
+    RESERVED_VALIDATION_ERROR_13 = 54,
+    RESERVED_VALIDATION_ERROR_14 = 55,
+    RESERVED_VALIDATION_ERROR_15 = 56,
 
     // When a code module/script is published it is verified. These are the
     // possible errors that can arise from the verification process.

@@ -304,24 +304,6 @@ impl<T: Transaction, O: TransactionOutput<Txn = T>, E: Debug + Send + Clone>
         }
     }
 
-    pub(crate) fn module_write_set(&self, txn_idx: TxnIndex) -> Vec<ModuleWrite<T::Value>> {
-        use ExecutionStatus as E;
-
-        match self.outputs[txn_idx as usize]
-            .load()
-            .as_ref()
-            .map(|status| status.as_ref())
-        {
-            Some(E::Success(t) | E::SkipRest(t)) => t.module_write_set(),
-            Some(
-                E::Abort(_)
-                | E::DelayedFieldsCodeInvariantError(_)
-                | E::SpeculativeExecutionAbortError(_),
-            )
-            | None => Vec::new(),
-        }
-    }
-
     pub(crate) fn delayed_field_keys(
         &self,
         txn_idx: TxnIndex,

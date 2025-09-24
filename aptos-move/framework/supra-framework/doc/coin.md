@@ -2780,6 +2780,54 @@ Note: This bypasses CoinStore::frozen -- coins within a frozen CoinStore can be 
 
 </details>
 
+<a id="0x1_coin_burn_from_for_gas"></a>
+
+## Function `burn_from_for_gas`
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="coin.md#0x1_coin_burn_from_for_gas">burn_from_for_gas</a>&lt;CoinType&gt;(account_addr: <b>address</b>, amount: u64, burn_cap: &<a href="coin.md#0x1_coin_BurnCapability">coin::BurnCapability</a>&lt;CoinType&gt;)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="coin.md#0x1_coin_burn_from_for_gas">burn_from_for_gas</a>&lt;CoinType&gt;(
+    account_addr: <b>address</b>,
+    amount: u64,
+    burn_cap: &<a href="coin.md#0x1_coin_BurnCapability">BurnCapability</a>&lt;CoinType&gt;,
+) <b>acquires</b> <a href="coin.md#0x1_coin_CoinInfo">CoinInfo</a>, <a href="coin.md#0x1_coin_CoinStore">CoinStore</a>, <a href="coin.md#0x1_coin_CoinConversionMap">CoinConversionMap</a>, <a href="coin.md#0x1_coin_PairedFungibleAssetRefs">PairedFungibleAssetRefs</a> {
+    // Skip burning <b>if</b> amount is zero. This shouldn't <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error">error</a> out <b>as</b> it's called <b>as</b> part of transaction fee burning.
+    <b>if</b> (amount == 0) {
+        <b>return</b>
+    };
+
+    <b>let</b> (coin_amount_to_burn, fa_amount_to_burn) = <a href="coin.md#0x1_coin_calculate_amount_to_withdraw">calculate_amount_to_withdraw</a>&lt;CoinType&gt;(
+        account_addr,
+        amount
+    );
+    <b>if</b> (coin_amount_to_burn &gt; 0) {
+        <b>let</b> coin_store = <b>borrow_global_mut</b>&lt;<a href="coin.md#0x1_coin_CoinStore">CoinStore</a>&lt;CoinType&gt;&gt;(account_addr);
+        <b>let</b> coin_to_burn = <a href="coin.md#0x1_coin_extract">extract</a>(&<b>mut</b> coin_store.<a href="coin.md#0x1_coin">coin</a>, coin_amount_to_burn);
+        <a href="coin.md#0x1_coin_burn">burn</a>(coin_to_burn, burn_cap);
+    };
+    <b>if</b> (fa_amount_to_burn &gt; 0) {
+        <a href="fungible_asset.md#0x1_fungible_asset_address_burn_from_for_gas">fungible_asset::address_burn_from_for_gas</a>(
+            <a href="coin.md#0x1_coin_borrow_paired_burn_ref">borrow_paired_burn_ref</a>(burn_cap),
+            <a href="primary_fungible_store.md#0x1_primary_fungible_store_primary_store_address">primary_fungible_store::primary_store_address</a>(account_addr, <a href="../../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_destroy_some">option::destroy_some</a>(<a href="coin.md#0x1_coin_paired_metadata">paired_metadata</a>&lt;CoinType&gt;())),
+            fa_amount_to_burn
+        );
+    };
+}
+</code></pre>
+
+
+
+</details>
+
 <a id="0x1_coin_deposit"></a>
 
 ## Function `deposit`

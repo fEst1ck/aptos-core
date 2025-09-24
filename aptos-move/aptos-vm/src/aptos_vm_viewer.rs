@@ -31,23 +31,17 @@ impl<'t, SV: StateView> AptosVMViewer<'t, SV> {
     }
 
     fn create_gas_meter(&self, max_gas_amount: u64) -> anyhow::Result<ProdGasMeter> {
-        let vm_gas_params =
-            match get_or_vm_startup_failure(&self.vm.gas_params_internal(), &self.log_context) {
-                Ok(gas_params) => gas_params.vm.clone(),
-                Err(err) => return Err(anyhow::Error::msg(format!("{}", err))),
-            };
+        let vm_gas_params = self.vm.gas_params(&self.log_context).map_err(|err| anyhow::Error::msg(err.to_string()))?.vm.clone();
         let storage_gas_params =
-            match get_or_vm_startup_failure(&self.vm.storage_gas_params, &self.log_context) {
-                Ok(gas_params) => gas_params.clone(),
-                Err(err) => return Err(anyhow::Error::msg(format!("{}", err))),
-            };
+        self.vm.storage_gas_params(&self.log_context).map_err(|err| anyhow::Error::msg(err.to_string()))?;
 
         let gas_meter = make_prod_gas_meter(
-            self.vm.gas_feature_version,
+            self.vm.gas_feature_version(),
             vm_gas_params,
             storage_gas_params,
             /* is_approved_gov_script */ false,
             max_gas_amount.into(),
+            &NoopBlockSynchronizationKillSwitch {},
         );
         Ok(gas_meter)
     }
@@ -57,22 +51,30 @@ impl<'t, SV: StateView> AptosVMViewer<'t, SV> {
         function: ViewFunction,
         max_gas_amount: u64,
     ) -> ViewFunctionOutput {
-        let resolver = self.vm.as_move_resolver(self.state_view);
-        let mut session = self.vm.new_session(&resolver, Void, None);
+        let resolver = self.vm.as_move_resolver();
+        let module_storage = self.state_view.as_aptos_code_storage(&self.move_vm().env);
+
+        let mut session = vm.new_session(&resolver, SessionId::Void, None);
+
         let mut gas_meter = match self.create_gas_meter(max_gas_amount) {
             Ok(meter) => meter,
             Err(e) => return ViewFunctionOutput::new(Err(e), 0),
         };
+
         let (module_id, func_name, type_args, arguments) = function.into_inner();
 
-        let execution_result = AptosVM::execute_view_function_in_vm(
+        let traversal_storage = TraversalStorage::new();
+        let mut traversal_context = TraversalContext::new(&traversal_storage);
+        let execution_result = Self::execute_view_function_in_vm(
             &mut session,
-            &self.vm,
+            &vm,
             module_id,
             func_name,
             type_args,
             arguments,
             &mut gas_meter,
+            &mut traversal_context,
+            &module_storage,
         );
         let gas_used = AptosVM::gas_used(max_gas_amount.into(), &gas_meter);
         match execution_result {
