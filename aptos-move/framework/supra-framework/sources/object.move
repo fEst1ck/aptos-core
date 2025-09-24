@@ -1180,7 +1180,7 @@ module supra_framework::object {
     }
 
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
 
     #[test(creator = @0x123)]
     fun test_transfer_permission_e2e(
