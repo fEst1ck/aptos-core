@@ -130,27 +130,29 @@ pub enum FeatureFlag {
     /// Enables bytecode version v8
     VM_BINARY_FORMAT_V8 = 86,
     BULLETPROOFS_BATCH_NATIVES = 87,
-    DERIVABLE_ACCOUNT_ABSTRACTION = 88,
-    /// Whether function values are enabled.
-    ENABLE_FUNCTION_VALUES = 89,
-    NEW_ACCOUNTS_DEFAULT_TO_FA_STORE = 90,
-    DEFAULT_ACCOUNT_RESOURCE = 91,
-    JWK_CONSENSUS_PER_KEY_MODE = 92,
-    TRANSACTION_PAYLOAD_V2 = 93,
-    ORDERLESS_TRANSACTIONS = 94,
-    // TODO(lazy-loading): Add link to AIP and its number + brief description.
-    ENABLE_LAZY_LOADING = 95,
 
-    CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION = 96,
-    DISTRIBUTE_TRANSACTION_FEE = 97,
     // Keeping 4*8 bit reserved to have graceful updated from aptos-mainstream in case of new flags have been added
     // Ends up in 11th byte, 0th bit
-    SUPRA_NATIVE_AUTOMATION = 128,
-    SUPRA_ETH_TRIE = 129,
-    SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK = 130,
-    PRIVATE_POLL = 131,
-    SUPRA_AUTOMATION_TASK_SYNC = 132,
-    SUPRA_COUNT_FAILED_PROPOSALS = 133,
+    SUPRA_NATIVE_AUTOMATION = 88,
+    SUPRA_ETH_TRIE = 89,
+    SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK = 90,
+    PRIVATE_POLL = 91,
+    SUPRA_AUTOMATION_TASK_SYNC = 92,
+    SUPRA_COUNT_FAILED_PROPOSALS = 93,
+
+    DERIVABLE_ACCOUNT_ABSTRACTION = 96,
+    /// Whether function values are enabled.
+    ENABLE_FUNCTION_VALUES = 97,
+    NEW_ACCOUNTS_DEFAULT_TO_FA_STORE = 98,
+    DEFAULT_ACCOUNT_RESOURCE = 99,
+    JWK_CONSENSUS_PER_KEY_MODE = 100,
+    TRANSACTION_PAYLOAD_V2 = 101,
+    ORDERLESS_TRANSACTIONS = 102,
+    // TODO(lazy-loading): Add link to AIP and its number + brief description.
+    ENABLE_LAZY_LOADING = 103,
+
+    CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION = 104,
+    DISTRIBUTE_TRANSACTION_FEE = 105,
 }
 
 impl FeatureFlag {

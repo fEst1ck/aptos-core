@@ -729,7 +729,7 @@ module std::features {
     /// Whether the account abstraction is enabled.
     ///
     /// Lifetime: transient
-    const DERIVABLE_ACCOUNT_ABSTRACTION: u64 = 88;
+    const DERIVABLE_ACCOUNT_ABSTRACTION: u64 = 96;
 
     public fun is_derivable_account_abstraction_enabled(): bool acquires Features {
         is_enabled(DERIVABLE_ACCOUNT_ABSTRACTION)
@@ -744,11 +744,11 @@ module std::features {
     /// Lifetime: transient
     ///
     /// We do not expect use from Move, so for now only for documentation purposes here
-    const ENABLE_FUNCTION_VALUES: u64 = 89;
+    const ENABLE_FUNCTION_VALUES: u64 = 97;
 
     /// Whether new accounts default to the Fungible Asset store.
     /// Lifetime: transient
-    const NEW_ACCOUNTS_DEFAULT_TO_FA_STORE: u64 = 90;
+    const NEW_ACCOUNTS_DEFAULT_TO_FA_STORE: u64 = 98;
 
     public fun get_new_accounts_default_to_fa_store_feature(): u64 { NEW_ACCOUNTS_DEFAULT_TO_FA_STORE }
 
@@ -757,7 +757,7 @@ module std::features {
     }
 
     /// Lifetime: transient
-    const DEFAULT_ACCOUNT_RESOURCE: u64 = 91;
+    const DEFAULT_ACCOUNT_RESOURCE: u64 = 99;
 
     public fun get_default_account_resource_feature(): u64 { DEFAULT_ACCOUNT_RESOURCE }
 
@@ -772,7 +772,7 @@ module std::features {
     /// - while a key-level update is mostly represented by a new type `KeyLevelUpdate` locally,
     ///   For simplicity, it is represented by type `ProviderJWKs` (used to represent issuer-level update)
     ///   in JWK Consensus messages, in validator transactions, and in Move.
-    const JWK_CONSENSUS_PER_KEY_MODE: u64 = 92;
+    const JWK_CONSENSUS_PER_KEY_MODE: u64 = 100;
 
     public fun get_jwk_consensus_per_key_mode_feature(): u64 { JWK_CONSENSUS_PER_KEY_MODE }
 
@@ -782,7 +782,7 @@ module std::features {
 
     /// Whether orderless transactions are enabled.
     /// Lifetime: transient
-    const ORDERLESS_TRANSACTIONS: u64 = 94;
+    const ORDERLESS_TRANSACTIONS: u64 = 102;
 
     public fun get_orderless_transactions_feature(): u64 { ORDERLESS_TRANSACTIONS }
 
@@ -791,7 +791,7 @@ module std::features {
     }
 
     /// Whether to calculate the transaction fee for distribution.
-    const CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION: u64 = 96;
+    const CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION: u64 = 104;
 
     public fun get_calculate_transaction_fee_for_distribution_feature(): u64 { CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION }
 
@@ -800,7 +800,7 @@ module std::features {
     }
 
     /// Whether to distribute transaction fee to validators.
-    const DISTRIBUTE_TRANSACTION_FEE: u64 = 97;
+    const DISTRIBUTE_TRANSACTION_FEE: u64 = 105;
 
     public fun get_distribute_transaction_fee_feature(): u64 { DISTRIBUTE_TRANSACTION_FEE }
 
@@ -813,7 +813,7 @@ module std::features {
     /// enabling automation task registration, execution and cancellation.
     ///
     /// Lifetime: transient
-    const SUPRA_NATIVE_AUTOMATION: u64 = 128;
+    const SUPRA_NATIVE_AUTOMATION: u64 = 88;
 
     public fun get_supra_native_automation_feature(): u64 {
         SUPRA_NATIVE_AUTOMATION
@@ -826,7 +826,7 @@ module std::features {
     /// Whether the APIs related to the eth_trie feature are enabled.
     ///
     /// Lifetime: transient
-    const SUPRA_ETH_TRIE: u64 = 129;
+    const SUPRA_ETH_TRIE: u64 = 89;
 
     public fun get_supra_eth_trie_feature(): u64 {
         SUPRA_ETH_TRIE
@@ -840,7 +840,7 @@ module std::features {
     /// task gas parameters in scope of automation registration transaction will pass gas check.
     ///
     /// Lifetime: transient
-    const SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK: u64 = 130;
+    const SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK: u64 = 90;
 
     public fun get_supra_automation_payload_gas_check_feature(): u64 {
         SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK
@@ -853,7 +853,7 @@ module std::features {
     /// Whether the APIs related to the bls12381_bulletproofs feature are enabled.
     ///
     /// Lifetime: transient
-    const PRIVATE_POLL: u64 = 131;
+    const PRIVATE_POLL: u64 = 91;
 
     public fun get_supra_private_poll_feature(): u64 {
         PRIVATE_POLL
@@ -866,7 +866,7 @@ module std::features {
     /// Whether the automation task sync on block basis is enabled.
     ///
     /// Lifetime: transient
-    const SUPRA_AUTOMATION_TASK_SYNC: u64 = 132;
+    const SUPRA_AUTOMATION_TASK_SYNC: u64 = 92;
 
     public fun get_supra_automation_task_sync_feature(): u64 {
         SUPRA_AUTOMATION_TASK_SYNC
@@ -877,7 +877,7 @@ module std::features {
     }
 
     /// Whether the automation task sync on block basis is enabled.
-    const SUPRA_COUNT_FAILED_PROPOSALS: u64 = 133;
+    const SUPRA_COUNT_FAILED_PROPOSALS: u64 = 93;
 
     public fun get_supra_count_failed_proposals_feature(): u64 {
         SUPRA_COUNT_FAILED_PROPOSALS

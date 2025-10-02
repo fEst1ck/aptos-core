@@ -31,7 +31,7 @@ pub struct SupraCoinType;
 
 impl CoinType for SupraCoinType {
     fn type_tag() -> TypeTag {
-        APTOS_COIN_TYPE.clone()
+        SUPRA_COIN_TYPE.clone()
     }
 
     fn coin_info_address() -> AccountAddress {

@@ -38,10 +38,6 @@ pub const ESECONDARY_KEYS_ADDRESSES_COUNT_MISMATCH: u64 = 1009;
 pub const EGAS_PAYER_ACCOUNT_MISSING: u64 = 1010;
 // Insufficient balance to cover the required deposit.
 pub const EINSUFFICIENT_BALANCE_FOR_REQUIRED_DEPOSIT: u64 = 1011;
-// Nonce is already in the nonce history
-pub const ENONCE_ALREADY_USED: u64 = 1012;
-// Transaction expiration time is too far in the future.
-pub const ETRANSACTION_EXPIRATION_TOO_FAR_IN_FUTURE: u64 = 1013;
 
 // Failed to find active automation task by specified id.
 pub const ENO_ACTIVE_AUTOMATION_TASK: u64 = 1012;
