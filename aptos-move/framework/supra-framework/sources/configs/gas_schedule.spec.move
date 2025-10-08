@@ -48,6 +48,7 @@ spec supra_framework::gas_schedule {
 
     spec set_gas_schedule(supra_framework: &signer, gas_schedule_blob: vector<u8>) {
         use std::signer;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/gas_schedule.spec.move
         use supra_framework::util;
         use supra_framework::coin::CoinInfo;
         use supra_framework::supra_coin::SupraCoin;
@@ -57,6 +58,17 @@ spec supra_framework::gas_schedule {
         // TODO: set because of timeout (property proved)
         pragma verify_duration_estimate = 600;
         requires exists<CoinInfo<SupraCoin>>(@supra_framework);
+=======
+        use aptos_framework::util;
+        use aptos_framework::coin::CoinInfo;
+        use aptos_framework::aptos_coin::AptosCoin;
+        use aptos_framework::staking_config;
+        use aptos_framework::chain_status;
+
+        // TODO: set because of timeout (property proved)
+        pragma verify_duration_estimate = 600;
+        requires exists<CoinInfo<AptosCoin>>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/gas_schedule.spec.move
         requires chain_status::is_genesis();
         include staking_config::StakingRewardsConfigRequirement;
 
@@ -72,6 +84,7 @@ spec supra_framework::gas_schedule {
         ensures global<GasScheduleV2>(@supra_framework) == new_gas_schedule;
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/gas_schedule.spec.move
     spec set_storage_gas_config(supra_framework: &signer, config: StorageGasConfig) {
         use supra_framework::coin::CoinInfo;
         use supra_framework::supra_coin::SupraCoin;
@@ -81,6 +94,17 @@ spec supra_framework::gas_schedule {
         pragma verify_duration_estimate = 600;
         requires exists<CoinInfo<SupraCoin>>(@supra_framework);
         include system_addresses::AbortsIfNotSupraFramework{ account: supra_framework };
+=======
+    spec set_storage_gas_config(aptos_framework: &signer, config: StorageGasConfig) {
+        use aptos_framework::coin::CoinInfo;
+        use aptos_framework::aptos_coin::AptosCoin;
+        use aptos_framework::staking_config;
+
+        // TODO: set because of timeout (property proved).
+        pragma verify_duration_estimate = 600;
+        requires exists<CoinInfo<AptosCoin>>(@aptos_framework);
+        include system_addresses::AbortsIfNotAptosFramework{ account: aptos_framework };
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/gas_schedule.spec.move
         include staking_config::StakingRewardsConfigRequirement;
         aborts_if !exists<StorageGasConfig>(@supra_framework);
         ensures global<StorageGasConfig>(@supra_framework) == config;

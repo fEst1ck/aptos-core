@@ -136,7 +136,10 @@ pub(crate) fn get_allowed_structs(
 pub(crate) fn validate_combine_signer_and_txn_args(
     session: &mut SessionExt<impl AptosMoveResolver>,
     module_storage: &impl ModuleStorage,
+<<<<<<< HEAD
     gas_meter: &mut impl GasMeter,
+=======
+>>>>>>> aptos-framework-v1.34.0
     serialized_signers: &SerializedSigners,
     args: Vec<Vec<u8>>,
     func: &LoadedFunction,
@@ -200,7 +203,10 @@ pub(crate) fn validate_combine_signer_and_txn_args(
     let args = construct_args(
         session,
         module_storage,
+<<<<<<< HEAD
         gas_meter,
+=======
+>>>>>>> aptos-framework-v1.34.0
         &func.param_tys()[signer_param_cnt..],
         args,
         func.ty_args(),
@@ -256,7 +262,10 @@ pub(crate) fn is_valid_txn_arg(
 pub(crate) fn construct_args(
     session: &mut SessionExt<impl AptosMoveResolver>,
     module_storage: &impl ModuleStorage,
+<<<<<<< HEAD
     gas_meter: &mut impl GasMeter,
+=======
+>>>>>>> aptos-framework-v1.34.0
     types: &[Type],
     args: Vec<Vec<u8>>,
     ty_args: &[Type],
@@ -278,7 +287,11 @@ pub(crate) fn construct_args(
             &ty,
             allowed_structs,
             arg,
+<<<<<<< HEAD
             gas_meter,
+=======
+            &mut gas_meter,
+>>>>>>> aptos-framework-v1.34.0
             is_view,
         )?;
         res_args.push(arg);

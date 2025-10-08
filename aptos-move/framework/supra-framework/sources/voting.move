@@ -32,11 +32,19 @@ module supra_framework::voting {
     use aptos_std::table::{Self, Table};
     use aptos_std::type_info::{Self, TypeInfo};
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/voting.move
     use supra_framework::account;
     use supra_framework::event::{Self, EventHandle};
     use supra_framework::permissioned_signer;
     use supra_framework::timestamp;
     use supra_framework::transaction_context;
+=======
+    use aptos_framework::account;
+    use aptos_framework::event::{Self, EventHandle};
+    use aptos_framework::permissioned_signer;
+    use aptos_framework::timestamp;
+    use aptos_framework::transaction_context;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/voting.move
     use aptos_std::from_bcs;
 
     /// Current script's execution hash does not match the specified proposal's

@@ -44,6 +44,7 @@ module supra_framework::vesting {
     use aptos_std::pool_u64::{Self, Pool};
     use aptos_std::simple_map::{Self, SimpleMap};
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.move
     use supra_framework::account::{Self, SignerCapability, new_event_handle};
     use supra_framework::supra_account::{Self, assert_account_is_registered_for_supra};
     use supra_framework::supra_coin::SupraCoin;
@@ -54,6 +55,18 @@ module supra_framework::vesting {
     use supra_framework::system_addresses;
     use supra_framework::timestamp;
     use supra_framework::permissioned_signer;
+=======
+    use aptos_framework::account::{Self, SignerCapability, new_event_handle};
+    use aptos_framework::aptos_account::{Self, assert_account_is_registered_for_apt};
+    use aptos_framework::aptos_coin::AptosCoin;
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::event::{EventHandle, emit, emit_event};
+    use aptos_framework::stake;
+    use aptos_framework::staking_contract;
+    use aptos_framework::system_addresses;
+    use aptos_framework::timestamp;
+    use aptos_framework::permissioned_signer;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.move
 
     friend supra_framework::genesis;
 
@@ -1236,8 +1249,13 @@ module supra_framework::vesting {
     const VALIDATOR_STATUS_INACTIVE: u64 = 4;
 
     #[test_only]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.move
     public fun setup(supra_framework: &signer, accounts: &vector<address>) {
         use supra_framework::supra_account::create_account;
+=======
+    public fun setup(aptos_framework: &signer, accounts: &vector<address>) {
+        use aptos_framework::aptos_account::create_account;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.move
 
         stake::initialize_for_test_custom(
             supra_framework,
@@ -1256,7 +1274,11 @@ module supra_framework::vesting {
         });
 
         // In the test environment, the periodical_reward_rate_decrease feature is initially turned off.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.move
         std::features::change_feature_flags_for_testing(supra_framework, vector[], vector[std::features::get_periodical_reward_rate_decrease_feature()]);
+=======
+        std::features::change_feature_flags_for_testing(aptos_framework, vector[], vector[std::features::get_periodical_reward_rate_decrease_feature()]);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.move
     }
 
     #[test_only]
@@ -1477,7 +1499,11 @@ module supra_framework::vesting {
         setup_vesting_contract(admin, &vector[@1, @2], &vector[1], admin_address, 0);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.move
     #[test(supra_framework = @0x1)]
+=======
+    #[test(aptos_framework = @0x1)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.move
     #[expected_failure(abort_code = 0x10002, location = Self)]
     public entry fun test_create_empty_vesting_schedule_should_fail(supra_framework: &signer) {
         setup(supra_framework, &vector[]);
@@ -1999,9 +2025,15 @@ module supra_framework::vesting {
         admin_withdraw(admin, contract_address);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.move
     #[test(supra_framework = @0x1, admin = @0x123)]
     public entry fun test_set_beneficiary_with_missing_account(
         supra_framework: &signer,
+=======
+    #[test(aptos_framework = @0x1, admin = @0x123)]
+    public entry fun test_set_beneficiary_with_missing_account(
+        aptos_framework: &signer,
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.move
         admin: &signer,
     ) acquires AdminStore, VestingContract {
         let admin_address = signer::address_of(admin);
@@ -2011,6 +2043,7 @@ module supra_framework::vesting {
         set_beneficiary(admin, contract_address, @1, @11);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.move
     #[test(supra_framework = @0x1, admin = @0x123)]
     public entry fun test_set_beneficiary_with_unregistered_account(
         supra_framework: &signer,
@@ -2018,6 +2051,15 @@ module supra_framework::vesting {
     ) acquires AdminStore, VestingContract {
         let fa_feature = std::features::get_new_accounts_default_to_fa_store_feature();
         std::features::change_feature_flags_for_testing(supra_framework, vector[], vector[fa_feature]);
+=======
+    #[test(aptos_framework = @0x1, admin = @0x123)]
+    public entry fun test_set_beneficiary_with_unregistered_account(
+        aptos_framework: &signer,
+        admin: &signer,
+    ) acquires AdminStore, VestingContract {
+        let fa_feature = std::features::get_new_accounts_default_to_fa_store_feature();
+        std::features::change_feature_flags_for_testing(aptos_framework, vector[], vector[fa_feature]);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.move
         let admin_address = signer::address_of(admin);
         setup(supra_framework, &vector[admin_address]);
         let contract_address = setup_vesting_contract(

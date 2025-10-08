@@ -56,8 +56,13 @@ module supra_framework::execution_config {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<ExecutionConfig>()) {
             let config = config_buffer::extract_v2<ExecutionConfig>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/execution_config.move
             if (exists<ExecutionConfig>(@supra_framework)) {
                 *borrow_global_mut<ExecutionConfig>(@supra_framework) = config;
+=======
+            if (exists<ExecutionConfig>(@aptos_framework)) {
+                *borrow_global_mut<ExecutionConfig>(@aptos_framework) = config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/execution_config.move
             } else {
                 move_to(framework, config);
             };

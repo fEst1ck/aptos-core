@@ -996,7 +996,11 @@ module supra_framework::staking_contract {
     const MAXIMUM_STAKE: u64 = 100000000000000000; // 1B SUPRA coins with 8 decimals.
 
     #[test_only]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/staking_contract.move
     public fun setup(supra_framework: &signer, staker: &signer, operator: &signer, initial_balance: u64) {
+=======
+    public fun setup(aptos_framework: &signer, staker: &signer, operator: &signer, initial_balance: u64) {
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/staking_contract.move
         // Reward rate of 0.1% per epoch.
         stake::initialize_for_test_custom(
             supra_framework,
@@ -1035,7 +1039,11 @@ module supra_framework::staking_contract {
         // Voter is initially set to operator but then updated to be staker.
         create_staking_contract(staker, operator_address, operator_address, amount, commission, vector::empty<u8>());
         // In the test environment, the periodical_reward_rate_decrease feature is initially turned off.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/staking_contract.move
         std::features::change_feature_flags_for_testing(supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+=======
+        std::features::change_feature_flags_for_testing(aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/staking_contract.move
     }
 
     #[test(supra_framework = @0x1, staker = @0x123, operator = @0x234)]
@@ -1044,7 +1052,11 @@ module supra_framework::staking_contract {
         staker: &signer,
         operator: &signer
     ) acquires Store, BeneficiaryForOperator, Staker {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/staking_contract.move
         setup_staking_contract(supra_framework, staker, operator, INITIAL_BALANCE, 10);
+=======
+        setup_staking_contract(aptos_framework, staker, operator, INITIAL_BALANCE, 10);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/staking_contract.move
         let staker_address = signer::address_of(staker);
         let operator_address = signer::address_of(operator);
         assert_staking_contract_exists(staker_address, operator_address);

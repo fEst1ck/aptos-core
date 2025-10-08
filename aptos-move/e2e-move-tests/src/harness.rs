@@ -252,6 +252,7 @@ impl MoveHarness {
     /// Runs a signed transaction. On success, applies the write set.
     pub fn run_raw(&mut self, txn: SignedTransaction) -> TransactionOutput {
         let output = self.executor.execute_transaction(txn);
+<<<<<<< HEAD
         if matches!(output.status(), TransactionStatus::Keep(_)) {
             self.executor.apply_write_set(output.write_set());
             self.executor.append_events(output.events().to_vec());
@@ -262,12 +263,18 @@ impl MoveHarness {
     /// Runs a signed transaction. On success, applies the write set.
     pub fn try_run_raw(&mut self, txn: SignedTransaction) -> Result<TransactionOutput, VMStatus> {
         let mut output = self.executor.try_execute_transaction(txn)?;
+=======
+>>>>>>> aptos-framework-v1.34.0
         if matches!(output.status(), TransactionStatus::Keep(_)) {
             self.executor.apply_write_set(output.write_set());
             self.executor.append_events(output.events().to_vec());
         }
+<<<<<<< HEAD
         output.fill_error_status();
         Ok(output)
+=======
+        output
+>>>>>>> aptos-framework-v1.34.0
     }
 
     /// Runs a signed transaction. On success, applies the write set.

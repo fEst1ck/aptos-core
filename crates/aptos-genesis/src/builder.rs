@@ -443,7 +443,10 @@ pub struct GenesisConfiguration {
     pub initial_features_override: Option<Features>,
     pub randomness_config_override: Option<OnChainRandomnessConfig>,
     pub jwk_consensus_config_override: Option<OnChainJWKConsensusConfig>,
+<<<<<<< HEAD
     pub automation_registry_config: Option<AutomationRegistryConfig>,
+=======
+>>>>>>> aptos-framework-v1.34.0
     pub initial_jwks: Vec<IssuerJWK>,
     pub keyless_groth16_vk: Option<Groth16VerificationKey>,
 }
@@ -669,7 +672,10 @@ impl Builder {
             initial_features_override: None,
             randomness_config_override: None,
             jwk_consensus_config_override: None,
+<<<<<<< HEAD
             automation_registry_config: Some(AutomationRegistryConfig::default()),
+=======
+>>>>>>> aptos-framework-v1.34.0
             initial_jwks: vec![],
             keyless_groth16_vk: None,
         };

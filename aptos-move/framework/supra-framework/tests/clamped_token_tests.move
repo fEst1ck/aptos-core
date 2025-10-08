@@ -1,8 +1,15 @@
 #[test_only]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/clamped_token_tests.move
 module supra_framework::clamped_token_tests {
     use supra_framework::fungible_asset::{Self, Metadata, TestToken};
     use supra_framework::dispatchable_fungible_asset;
     use supra_framework::object;
+=======
+module aptos_framework::clamped_token_tests {
+    use aptos_framework::fungible_asset::{Self, Metadata, TestToken};
+    use aptos_framework::dispatchable_fungible_asset;
+    use aptos_framework::object;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/clamped_token_tests.move
     use 0xcafe::clamped_token;
     use std::option;
 

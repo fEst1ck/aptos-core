@@ -149,12 +149,15 @@ pub enum FeatureFlag {
     EnableLazyLoading,
     CalculateTransactionFeeForDistribution,
     DistributeTransactionFee,
+<<<<<<< HEAD
     SupraNativeAutomation,
     SupraEthTrie,
     SupraAutomationPayloadGasCheck,
     PrivatePoll,
     SupraAutomationTaskSync,
     SupraCountFailedProposals,
+=======
+>>>>>>> aptos-framework-v1.34.0
 }
 
 fn generate_features_blob(writer: &CodeWriter, data: &[u64]) {
@@ -401,6 +404,7 @@ impl From<FeatureFlag> for AptosFeatureFlag {
                 AptosFeatureFlag::CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION
             },
             FeatureFlag::DistributeTransactionFee => AptosFeatureFlag::DISTRIBUTE_TRANSACTION_FEE,
+<<<<<<< HEAD
                 FeatureFlag::SupraNativeAutomation => AptosFeatureFlag::SUPRA_NATIVE_AUTOMATION,
             FeatureFlag::SupraEthTrie => AptosFeatureFlag::SUPRA_ETH_TRIE,
             FeatureFlag::SupraAutomationPayloadGasCheck => {
@@ -411,6 +415,8 @@ impl From<FeatureFlag> for AptosFeatureFlag {
             FeatureFlag::SupraCountFailedProposals => {
                 AptosFeatureFlag::SUPRA_COUNT_FAILED_PROPOSALS
             },
+=======
+>>>>>>> aptos-framework-v1.34.0
         }
     }
 }
@@ -584,6 +590,7 @@ impl From<AptosFeatureFlag> for FeatureFlag {
                 FeatureFlag::CalculateTransactionFeeForDistribution
             },
             AptosFeatureFlag::DISTRIBUTE_TRANSACTION_FEE => FeatureFlag::DistributeTransactionFee,
+<<<<<<< HEAD
                 AptosFeatureFlag::SUPRA_NATIVE_AUTOMATION => FeatureFlag::SupraNativeAutomation,
             AptosFeatureFlag::SUPRA_ETH_TRIE => FeatureFlag::SupraEthTrie,
             AptosFeatureFlag::SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK => {
@@ -594,6 +601,8 @@ impl From<AptosFeatureFlag> for FeatureFlag {
             AptosFeatureFlag::SUPRA_COUNT_FAILED_PROPOSALS => {
                 FeatureFlag::SupraCountFailedProposals
             },
+=======
+>>>>>>> aptos-framework-v1.34.0
         }
     }
 }

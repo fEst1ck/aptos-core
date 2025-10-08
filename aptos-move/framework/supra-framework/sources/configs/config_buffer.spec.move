@@ -23,7 +23,11 @@ spec supra_framework::config_buffer {
     }
 
     spec extract_v2<T: store>(): T {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/config_buffer.spec.move
         aborts_if !exists<PendingConfigs>(@supra_framework);
+=======
+        aborts_if !exists<PendingConfigs>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/config_buffer.spec.move
         include ExtractAbortsIf<T>;
     }
 

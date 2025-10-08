@@ -79,12 +79,16 @@ pub fn aptos_test_natives() -> NativeFunctionTable {
 
 #[test]
 fn move_framework_unit_tests() {
+<<<<<<< HEAD
     run_tests_for_pkg("supra-framework", false);
 }
 
 #[test]
 fn move_supra_stdlib_unit_tests() {
     run_tests_for_pkg("supra-stdlib");
+=======
+    run_tests_for_pkg("aptos-framework", false);
+>>>>>>> aptos-framework-v1.34.0
 }
 
 #[test]

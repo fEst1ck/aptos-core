@@ -4,10 +4,18 @@
 /// events emitted to a handle and emit events to the event store.
 module supra_framework::event {
     use std::bcs;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/event.move
     use supra_framework::guid::GUID;
 
     friend supra_framework::account;
     friend supra_framework::object;
+=======
+    use aptos_framework::guid::GUID;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/event.move
+
+    /// An event cannot be created. This error is returned by native implementations when
+    ///   - The type tag for event is too deeply nested.
+    const ECANNOT_CREATE_EVENT: u64 = 1;
 
     /// An event cannot be created. This error is returned by native implementations when
     ///   - The type tag for event is too deeply nested.

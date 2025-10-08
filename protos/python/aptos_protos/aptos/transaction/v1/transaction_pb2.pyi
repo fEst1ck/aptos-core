@@ -821,7 +821,10 @@ class TransactionPayload(_message.Message):
         "script_payload",
         "write_set_payload",
         "multisig_payload",
+<<<<<<< HEAD
         "automation_payload",
+=======
+>>>>>>> aptos-framework-v1.34.0
         "extra_config_v1",
     ]
 
@@ -844,14 +847,20 @@ class TransactionPayload(_message.Message):
     SCRIPT_PAYLOAD_FIELD_NUMBER: _ClassVar[int]
     WRITE_SET_PAYLOAD_FIELD_NUMBER: _ClassVar[int]
     MULTISIG_PAYLOAD_FIELD_NUMBER: _ClassVar[int]
+<<<<<<< HEAD
     AUTOMATION_PAYLOAD_FIELD_NUMBER: _ClassVar[int]
+=======
+>>>>>>> aptos-framework-v1.34.0
     EXTRA_CONFIG_V1_FIELD_NUMBER: _ClassVar[int]
     type: TransactionPayload.Type
     entry_function_payload: EntryFunctionPayload
     script_payload: ScriptPayload
     write_set_payload: WriteSetPayload
     multisig_payload: MultisigPayload
+<<<<<<< HEAD
     automation_payload: AutomationPayload
+=======
+>>>>>>> aptos-framework-v1.34.0
     extra_config_v1: ExtraConfigV1
     def __init__(
         self,
@@ -860,7 +869,10 @@ class TransactionPayload(_message.Message):
         script_payload: _Optional[_Union[ScriptPayload, _Mapping]] = ...,
         write_set_payload: _Optional[_Union[WriteSetPayload, _Mapping]] = ...,
         multisig_payload: _Optional[_Union[MultisigPayload, _Mapping]] = ...,
+<<<<<<< HEAD
         automation_payload: _Optional[_Union[AutomationPayload, _Mapping]] = ...,
+=======
+>>>>>>> aptos-framework-v1.34.0
         extra_config_v1: _Optional[_Union[ExtraConfigV1, _Mapping]] = ...,
     ) -> None: ...
 

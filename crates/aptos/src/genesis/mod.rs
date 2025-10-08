@@ -259,7 +259,12 @@ pub fn fetch_mainnet_genesis_info(git_options: GitOptions) -> CliTypedResult<Mai
             initial_features_override: None,
             randomness_config_override: None,
             jwk_consensus_config_override: None,
+<<<<<<< HEAD
             automation_registry_config: layout.automation_registry_config.clone(),
+=======
+            initial_jwks: vec![],
+            keyless_groth16_vk: None,
+>>>>>>> aptos-framework-v1.34.0
         },
     )?)
 }
@@ -305,7 +310,12 @@ pub fn fetch_genesis_info(git_options: GitOptions) -> CliTypedResult<GenesisInfo
             initial_features_override: None,
             randomness_config_override: None,
             jwk_consensus_config_override: layout.jwk_consensus_config_override.clone(),
+<<<<<<< HEAD
             automation_registry_config: layout.automation_registry_config.clone(),
+=======
+            initial_jwks: layout.initial_jwks.clone(),
+            keyless_groth16_vk: layout.keyless_groth16_vk_override.clone(),
+>>>>>>> aptos-framework-v1.34.0
         },
     )?)
 }

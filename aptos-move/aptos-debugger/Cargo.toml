@@ -15,7 +15,11 @@ rust-version = { workspace = true }
 [dependencies]
 anyhow = { workspace = true }
 aptos-block-executor = { workspace = true }
+<<<<<<< HEAD
 # aptos-consensus = { workspace = true }
+=======
+aptos-consensus = { workspace = true }
+>>>>>>> aptos-framework-v1.34.0
 aptos-crypto = { workspace = true }
 aptos-gas-profiling = { workspace = true }
 aptos-logger = { workspace = true }

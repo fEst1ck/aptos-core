@@ -39,16 +39,26 @@ module supra_framework::randomness_api_v0_config {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<RequiredGasDeposit>()) {
             let new_config = config_buffer::extract_v2<RequiredGasDeposit>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/randomness_api_v0_config.move
             if (exists<RequiredGasDeposit>(@supra_framework)) {
                 *borrow_global_mut<RequiredGasDeposit>(@supra_framework) = new_config;
+=======
+            if (exists<RequiredGasDeposit>(@aptos_framework)) {
+                *borrow_global_mut<RequiredGasDeposit>(@aptos_framework) = new_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/randomness_api_v0_config.move
             } else {
                 move_to(framework, new_config);
             }
         };
         if (config_buffer::does_exist<AllowCustomMaxGasFlag>()) {
             let new_config = config_buffer::extract_v2<AllowCustomMaxGasFlag>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/randomness_api_v0_config.move
             if (exists<AllowCustomMaxGasFlag>(@supra_framework)) {
                 *borrow_global_mut<AllowCustomMaxGasFlag>(@supra_framework) = new_config;
+=======
+            if (exists<AllowCustomMaxGasFlag>(@aptos_framework)) {
+                *borrow_global_mut<AllowCustomMaxGasFlag>(@aptos_framework) = new_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/randomness_api_v0_config.move
             } else {
                 move_to(framework, new_config);
             }

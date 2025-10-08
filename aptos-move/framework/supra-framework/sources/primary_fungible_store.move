@@ -21,9 +21,15 @@ module supra_framework::primary_fungible_store {
     use std::string::String;
 
     #[test_only]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/primary_fungible_store.move
     use supra_framework::permissioned_signer;
 
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
+=======
+    use aptos_framework::permissioned_signer;
+
+    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/primary_fungible_store.move
     /// A resource that holds the derive ref for the fungible asset metadata object. This is used to create primary
     /// stores for users with deterministic addresses so that users can easily deposit/withdraw/transfer fungible
     /// assets.

@@ -41,7 +41,11 @@ use aptos_types::{
         TransactionPayload, TransactionPayloadInner,
     },
     vm_status::StatusCode,
+<<<<<<< HEAD
     SupraCoinType, CoinType,
+=======
+    AptosCoinType, CoinType,
+>>>>>>> aptos-framework-v1.34.0
 };
 use aptos_vm::{AptosSimulationVM, AptosVM};
 use move_core_types::{ident_str, language_storage::ModuleId, vm_status::VMStatus};
@@ -637,7 +641,11 @@ impl TransactionsApi {
                     &state_view,
                     ModuleId::new(AccountAddress::ONE, ident_str!("coin").into()),
                     ident_str!("balance").into(),
+<<<<<<< HEAD
                     vec![SupraCoinType::type_tag()],
+=======
+                    vec![AptosCoinType::type_tag()],
+>>>>>>> aptos-framework-v1.34.0
                     vec![signed_transaction.sender().to_vec()],
                     context.node_config.api.max_gas_view_function,
                 );

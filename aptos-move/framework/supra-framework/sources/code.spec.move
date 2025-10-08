@@ -73,6 +73,7 @@ spec supra_framework::code {
     }
 
     spec schema AbortsIfPermissionedSigner {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/code.spec.move
         use supra_framework::permissioned_signer;
         s: signer;
         let perm = CodePublishingPermission {};
@@ -80,14 +81,21 @@ spec supra_framework::code {
     }
 
     spec schema AbortsIfPermissionedSigner {
+=======
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/code.spec.move
         use aptos_framework::permissioned_signer;
         s: signer;
         let perm = CodePublishingPermission {};
         aborts_if !permissioned_signer::spec_check_permission_exists(s, perm);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/code.spec.move
     spec initialize(supra_framework: &signer, package_owner: &signer, metadata: PackageMetadata) {
         let aptos_addr = signer::address_of(supra_framework);
+=======
+    spec initialize(aptos_framework: &signer, package_owner: &signer, metadata: PackageMetadata) {
+        let aptos_addr = signer::address_of(aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/code.spec.move
         let owner_addr = signer::address_of(package_owner);
         aborts_if !system_addresses::is_supra_framework_address(aptos_addr);
 

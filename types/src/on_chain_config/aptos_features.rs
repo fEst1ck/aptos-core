@@ -130,6 +130,7 @@ pub enum FeatureFlag {
     /// Enables bytecode version v8
     VM_BINARY_FORMAT_V8 = 86,
     BULLETPROOFS_BATCH_NATIVES = 87,
+<<<<<<< HEAD
 
     // Keeping 4*8 bit reserved to have graceful updated from aptos-mainstream in case of new flags have been added
     // Ends up in 11th byte, 0th bit
@@ -153,6 +154,21 @@ pub enum FeatureFlag {
 
     CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION = 104,
     DISTRIBUTE_TRANSACTION_FEE = 105,
+=======
+    DERIVABLE_ACCOUNT_ABSTRACTION = 88,
+    /// Whether function values are enabled.
+    ENABLE_FUNCTION_VALUES = 89,
+    NEW_ACCOUNTS_DEFAULT_TO_FA_STORE = 90,
+    DEFAULT_ACCOUNT_RESOURCE = 91,
+    JWK_CONSENSUS_PER_KEY_MODE = 92,
+    TRANSACTION_PAYLOAD_V2 = 93,
+    ORDERLESS_TRANSACTIONS = 94,
+    // TODO(lazy-loading): Add link to AIP and its number + brief description.
+    ENABLE_LAZY_LOADING = 95,
+
+    CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION = 96,
+    DISTRIBUTE_TRANSACTION_FEE = 97,
+>>>>>>> aptos-framework-v1.34.0
 }
 
 impl FeatureFlag {
@@ -251,10 +267,13 @@ impl FeatureFlag {
             FeatureFlag::ORDERLESS_TRANSACTIONS,
             FeatureFlag::CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION,
             FeatureFlag::DISTRIBUTE_TRANSACTION_FEE,
+<<<<<<< HEAD
             FeatureFlag::SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK,
             FeatureFlag::PRIVATE_POLL,
             FeatureFlag::SUPRA_AUTOMATION_TASK_SYNC,
             FeatureFlag::SUPRA_COUNT_FAILED_PROPOSALS,
+=======
+>>>>>>> aptos-framework-v1.34.0
         ]
     }
 }

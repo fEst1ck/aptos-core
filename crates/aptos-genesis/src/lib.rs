@@ -83,7 +83,10 @@ pub struct GenesisInfo {
     pub initial_features_override: Option<Features>,
     pub randomness_config_override: Option<OnChainRandomnessConfig>,
     pub jwk_consensus_config_override: Option<OnChainJWKConsensusConfig>,
+<<<<<<< HEAD
     pub automation_registry_config: Option<AutomationRegistryConfig>,
+=======
+>>>>>>> aptos-framework-v1.34.0
     pub initial_jwks: Vec<IssuerJWK>,
     pub keyless_groth16_vk: Option<Groth16VerificationKey>,
 }
@@ -127,7 +130,10 @@ impl GenesisInfo {
             initial_features_override: genesis_config.initial_features_override.clone(),
             randomness_config_override: genesis_config.randomness_config_override.clone(),
             jwk_consensus_config_override: genesis_config.jwk_consensus_config_override.clone(),
+<<<<<<< HEAD
             automation_registry_config: genesis_config.automation_registry_config.clone(),
+=======
+>>>>>>> aptos-framework-v1.34.0
             initial_jwks: genesis_config.initial_jwks.clone(),
             keyless_groth16_vk: genesis_config.keyless_groth16_vk.clone(),
         })
@@ -171,8 +177,11 @@ impl GenesisInfo {
                 initial_features_override: self.initial_features_override.clone(),
                 randomness_config_override: self.randomness_config_override.clone(),
                 jwk_consensus_config_override: self.jwk_consensus_config_override.clone(),
+<<<<<<< HEAD
                 genesis_timestamp_in_microseconds: self.genesis_timestamp_in_microseconds,
                 automation_registry_config: self.automation_registry_config.clone(),
+=======
+>>>>>>> aptos-framework-v1.34.0
                 initial_jwks: self.initial_jwks.clone(),
                 keyless_groth16_vk: self.keyless_groth16_vk.clone(),
             },

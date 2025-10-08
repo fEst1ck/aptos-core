@@ -597,7 +597,10 @@ env_logger = "0.10.0"
 equivalent = "1.0"
 erased-serde = "0.3.13"
 ethnum = "1.5.0"
+<<<<<<< HEAD
 eth_trie = "0.4.0"
+=======
+>>>>>>> aptos-framework-v1.34.0
 ethers = { version = "2" }
 dearbitrary = { version = "1.0.4", features = ["derive"] }
 fail = "0.5.0"
@@ -743,6 +746,7 @@ reqwest-middleware = "0.2.0"
 reqwest-retry = "0.2.1"
 ring = { version = "0.16.20", features = ["std"] }
 ripemd = "0.1.1"
+<<<<<<< HEAD
 rlp = "0.5.1"
 
 # ######
@@ -754,6 +758,10 @@ rocksdb = { version = "0.22.0", default-features = false, features = [
 ] }
 #########
 
+=======
+rlimit = "0.10.2"
+rocksdb = { version = "0.22.0", features = ["lz4"] }
+>>>>>>> aptos-framework-v1.34.0
 rsa = { version = "0.9.6" }
 rstack-self = { version = "0.3.0", features = ["dw"], default-features = false }
 rstest = "0.15.0"

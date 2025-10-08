@@ -541,7 +541,11 @@ impl AptosVM {
         }
     }
 
+<<<<<<< HEAD
     pub(crate) fn inject_abort_info_if_available(
+=======
+    fn inject_abort_info_if_available(
+>>>>>>> aptos-framework-v1.34.0
         &self,
         module_storage: &impl AptosModuleStorage,
         traversal_context: &TraversalContext,
@@ -833,7 +837,10 @@ impl AptosVM {
         let args = transaction_arg_validation::validate_combine_signer_and_txn_args(
             session,
             code_storage,
+<<<<<<< HEAD
             &mut UnmeteredGasMeter,
+=======
+>>>>>>> aptos-framework-v1.34.0
             serialized_signers,
             convert_txn_args(serialized_script.args()),
             &func,
@@ -909,7 +916,10 @@ impl AptosVM {
         let args = transaction_arg_validation::validate_combine_signer_and_txn_args(
             session,
             module_storage,
+<<<<<<< HEAD
             &mut UnmeteredGasMeter,
+=======
+>>>>>>> aptos-framework-v1.34.0
             serialized_signers,
             entry_fn.args().to_vec(),
             &function,
@@ -976,6 +986,7 @@ impl AptosVM {
                         gas_meter,
                         traversal_context,
                         entry_fn,
+<<<<<<< HEAD
                     )
                 })?;
             }
@@ -999,6 +1010,8 @@ impl AptosVM {
                         txn_data.sender(),
                         registration_params,
                         txn_data,
+=======
+>>>>>>> aptos-framework-v1.34.0
                     )
                 })?;
             },
@@ -1124,7 +1137,11 @@ impl AptosVM {
         txn_data: &TransactionMetadata,
         resolver: &impl AptosMoveResolver,
         module_storage: &impl AptosModuleStorage,
+<<<<<<< HEAD
     ) -> Result<GasQuantity<Quant>, VMStatus> {
+=======
+    ) -> Result<GasQuantity<Octa>, VMStatus> {
+>>>>>>> aptos-framework-v1.34.0
         gas_meter.charge_io_gas_for_transaction(txn_data.transaction_size())?;
         for event in change_set.events_iter() {
             gas_meter.charge_io_gas_for_event(event)?;
@@ -1147,7 +1164,11 @@ impl AptosVM {
         Ok(storage_refund)
     }
 
+<<<<<<< HEAD
     pub(crate) fn charge_change_set_and_respawn_session<'r>(
+=======
+    fn charge_change_set_and_respawn_session<'r>(
+>>>>>>> aptos-framework-v1.34.0
         &self,
         mut user_session_change_set: UserSessionChangeSet,
         resolver: &'r impl AptosMoveResolver,
@@ -1462,7 +1483,11 @@ impl AptosVM {
     }
 
     /// Resolve a pending code publish request registered via the NativeCodeContext.
+<<<<<<< HEAD
     pub(crate) fn resolve_pending_code_publish_and_finish_user_session(
+=======
+    fn resolve_pending_code_publish_and_finish_user_session(
+>>>>>>> aptos-framework-v1.34.0
         &self,
         mut session: UserSession,
         resolver: &impl AptosMoveResolver,
@@ -1714,6 +1739,7 @@ impl AptosVM {
         traversal_context: &mut TraversalContext,
         gas_meter: &mut impl AptosGasMeter,
     ) -> Result<SerializedSigners, VMStatus> {
+<<<<<<< HEAD
         // Check if the native automation feature is active. We do this here so that the check
         // is executed during verification at the RPC node and mempool as well as during execution.
         if let TransactionPayload::AutomationRegistration(_) = transaction.payload() {
@@ -1731,6 +1757,8 @@ impl AptosVM {
             }
         }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
         // Check transaction format.
         if transaction.contains_duplicate_signers() {
             return Err(VMStatus::error(
@@ -1986,7 +2014,10 @@ impl AptosVM {
         let payload_timer =
             VM_TIMER.timer_with_label("AptosVM::execute_user_transaction_impl [payload]");
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> aptos-framework-v1.34.0
         // `validate_signed_transaction` function already discards the transactions with `TransactionPayloadInner` type payload if the
         // corresponding feature flag (`TransactionPayloadV2`) is disabled. Therefore, we don't need to check the feature flag here again.
         let executable = match txn.executable_ref() {
@@ -2009,7 +2040,11 @@ impl AptosVM {
                 log_context,
                 change_set_configs,
             )
+<<<<<<< HEAD
         }  else {
+=======
+        } else {
+>>>>>>> aptos-framework-v1.34.0
             self.execute_script_or_entry_function(
                 resolver,
                 code_storage,
@@ -2631,7 +2666,11 @@ impl AptosVM {
             .into()
     }
 
+<<<<<<< HEAD
     pub(crate) fn execute_view_function_in_vm(
+=======
+    fn execute_view_function_in_vm(
+>>>>>>> aptos-framework-v1.34.0
         session: &mut SessionExt<impl AptosMoveResolver>,
         vm: &AptosVM,
         module_id: ModuleId,
@@ -2719,6 +2758,7 @@ impl AptosVM {
             self.is_simulation,
         )?;
 
+<<<<<<< HEAD
 
         if let Some(task_registration_params) = executable_ref.as_automation_registration_params() {
             check_automation_task_gas(
@@ -2730,6 +2770,8 @@ impl AptosVM {
             )
         }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
         if let Some(multisig_address) = extra_config.multisig_address() {
             // Once "simulation_enhancement" is enabled, the simulation path also validates the
             // multisig transaction by running the multisig prologue.

@@ -8,6 +8,7 @@
 ///   - Changing how gas is calculated in any way
 ///
 /// Change log:
+<<<<<<< HEAD
 /// - V33:
 ///    - Gas charging for modules used in type tags
 ///
@@ -21,6 +22,14 @@
 ///   - Increased governance transaction execution limit from 4B to 5B to enable framework upgrades without changing
 ///     the gas schedule.
 ///   - Updated the `pbo_delegation_pool.move` and `vesting_without_staking.move` smart contracts (not gas-related).
+=======
+/// - V31:
+///    - Gas charging for modules used in type tags
+///
+/// - V22
+///    - Gas parameters for enums
+///    - Gas parameters for new native function `bcs::serialized_size`
+>>>>>>> aptos-framework-v1.34.0
 /// - V21
 ///   - Fix type to type tag conversion in MoveVM
 /// - V20
@@ -92,6 +101,7 @@ pub mod gas_feature_versions {
     pub const RELEASE_V1_14: u64 = 19;
     pub const RELEASE_V1_15: u64 = 20;
     pub const RELEASE_V1_16: u64 = 21;
+<<<<<<< HEAD
     pub const RELEASE_V1_16_SUPRA_V1_5_1: u64 = 22;
     pub const RELEASE_V1_16_SUPRA_V1_6_0: u64 = 23;
     pub const RELEASE_V1_16: u64 = 24;
@@ -111,4 +121,22 @@ pub mod gas_feature_versions {
     pub const RELEASE_V1_32: u64 = 38;
     pub const RELEASE_V1_33: u64 = 39;
     pub const RELEASE_V1_34: u64 = 40;
+=======
+    pub const RELEASE_V1_18: u64 = 22;
+    pub const RELEASE_V1_19: u64 = 23;
+    pub const RELEASE_V1_20: u64 = 24;
+    pub const RELEASE_V1_21: u64 = 25;
+    pub const RELEASE_V1_22: u64 = 26;
+    pub const RELEASE_V1_23: u64 = 27;
+    pub const RELEASE_V1_24: u64 = 28;
+    pub const RELEASE_V1_26: u64 = 30;
+    pub const RELEASE_V1_27: u64 = 31;
+    pub const RELEASE_V1_28: u64 = 32;
+    pub const RELEASE_V1_29: u64 = 33;
+    pub const RELEASE_V1_30: u64 = 34;
+    pub const RELEASE_V1_31: u64 = 35;
+    pub const RELEASE_V1_32: u64 = 36;
+    pub const RELEASE_V1_33: u64 = 37;
+    pub const RELEASE_V1_34: u64 = 38;
+>>>>>>> aptos-framework-v1.34.0
 }

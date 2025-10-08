@@ -266,18 +266,33 @@ module defi::locked_coins {
     }
 
     #[test_only]
+<<<<<<< HEAD
     use supra_framework::account;
     #[test_only]
     use supra_framework::coin::BurnCapability;
+=======
+    use aptos_framework::account;
+>>>>>>> aptos-framework-v1.34.0
     #[test_only]
     use supra_framework::supra_coin::{Self, SupraCoin};
     #[test_only]
+<<<<<<< HEAD
     use supra_framework::aptos_account;
 
     #[test_only]
     fun setup(supra_framework: &signer, sponsor: &signer): BurnCapability<SupraCoin> {
         timestamp::set_time_has_started_for_testing(supra_framework);
         let (burn_cap, mint_cap) = supra_coin::initialize_for_test(supra_framework);
+=======
+    use aptos_framework::aptos_coin::{Self, AptosCoin};
+    #[test_only]
+    use aptos_framework::aptos_account;
+
+    #[test_only]
+    fun setup(aptos_framework: &signer, sponsor: &signer): BurnCapability<AptosCoin> {
+        timestamp::set_time_has_started_for_testing(aptos_framework);
+        let (burn_cap, mint_cap) = aptos_coin::initialize_for_test(aptos_framework);
+>>>>>>> aptos-framework-v1.34.0
 
         account::create_account_for_test(signer::address_of(sponsor));
         coin::register<SupraCoin>(sponsor);

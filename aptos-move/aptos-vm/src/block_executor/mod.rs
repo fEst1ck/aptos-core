@@ -597,6 +597,7 @@ impl<
                 err_msg,
             ))) => Err(VMStatus::Error {
                 status_code: StatusCode::DELAYED_FIELD_OR_BLOCKSTM_CODE_INVARIANT_ERROR,
+<<<<<<< HEAD
                 sub_status: None,
                 message: Some(err_msg),
             }),
@@ -604,6 +605,8 @@ impl<
                 PanicError::MissingNativeFunction(err_msg),
             )) => Err(VMStatus::Error {
                 status_code: StatusCode::MISSING_NATIVE_FUNCTION,
+=======
+>>>>>>> aptos-framework-v1.34.0
                 sub_status: None,
                 message: Some(err_msg),
             }),

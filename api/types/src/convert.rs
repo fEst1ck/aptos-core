@@ -383,10 +383,16 @@ impl<'a, S: StateView> MoveConverter<'a, S> {
                                     ),
                                 ),
                             }),
+<<<<<<< HEAD
                             aptos_types::transaction::TransactionExecutable::Script(_)
                             | aptos_types::transaction::TransactionExecutable::AutomationRegistration(_)=> {
                                 bail!(
                                     "Script/AutomationRegistration executable is not supported for multisig transactions"
+=======
+                            aptos_types::transaction::TransactionExecutable::Script(_) => {
+                                bail!(
+                                    "Script executable is not supported for multisig transactions"
+>>>>>>> aptos-framework-v1.34.0
                                 )
                             },
                             aptos_types::transaction::TransactionExecutable::Empty => {
@@ -406,9 +412,12 @@ impl<'a, S: StateView> MoveConverter<'a, S> {
                             aptos_types::transaction::TransactionExecutable::Script(script) => {
                                 TransactionPayload::ScriptPayload(try_into_script_payload(script)?)
                             },
+<<<<<<< HEAD
                             aptos_types::transaction::TransactionExecutable::AutomationRegistration(params) => {
                                 TransactionPayload::AutomationRegistrationPayload(self.try_into_automation_registration_payload(params)?)
                             },
+=======
+>>>>>>> aptos-framework-v1.34.0
                             aptos_types::transaction::TransactionExecutable::Empty => {
                                 bail!("Empty executable is not supported for non-multisig transactions")
                             },

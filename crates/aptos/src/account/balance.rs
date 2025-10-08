@@ -5,7 +5,11 @@ use crate::common::types::{
     CliCommand, CliConfig, CliError, CliTypedResult, ConfigSearchMode, ProfileOptions, RestOptions,
 };
 use aptos_api_types::ViewFunction;
+<<<<<<< HEAD
 use aptos_types::{account_address::AccountAddress, SupraCoinType, CoinType};
+=======
+use aptos_types::{account_address::AccountAddress, AptosCoinType, CoinType};
+>>>>>>> aptos-framework-v1.34.0
 use async_trait::async_trait;
 use clap::Parser;
 use move_core_types::{
@@ -83,7 +87,11 @@ impl Balance {
             })?
         } else {
             // If nothing is given, use the default APT
+<<<<<<< HEAD
             SupraCoinType::type_tag()
+=======
+            AptosCoinType::type_tag()
+>>>>>>> aptos-framework-v1.34.0
         };
 
         let client = self.rest_options.client(&self.profile_options)?;

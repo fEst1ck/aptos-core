@@ -75,7 +75,11 @@ spec supra_framework::supra_account {
         auth_key: address;
         aborts_if exists<account::Account>(auth_key);
         // aborts_if length_judgment(auth_key);
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
         aborts_if auth_key == @vm_reserved || auth_key == @supra_framework || auth_key == @aptos_token;
+=======
+        aborts_if auth_key == @vm_reserved || auth_key == @aptos_framework || auth_key == @aptos_token;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
     }
 
     spec fun length_judgment(auth_key: address): bool {
@@ -111,7 +115,11 @@ spec supra_framework::supra_account {
         pragma aborts_if_is_partial;
         // aborts_if !account::spec_exists_at(addr);
         // TODO(fa_migration)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
         //aborts_if !coin::spec_is_account_registered<SupraCoin>(addr);
+=======
+        //aborts_if !coin::spec_is_account_registered<AptosCoin>(addr);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
     }
 
     spec set_allow_direct_coin_transfers(account: &signer, allow: bool) {
@@ -139,10 +147,17 @@ spec supra_framework::supra_account {
         aborts_if exists i in 0..len(recipients):
                 !account::spec_exists_at(recipients[i]) && length_judgment(recipients[i]);
         aborts_if exists i in 0..len(recipients):
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
                 !account::spec_exists_at(recipients[i]) && (recipients[i] == @vm_reserved || recipients[i] == @supra_framework || recipients[i] == @aptos_token);
         ensures forall i in 0..len(recipients):
                 (!account::spec_exists_at(recipients[i]) ==> !length_judgment(recipients[i])) &&
                     (!account::spec_exists_at(recipients[i]) ==> (recipients[i] != @vm_reserved && recipients[i] != @supra_framework && recipients[i] != @aptos_token));
+=======
+                !account::spec_exists_at(recipients[i]) && (recipients[i] == @vm_reserved || recipients[i] == @aptos_framework || recipients[i] == @aptos_token);
+        ensures forall i in 0..len(recipients):
+                (!account::spec_exists_at(recipients[i]) ==> !length_judgment(recipients[i])) &&
+                    (!account::spec_exists_at(recipients[i]) ==> (recipients[i] != @vm_reserved && recipients[i] != @aptos_framework && recipients[i] != @aptos_token));
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
 
         // coin::withdraw properties
         aborts_if exists i in 0..len(recipients):
@@ -158,9 +173,15 @@ spec supra_framework::supra_account {
 
         // guid properties
         aborts_if exists i in 0..len(recipients):
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
             account::spec_exists_at(recipients[i]) && !exists<coin::CoinStore<SupraCoin>>(recipients[i]) && global<account::Account>(recipients[i]).guid_creation_num + 2 >= account::MAX_GUID_CREATION_NUM;
         aborts_if exists i in 0..len(recipients):
             account::spec_exists_at(recipients[i]) && !exists<coin::CoinStore<SupraCoin>>(recipients[i]) && global<account::Account>(recipients[i]).guid_creation_num + 2 > MAX_U64;
+=======
+            account::spec_exists_at(recipients[i]) && !exists<coin::CoinStore<AptosCoin>>(recipients[i]) && global<account::Account>(recipients[i]).guid_creation_num + 2 >= account::MAX_GUID_CREATION_NUM;
+        aborts_if exists i in 0..len(recipients):
+            account::spec_exists_at(recipients[i]) && !exists<coin::CoinStore<AptosCoin>>(recipients[i]) && global<account::Account>(recipients[i]).guid_creation_num + 2 > MAX_U64;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
     }
 
     spec can_receive_direct_coin_transfers(account: address): bool {
@@ -193,10 +214,17 @@ spec supra_framework::supra_account {
         aborts_if exists i in 0..len(recipients):
                 !account::spec_exists_at(recipients[i]) && length_judgment(recipients[i]);
         aborts_if exists i in 0..len(recipients):
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
                 !account::spec_exists_at(recipients[i]) && (recipients[i] == @vm_reserved || recipients[i] == @supra_framework || recipients[i] == @aptos_token);
         ensures forall i in 0..len(recipients):
                 (!account::spec_exists_at(recipients[i]) ==> !length_judgment(recipients[i])) &&
                     (!account::spec_exists_at(recipients[i]) ==> (recipients[i] != @vm_reserved && recipients[i] != @supra_framework && recipients[i] != @aptos_token));
+=======
+                !account::spec_exists_at(recipients[i]) && (recipients[i] == @vm_reserved || recipients[i] == @aptos_framework || recipients[i] == @aptos_token);
+        ensures forall i in 0..len(recipients):
+                (!account::spec_exists_at(recipients[i]) ==> !length_judgment(recipients[i])) &&
+                    (!account::spec_exists_at(recipients[i]) ==> (recipients[i] != @vm_reserved && recipients[i] != @aptos_framework && recipients[i] != @aptos_token));
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
 
         // coin::withdraw properties
         aborts_if exists i in 0..len(recipients):
@@ -242,7 +270,36 @@ spec supra_framework::supra_account {
     }
 
     spec deposit_fungible_assets(to: address, fa: FungibleAsset) {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
         pragma verify = false;
+=======
+        pragma verify = false;
+    }
+
+    spec transfer_fungible_assets(from: &signer, metadata: Object<Metadata>, to: address, amount: u64) {
+        pragma verify = false;
+    }
+
+    spec batch_transfer_fungible_assets(from: &signer, metadata: Object<Metadata>, recipients: vector<address>, amounts: vector<u64>) {
+        pragma verify = false;
+    }
+
+    spec transfer_coins<CoinType>(from: &signer, to: address, amount: u64) {
+        // TODO(fa_migration)
+        pragma verify = false;
+        let account_addr_source = signer::address_of(from);
+
+
+        include CreateAccountTransferAbortsIf;
+        include WithdrawAbortsIf<CoinType>;
+        include GuidAbortsIf<CoinType>;
+        include RegistCoinAbortsIf<CoinType>;
+        include TransferEnsures<CoinType>;
+
+        aborts_if exists<coin::CoinStore<CoinType>>(to) && global<coin::CoinStore<CoinType>>(to).frozen;
+        ensures exists<aptos_framework::account::Account>(to);
+        ensures exists<aptos_framework::coin::CoinStore<CoinType>>(to);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
     }
 
     spec transfer_fungible_assets(from: &signer, metadata: Object<Metadata>, to: address, amount: u64) {
@@ -297,7 +354,11 @@ spec supra_framework::supra_account {
     spec schema CreateAccountTransferAbortsIf {
         to: address;
         aborts_if !account::spec_exists_at(to) && length_judgment(to);
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
         aborts_if !account::spec_exists_at(to) && (to == @vm_reserved || to == @supra_framework || to == @aptos_token);
+=======
+        aborts_if !account::spec_exists_at(to) && (to == @vm_reserved || to == @aptos_framework || to == @aptos_token);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
     }
 
     spec schema WithdrawAbortsIf<CoinType> {
@@ -323,8 +384,13 @@ spec supra_framework::supra_account {
         to: address;
         // TODO(fa_migration)
         // aborts_if !coin::spec_is_account_registered<CoinType>(to) && !type_info::spec_is_struct<CoinType>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.spec.move
         aborts_if exists<supra_framework::account::Account>(to);
         aborts_if type_info::type_of<CoinType>() != type_info::type_of<SupraCoin>();
+=======
+        aborts_if exists<aptos_framework::account::Account>(to);
+        aborts_if type_info::type_of<CoinType>() != type_info::type_of<AptosCoin>();
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.spec.move
     }
 
     spec schema TransferEnsures<CoinType> {

@@ -12,15 +12,20 @@ use aptos_package_builder::PackageBuilder;
 use aptos_types::{
     account_address::AccountAddress,
     transaction::{EntryFunction, TransactionPayload},
+    AptosCoinType, CoinType,
 };
 use move_core_types::{ident_str, language_storage::ModuleId};
 
 pub fn aptos_coin_transfer(to: AccountAddress, amount: u64) -> TransactionPayload {
+<<<<<<< HEAD
     coin_transfer(
         aptos_types::utility_coin::SUPRA_COIN_TYPE.clone(),
         to,
         amount,
     )
+=======
+    coin_transfer(AptosCoinType::type_tag(), to, amount)
+>>>>>>> aptos-framework-v1.34.0
 }
 
 pub fn publish_module_source(module_name: &str, module_src: &str) -> TransactionPayload {

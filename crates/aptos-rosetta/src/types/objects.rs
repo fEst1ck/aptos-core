@@ -2685,7 +2685,11 @@ impl InternalOperation {
                 // We special case APT, because we don't want the behavior to change
                 if currency == &native_coin() {
                     return Ok((
+<<<<<<< HEAD
                         aptos_stdlib::supra_account_transfer(transfer.receiver, transfer.amount.0),
+=======
+                        aptos_stdlib::aptos_account_transfer(transfer.receiver, transfer.amount.0),
+>>>>>>> aptos-framework-v1.34.0
                         transfer.sender,
                     ));
                 }
@@ -2698,7 +2702,11 @@ impl InternalOperation {
                             let coin_type_tag = parse_type_tag(coin_type)
                                 .map_err(|err| ApiError::InvalidInput(Some(err.to_string())))?;
                             (
+<<<<<<< HEAD
                                 aptos_stdlib::supra_account_transfer_coins(
+=======
+                                aptos_stdlib::aptos_account_transfer_coins(
+>>>>>>> aptos-framework-v1.34.0
                                     coin_type_tag,
                                     transfer.receiver,
                                     transfer.amount.0,

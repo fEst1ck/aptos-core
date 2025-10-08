@@ -69,8 +69,13 @@ module supra_framework::jwk_consensus_config {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<JWKConsensusConfig>()) {
             let new_config = config_buffer::extract_v2<JWKConsensusConfig>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/jwk_consensus_config.move
             if (exists<JWKConsensusConfig>(@supra_framework)) {
                 *borrow_global_mut<JWKConsensusConfig>(@supra_framework) = new_config;
+=======
+            if (exists<JWKConsensusConfig>(@aptos_framework)) {
+                *borrow_global_mut<JWKConsensusConfig>(@aptos_framework) = new_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/jwk_consensus_config.move
             } else {
                 move_to(framework, new_config);
             };

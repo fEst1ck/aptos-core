@@ -594,8 +594,13 @@ spec supra_framework::staking_contract {
         requires exists<staking_config::StakingRewardsConfig>(
             @supra_framework
         ) || !std::features::spec_periodical_reward_rate_decrease_enabled();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/staking_contract.spec.move
         requires exists<supra_framework::timestamp::CurrentTimeMicroseconds>(@supra_framework);
         requires exists<stake::SupraCoinCapabilities>(@supra_framework);
+=======
+        requires exists<aptos_framework::timestamp::CurrentTimeMicroseconds>(@aptos_framework);
+        requires exists<stake::AptosCoinCapabilities>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/staking_contract.spec.move
     }
 
     spec schema CreateStakePoolAbortsIf {

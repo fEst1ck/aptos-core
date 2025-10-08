@@ -255,11 +255,19 @@ impl AnalyzedTransactionProvider for Transaction {
                     let receiver_address = bcs::from_bytes(&func.args()[0]).unwrap();
                     rw_set_for_coin_transfer(sender_address, receiver_address, true)
                 },
+<<<<<<< HEAD
                 (AccountAddress::ONE, "supra_account", "transfer") => {
                     let receiver_address = bcs::from_bytes(&func.args()[0]).unwrap();
                     rw_set_for_coin_transfer(sender_address, receiver_address, false)
                 },
                 (AccountAddress::ONE, "supra_account", "create_account") => {
+=======
+                (AccountAddress::ONE, "aptos_account", "transfer") => {
+                    let receiver_address = bcs::from_bytes(&func.args()[0]).unwrap();
+                    rw_set_for_coin_transfer(sender_address, receiver_address, false)
+                },
+                (AccountAddress::ONE, "aptos_account", "create_account") => {
+>>>>>>> aptos-framework-v1.34.0
                     let receiver_address = bcs::from_bytes(&func.args()[0]).unwrap();
                     rw_set_for_create_account(sender_address, receiver_address)
                 },

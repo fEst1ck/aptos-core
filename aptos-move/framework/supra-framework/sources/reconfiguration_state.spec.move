@@ -100,7 +100,11 @@ spec supra_framework::reconfiguration_state {
         include  copyable_any::type_name(global<State>(@supra_framework).variant).bytes
             == b"0x1::reconfiguration_state::StateActive" ==>
         copyable_any::UnpackAbortsIf<StateActive> {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/reconfiguration_state.spec.move
             self: global<State>(@supra_framework).variant
+=======
+            self: global<State>(@aptos_framework).variant
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/reconfiguration_state.spec.move
         };
         aborts_if copyable_any::type_name(global<State>(@supra_framework).variant).bytes
             != b"0x1::reconfiguration_state::StateActive";

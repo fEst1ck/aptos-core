@@ -273,6 +273,17 @@ pub enum EntryFunctionCall {
         auth_key: AccountAddress,
     },
 
+    /// APT Primary Fungible Store specific specialized functions,
+    /// Utilized internally once migration of APT to FungibleAsset is complete.
+    /// Convenient function to transfer APT to a recipient account that might not exist.
+    /// This would create the recipient APT PFS first, which also registers it to receive APT, before transferring.
+    /// TODO: once migration is complete, rename to just "transfer_only" and make it an entry function (for cheapest way
+    /// to transfer APT) - if we want to allow APT PFS without account itself
+    AptosAccountFungibleTransferOnly {
+        to: AccountAddress,
+        amount: u64,
+    },
+
     /// Set whether `account` can receive direct transfers of coins that they have not explicitly registered to receive.
     AptosAccountSetAllowDirectCoinTransfers {
         allow: bool,
@@ -429,9 +440,9 @@ pub enum EntryFunctionCall {
         new_beneficiary: AccountAddress,
     },
 
-    /// Allows an owner to change the delegated voter of the underlying stake pool.
+    /// Deprecated. Use the partial governance voting flow instead.
     DelegationPoolSetDelegatedVoter {
-        new_voter: AccountAddress,
+        _new_voter: AccountAddress,
     },
 
     /// Allows an owner to change the operator of the underlying stake pool.
@@ -526,6 +537,67 @@ pub enum EntryFunctionCall {
         n_vec: Vec<Vec<u8>>,
     },
 
+    /// This can be called to install or update a set of JWKs for a federated OIDC provider.  This function should
+    /// be invoked to intially install a set of JWKs or to update a set of JWKs when a keypair is rotated.
+    ///
+    /// The `iss` parameter is the value of the `iss` claim on the JWTs that are to be verified by the JWK set.
+    /// `kid_vec`, `alg_vec`, `e_vec`, `n_vec` are String vectors of the JWK attributes `kid`, `alg`, `e` and `n` respectively.
+    /// See https://datatracker.ietf.org/doc/html/rfc7517#section-4 for more details about the JWK attributes aforementioned.
+    ///
+    /// For the example JWK set snapshot below containing 2 keys for Google found at https://www.googleapis.com/oauth2/v3/certs -
+    /// ```json
+    /// {
+    ///   "keys": [
+    ///     {
+    ///       "alg": "RS256",
+    ///       "use": "sig",
+    ///       "kty": "RSA",
+    ///       "n": "wNHgGSG5B5xOEQNFPW2p_6ZxZbfPoAU5VceBUuNwQWLop0ohW0vpoZLU1tAsq_S9s5iwy27rJw4EZAOGBR9oTRq1Y6Li5pDVJfmzyRNtmWCWndR-bPqhs_dkJU7MbGwcvfLsN9FSHESFrS9sfGtUX-lZfLoGux23TKdYV9EE-H-NDASxrVFUk2GWc3rL6UEMWrMnOqV9-tghybDU3fcRdNTDuXUr9qDYmhmNegYjYu4REGjqeSyIG1tuQxYpOBH-tohtcfGY-oRTS09kgsSS9Q5BRM4qqCkGP28WhlSf4ui0-norS0gKMMI1P_ZAGEsLn9p2TlYMpewvIuhjJs1thw",
+    ///       "kid": "d7b939771a7800c413f90051012d975981916d71",
+    ///       "e": "AQAB"
+    ///     },
+    ///     {
+    ///       "kty": "RSA",
+    ///       "kid": "b2620d5e7f132b52afe8875cdf3776c064249d04",
+    ///       "alg": "RS256",
+    ///       "n": "pi22xDdK2fz5gclIbDIGghLDYiRO56eW2GUcboeVlhbAuhuT5mlEYIevkxdPOg5n6qICePZiQSxkwcYMIZyLkZhSJ2d2M6Szx2gDtnAmee6o_tWdroKu0DjqwG8pZU693oLaIjLku3IK20lTs6-2TeH-pUYMjEqiFMhn-hb7wnvH_FuPTjgz9i0rEdw_Hf3Wk6CMypaUHi31y6twrMWq1jEbdQNl50EwH-RQmQ9bs3Wm9V9t-2-_Jzg3AT0Ny4zEDU7WXgN2DevM8_FVje4IgztNy29XUkeUctHsr-431_Iu23JIy6U4Kxn36X3RlVUKEkOMpkDD3kd81JPW4Ger_w",
+    ///       "e": "AQAB",
+    ///       "use": "sig"
+    ///     }
+    ///   ]
+    /// }
+    /// ```
+    ///
+    /// We can call update_federated_jwk_set for Google's `iss` - "https://accounts.google.com" and for each vector
+    /// argument `kid_vec`, `alg_vec`, `e_vec`, `n_vec`, we set in index 0 the corresponding attribute in the first JWK and we set in index 1
+    /// the corresponding attribute in the second JWK as shown below.
+    ///
+    /// ```move
+    /// use std::string::utf8;
+    /// aptos_framework::jwks::update_federated_jwk_set(
+    ///     jwk_owner,
+    ///     b"https://accounts.google.com",
+    ///     vector[utf8(b"d7b939771a7800c413f90051012d975981916d71"), utf8(b"b2620d5e7f132b52afe8875cdf3776c064249d04")],
+    ///     vector[utf8(b"RS256"), utf8(b"RS256")],
+    ///     vector[utf8(b"AQAB"), utf8(b"AQAB")],
+    ///     vector[
+    ///         utf8(b"wNHgGSG5B5xOEQNFPW2p_6ZxZbfPoAU5VceBUuNwQWLop0ohW0vpoZLU1tAsq_S9s5iwy27rJw4EZAOGBR9oTRq1Y6Li5pDVJfmzyRNtmWCWndR-bPqhs_dkJU7MbGwcvfLsN9FSHESFrS9sfGtUX-lZfLoGux23TKdYV9EE-H-NDASxrVFUk2GWc3rL6UEMWrMnOqV9-tghybDU3fcRdNTDuXUr9qDYmhmNegYjYu4REGjqeSyIG1tuQxYpOBH-tohtcfGY-oRTS09kgsSS9Q5BRM4qqCkGP28WhlSf4ui0-norS0gKMMI1P_ZAGEsLn9p2TlYMpewvIuhjJs1thw"),
+    ///         utf8(b"pi22xDdK2fz5gclIbDIGghLDYiRO56eW2GUcboeVlhbAuhuT5mlEYIevkxdPOg5n6qICePZiQSxkwcYMIZyLkZhSJ2d2M6Szx2gDtnAmee6o_tWdroKu0DjqwG8pZU693oLaIjLku3IK20lTs6-2TeH-pUYMjEqiFMhn-hb7wnvH_FuPTjgz9i0rEdw_Hf3Wk6CMypaUHi31y6twrMWq1jEbdQNl50EwH-RQmQ9bs3Wm9V9t-2-_Jzg3AT0Ny4zEDU7WXgN2DevM8_FVje4IgztNy29XUkeUctHsr-431_Iu23JIy6U4Kxn36X3RlVUKEkOMpkDD3kd81JPW4Ger_w")
+    ///     ]
+    /// )
+    /// ```
+    ///
+    /// See AIP-96 for more details about federated keyless - https://github.com/aptos-foundation/AIPs/blob/main/aips/aip-96.md
+    ///
+    /// NOTE: Currently only RSA keys are supported.
+    JwksUpdateFederatedJwkSet {
+        iss: Vec<u8>,
+        kid_vec: Vec<Vec<u8>>,
+        alg_vec: Vec<Vec<u8>>,
+        e_vec: Vec<Vec<u8>>,
+        n_vec: Vec<Vec<u8>>,
+    },
+
     /// Withdraw an `amount` of coin `CoinType` from `account` and burn it.
     ManagedCoinBurn {
         coin_type: TypeTag,
@@ -537,7 +609,11 @@ pub enum EntryFunctionCall {
         coin_type: TypeTag,
     },
 
+<<<<<<< HEAD
     /// Initialize new coin `CoinType` in Supra Blockchain.
+=======
+    /// Initialize new coin `CoinType` in Aptos Blockchain.
+>>>>>>> aptos-framework-v1.34.0
     /// Mint and Burn Capabilities will be stored under `account` in `Capabilities` resource.
     ManagedCoinInitialize {
         coin_type: TypeTag,
@@ -645,6 +721,33 @@ pub enum EntryFunctionCall {
         metadata_keys: Vec<Vec<u8>>,
         metadata_values: Vec<Vec<u8>>,
         timeout_duration: u64,
+    },
+
+    /// Private entry function that creates a new multisig account on top of an existing account and immediately rotate
+    /// the origin auth key to 0x0.
+    ///
+    /// Note: If the original account is a resource account, this does not revoke all control over it as if any
+    /// SignerCapability of the resource account still exists, it can still be used to generate the signer for the
+    /// account.
+    MultisigAccountCreateWithExistingAccountAndRevokeAuthKeyCall {
+        owners: Vec<AccountAddress>,
+        num_signatures_required: u64,
+        metadata_keys: Vec<Vec<u8>>,
+        metadata_values: Vec<Vec<u8>>,
+    },
+
+    /// Private entry function that creates a new multisig account on top of an existing account.
+    ///
+    /// This offers a migration path for an existing account with any type of auth key.
+    ///
+    /// Note that this does not revoke auth key-based control over the account. Owners should separately rotate the auth
+    /// key after they are fully migrated to the new multisig account. Alternatively, they can call
+    /// create_with_existing_account_and_revoke_auth_key_call instead.
+    MultisigAccountCreateWithExistingAccountCall {
+        owners: Vec<AccountAddress>,
+        num_signatures_required: u64,
+        metadata_keys: Vec<Vec<u8>>,
+        metadata_values: Vec<Vec<u8>>,
     },
 
     /// Private entry function that creates a new multisig account on top of an existing account and immediately rotate
@@ -822,6 +925,15 @@ pub enum EntryFunctionCall {
     ObjectCodeDeploymentPublish {
         metadata_serialized: Vec<u8>,
         code: Vec<Vec<u8>>,
+    },
+
+    /// Revoke all storable permission handle of the signer immediately.
+    PermissionedSignerRevokeAllHandles {},
+
+    /// Revoke a specific storable permission handle immediately. This will disallow owner of
+    /// the storable permission handle to derive signer from it anymore.
+    PermissionedSignerRevokePermissionStorageAddress {
+        permissions_storage_addr: AccountAddress,
     },
 
     /// Creates a new resource account and rotates the authentication key to either
@@ -1408,6 +1520,66 @@ impl EntryFunctionCall {
                 new_public_key_bytes,
                 cap_update_table,
             ),
+            AccountSetOriginatingAddress {} => account_set_originating_address(),
+            AccountUpsertEd25519BackupKeyOnKeylessAccount {
+                keyless_public_key,
+                backup_public_key,
+                backup_key_proof,
+            } => account_upsert_ed25519_backup_key_on_keyless_account(
+                keyless_public_key,
+                backup_public_key,
+                backup_key_proof,
+            ),
+            AccountAbstractionAddAuthenticationFunction {
+                module_address,
+                module_name,
+                function_name,
+            } => account_abstraction_add_authentication_function(
+                module_address,
+                module_name,
+                function_name,
+            ),
+            AccountAbstractionAddDispatchableAuthenticationFunction {
+                _module_address,
+                _module_name,
+                _function_name,
+            } => account_abstraction_add_dispatchable_authentication_function(
+                _module_address,
+                _module_name,
+                _function_name,
+            ),
+            AccountAbstractionInitialize {} => account_abstraction_initialize(),
+            AccountAbstractionRegisterDerivableAuthenticationFunction {
+                module_address,
+                module_name,
+                function_name,
+            } => account_abstraction_register_derivable_authentication_function(
+                module_address,
+                module_name,
+                function_name,
+            ),
+            AccountAbstractionRemoveAuthenticationFunction {
+                module_address,
+                module_name,
+                function_name,
+            } => account_abstraction_remove_authentication_function(
+                module_address,
+                module_name,
+                function_name,
+            ),
+            AccountAbstractionRemoveAuthenticator {} => account_abstraction_remove_authenticator(),
+            AccountAbstractionRemoveDispatchableAuthenticationFunction {
+                _module_address,
+                _module_name,
+                _function_name,
+            } => account_abstraction_remove_dispatchable_authentication_function(
+                _module_address,
+                _module_name,
+                _function_name,
+            ),
+            AccountAbstractionRemoveDispatchableAuthenticator {} => {
+                account_abstraction_remove_dispatchable_authenticator()
+            },
             AptosAccountBatchTransfer {
                 recipients,
                 amounts,
@@ -1418,6 +1590,9 @@ impl EntryFunctionCall {
                 amounts,
             } => aptos_account_batch_transfer_coins(coin_type, recipients, amounts),
             AptosAccountCreateAccount { auth_key } => aptos_account_create_account(auth_key),
+            AptosAccountFungibleTransferOnly { to, amount } => {
+                aptos_account_fungible_transfer_only(to, amount)
+            },
             AptosAccountSetAllowDirectCoinTransfers { allow } => {
                 aptos_account_set_allow_direct_coin_transfers(allow)
             },
@@ -1557,8 +1732,8 @@ impl EntryFunctionCall {
             DelegationPoolSetBeneficiaryForOperator { new_beneficiary } => {
                 delegation_pool_set_beneficiary_for_operator(new_beneficiary)
             },
-            DelegationPoolSetDelegatedVoter { new_voter } => {
-                delegation_pool_set_delegated_voter(new_voter)
+            DelegationPoolSetDelegatedVoter { _new_voter } => {
+                delegation_pool_set_delegated_voter(_new_voter)
             },
             DelegationPoolSetOperator { new_operator } => {
                 delegation_pool_set_operator(new_operator)
@@ -1583,6 +1758,13 @@ impl EntryFunctionCall {
                 pool_address,
                 amount,
             } => delegation_pool_withdraw(pool_address, amount),
+            JwksUpdateFederatedJwkSet {
+                iss,
+                kid_vec,
+                alg_vec,
+                e_vec,
+                n_vec,
+            } => jwks_update_federated_jwk_set(iss, kid_vec, alg_vec, e_vec, n_vec),
             ManagedCoinBurn { coin_type, amount } => managed_coin_burn(coin_type, amount),
             ManagedCoinDestroyCaps { coin_type } => managed_coin_destroy_caps(coin_type),
             ManagedCoinInitialize {
@@ -1671,6 +1853,28 @@ impl EntryFunctionCall {
                 metadata_keys,
                 metadata_values,
                 timeout_duration,
+            ),
+            MultisigAccountCreateWithExistingAccountAndRevokeAuthKeyCall {
+                owners,
+                num_signatures_required,
+                metadata_keys,
+                metadata_values,
+            } => multisig_account_create_with_existing_account_and_revoke_auth_key_call(
+                owners,
+                num_signatures_required,
+                metadata_keys,
+                metadata_values,
+            ),
+            MultisigAccountCreateWithExistingAccountCall {
+                owners,
+                num_signatures_required,
+                metadata_keys,
+                metadata_values,
+            } => multisig_account_create_with_existing_account_call(
+                owners,
+                num_signatures_required,
+                metadata_keys,
+                metadata_values,
             ),
             MultisigAccountCreateWithExistingAccountAndRevokeAuthKeyCall {
                 owners,
@@ -1794,6 +1998,10 @@ impl EntryFunctionCall {
                 metadata_serialized,
                 code,
             } => object_code_deployment_publish(metadata_serialized, code),
+            PermissionedSignerRevokeAllHandles {} => permissioned_signer_revoke_all_handles(),
+            PermissionedSignerRevokePermissionStorageAddress {
+                permissions_storage_addr,
+            } => permissioned_signer_revoke_permission_storage_address(permissions_storage_addr),
             ResourceAccountCreateResourceAccount {
                 seed,
                 optional_auth_key,
@@ -2462,6 +2670,209 @@ pub fn account_upsert_ed25519_backup_key_on_keyless_account(
     keyless_public_key: Vec<u8>,
     backup_public_key: Vec<u8>,
     backup_key_proof: Vec<u8>,
+<<<<<<< HEAD
+=======
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account").to_owned(),
+        ),
+        ident_str!("upsert_ed25519_backup_key_on_keyless_account").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&keyless_public_key).unwrap(),
+            bcs::to_bytes(&backup_public_key).unwrap(),
+            bcs::to_bytes(&backup_key_proof).unwrap(),
+        ],
+    ))
+}
+
+/// Add dispatchable authentication function that enables account abstraction via this function.
+/// Note: it is a private entry function that can only be called directly from transaction.
+pub fn account_abstraction_add_authentication_function(
+    module_address: AccountAddress,
+    module_name: Vec<u8>,
+    function_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("add_authentication_function").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&module_address).unwrap(),
+            bcs::to_bytes(&module_name).unwrap(),
+            bcs::to_bytes(&function_name).unwrap(),
+        ],
+    ))
+}
+
+pub fn account_abstraction_add_dispatchable_authentication_function(
+    _module_address: AccountAddress,
+    _module_name: Vec<u8>,
+    _function_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("add_dispatchable_authentication_function").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&_module_address).unwrap(),
+            bcs::to_bytes(&_module_name).unwrap(),
+            bcs::to_bytes(&_function_name).unwrap(),
+        ],
+    ))
+}
+
+pub fn account_abstraction_initialize() -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("initialize").to_owned(),
+        vec![],
+        vec![],
+    ))
+}
+
+/// Add dispatchable derivable authentication function, that enables account abstraction via this function.
+/// This means all accounts within the domain can use it to authenticate, without needing an initialization (unlike non-domain AA).
+/// dispatchable function needs to verify two things:
+/// - that signing_data.derivable_abstract_signature() is a valid signature of signing_data.digest() (just like regular AA)
+/// - that signing_data.derivable_abstract_public_key() is correct identity representing the authenticator
+///   (missing this step would allow impersonation)
+///
+/// Note: This is  public entry function, as it requires framework signer, and that can
+/// only be obtained as a part of the governance script.
+pub fn account_abstraction_register_derivable_authentication_function(
+    module_address: AccountAddress,
+    module_name: Vec<u8>,
+    function_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("register_derivable_authentication_function").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&module_address).unwrap(),
+            bcs::to_bytes(&module_name).unwrap(),
+            bcs::to_bytes(&function_name).unwrap(),
+        ],
+    ))
+}
+
+/// Remove dispatchable authentication function that enables account abstraction via this function.
+/// dispatchable function needs to verify that signing_data.authenticator() is a valid signature of signing_data.digest().
+/// Note: it is a private entry function that can only be called directly from transaction.
+pub fn account_abstraction_remove_authentication_function(
+    module_address: AccountAddress,
+    module_name: Vec<u8>,
+    function_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("remove_authentication_function").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&module_address).unwrap(),
+            bcs::to_bytes(&module_name).unwrap(),
+            bcs::to_bytes(&function_name).unwrap(),
+        ],
+    ))
+}
+
+/// Remove dispatchable authenticator so that all dispatchable authentication functions will be removed as well.
+/// After calling this function, the account is not abstracted at all.
+/// Note: it is a private entry function that can only be called directly from transaction.
+pub fn account_abstraction_remove_authenticator() -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("remove_authenticator").to_owned(),
+        vec![],
+        vec![],
+    ))
+}
+
+pub fn account_abstraction_remove_dispatchable_authentication_function(
+    _module_address: AccountAddress,
+    _module_name: Vec<u8>,
+    _function_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("remove_dispatchable_authentication_function").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&_module_address).unwrap(),
+            bcs::to_bytes(&_module_name).unwrap(),
+            bcs::to_bytes(&_function_name).unwrap(),
+        ],
+    ))
+}
+
+pub fn account_abstraction_remove_dispatchable_authenticator() -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account_abstraction").to_owned(),
+        ),
+        ident_str!("remove_dispatchable_authenticator").to_owned(),
+        vec![],
+        vec![],
+    ))
+}
+
+/// Batch version of APT transfer.
+pub fn aptos_account_batch_transfer(
+    recipients: Vec<AccountAddress>,
+    amounts: Vec<u64>,
+>>>>>>> aptos-framework-v1.34.0
 ) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
         ModuleId::new(
@@ -2697,6 +3108,27 @@ pub fn automation_registry_stop_tasks(task_indexes: Vec<u64>) -> TransactionPayl
         ident_str!("stop_tasks").to_owned(),
         vec![],
         vec![bcs::to_bytes(&auth_key).unwrap()],
+    ))
+}
+
+/// APT Primary Fungible Store specific specialized functions,
+/// Utilized internally once migration of APT to FungibleAsset is complete.
+/// Convenient function to transfer APT to a recipient account that might not exist.
+/// This would create the recipient APT PFS first, which also registers it to receive APT, before transferring.
+/// TODO: once migration is complete, rename to just "transfer_only" and make it an entry function (for cheapest way
+/// to transfer APT) - if we want to allow APT PFS without account itself
+pub fn aptos_account_fungible_transfer_only(to: AccountAddress, amount: u64) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("aptos_account").to_owned(),
+        ),
+        ident_str!("fungible_transfer_only").to_owned(),
+        vec![],
+        vec![bcs::to_bytes(&to).unwrap(), bcs::to_bytes(&amount).unwrap()],
     ))
 }
 
@@ -3322,8 +3754,8 @@ pub fn committee_map_upsert_committee_bulk(
     ))
 }
 
-/// Allows an owner to change the delegated voter of the underlying stake pool.
-pub fn delegation_pool_set_delegated_voter(new_voter: AccountAddress) -> TransactionPayload {
+/// Deprecated. Use the partial governance voting flow instead.
+pub fn delegation_pool_set_delegated_voter(_new_voter: AccountAddress) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
         ModuleId::new(
             AccountAddress::new([
@@ -3334,7 +3766,7 @@ pub fn delegation_pool_set_delegated_voter(new_voter: AccountAddress) -> Transac
         ),
         ident_str!("set_delegated_voter").to_owned(),
         vec![],
-        vec![bcs::to_bytes(&new_voter).unwrap()],
+        vec![bcs::to_bytes(&_new_voter).unwrap()],
     ))
 }
 
@@ -3553,6 +3985,86 @@ pub fn jwks_update_federated_jwk_set(
     ))
 }
 
+/// This can be called to install or update a set of JWKs for a federated OIDC provider.  This function should
+/// be invoked to intially install a set of JWKs or to update a set of JWKs when a keypair is rotated.
+///
+/// The `iss` parameter is the value of the `iss` claim on the JWTs that are to be verified by the JWK set.
+/// `kid_vec`, `alg_vec`, `e_vec`, `n_vec` are String vectors of the JWK attributes `kid`, `alg`, `e` and `n` respectively.
+/// See https://datatracker.ietf.org/doc/html/rfc7517#section-4 for more details about the JWK attributes aforementioned.
+///
+/// For the example JWK set snapshot below containing 2 keys for Google found at https://www.googleapis.com/oauth2/v3/certs -
+/// ```json
+/// {
+///   "keys": [
+///     {
+///       "alg": "RS256",
+///       "use": "sig",
+///       "kty": "RSA",
+///       "n": "wNHgGSG5B5xOEQNFPW2p_6ZxZbfPoAU5VceBUuNwQWLop0ohW0vpoZLU1tAsq_S9s5iwy27rJw4EZAOGBR9oTRq1Y6Li5pDVJfmzyRNtmWCWndR-bPqhs_dkJU7MbGwcvfLsN9FSHESFrS9sfGtUX-lZfLoGux23TKdYV9EE-H-NDASxrVFUk2GWc3rL6UEMWrMnOqV9-tghybDU3fcRdNTDuXUr9qDYmhmNegYjYu4REGjqeSyIG1tuQxYpOBH-tohtcfGY-oRTS09kgsSS9Q5BRM4qqCkGP28WhlSf4ui0-norS0gKMMI1P_ZAGEsLn9p2TlYMpewvIuhjJs1thw",
+///       "kid": "d7b939771a7800c413f90051012d975981916d71",
+///       "e": "AQAB"
+///     },
+///     {
+///       "kty": "RSA",
+///       "kid": "b2620d5e7f132b52afe8875cdf3776c064249d04",
+///       "alg": "RS256",
+///       "n": "pi22xDdK2fz5gclIbDIGghLDYiRO56eW2GUcboeVlhbAuhuT5mlEYIevkxdPOg5n6qICePZiQSxkwcYMIZyLkZhSJ2d2M6Szx2gDtnAmee6o_tWdroKu0DjqwG8pZU693oLaIjLku3IK20lTs6-2TeH-pUYMjEqiFMhn-hb7wnvH_FuPTjgz9i0rEdw_Hf3Wk6CMypaUHi31y6twrMWq1jEbdQNl50EwH-RQmQ9bs3Wm9V9t-2-_Jzg3AT0Ny4zEDU7WXgN2DevM8_FVje4IgztNy29XUkeUctHsr-431_Iu23JIy6U4Kxn36X3RlVUKEkOMpkDD3kd81JPW4Ger_w",
+///       "e": "AQAB",
+///       "use": "sig"
+///     }
+///   ]
+/// }
+/// ```
+///
+/// We can call update_federated_jwk_set for Google's `iss` - "https://accounts.google.com" and for each vector
+/// argument `kid_vec`, `alg_vec`, `e_vec`, `n_vec`, we set in index 0 the corresponding attribute in the first JWK and we set in index 1
+/// the corresponding attribute in the second JWK as shown below.
+///
+/// ```move
+/// use std::string::utf8;
+/// aptos_framework::jwks::update_federated_jwk_set(
+///     jwk_owner,
+///     b"https://accounts.google.com",
+///     vector[utf8(b"d7b939771a7800c413f90051012d975981916d71"), utf8(b"b2620d5e7f132b52afe8875cdf3776c064249d04")],
+///     vector[utf8(b"RS256"), utf8(b"RS256")],
+///     vector[utf8(b"AQAB"), utf8(b"AQAB")],
+///     vector[
+///         utf8(b"wNHgGSG5B5xOEQNFPW2p_6ZxZbfPoAU5VceBUuNwQWLop0ohW0vpoZLU1tAsq_S9s5iwy27rJw4EZAOGBR9oTRq1Y6Li5pDVJfmzyRNtmWCWndR-bPqhs_dkJU7MbGwcvfLsN9FSHESFrS9sfGtUX-lZfLoGux23TKdYV9EE-H-NDASxrVFUk2GWc3rL6UEMWrMnOqV9-tghybDU3fcRdNTDuXUr9qDYmhmNegYjYu4REGjqeSyIG1tuQxYpOBH-tohtcfGY-oRTS09kgsSS9Q5BRM4qqCkGP28WhlSf4ui0-norS0gKMMI1P_ZAGEsLn9p2TlYMpewvIuhjJs1thw"),
+///         utf8(b"pi22xDdK2fz5gclIbDIGghLDYiRO56eW2GUcboeVlhbAuhuT5mlEYIevkxdPOg5n6qICePZiQSxkwcYMIZyLkZhSJ2d2M6Szx2gDtnAmee6o_tWdroKu0DjqwG8pZU693oLaIjLku3IK20lTs6-2TeH-pUYMjEqiFMhn-hb7wnvH_FuPTjgz9i0rEdw_Hf3Wk6CMypaUHi31y6twrMWq1jEbdQNl50EwH-RQmQ9bs3Wm9V9t-2-_Jzg3AT0Ny4zEDU7WXgN2DevM8_FVje4IgztNy29XUkeUctHsr-431_Iu23JIy6U4Kxn36X3RlVUKEkOMpkDD3kd81JPW4Ger_w")
+///     ]
+/// )
+/// ```
+///
+/// See AIP-96 for more details about federated keyless - https://github.com/aptos-foundation/AIPs/blob/main/aips/aip-96.md
+///
+/// NOTE: Currently only RSA keys are supported.
+pub fn jwks_update_federated_jwk_set(
+    iss: Vec<u8>,
+    kid_vec: Vec<Vec<u8>>,
+    alg_vec: Vec<Vec<u8>>,
+    e_vec: Vec<Vec<u8>>,
+    n_vec: Vec<Vec<u8>>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("jwks").to_owned(),
+        ),
+        ident_str!("update_federated_jwk_set").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&iss).unwrap(),
+            bcs::to_bytes(&kid_vec).unwrap(),
+            bcs::to_bytes(&alg_vec).unwrap(),
+            bcs::to_bytes(&e_vec).unwrap(),
+            bcs::to_bytes(&n_vec).unwrap(),
+        ],
+    ))
+}
+
 /// Withdraw an `amount` of coin `CoinType` from `account` and burn it.
 pub fn managed_coin_burn(coin_type: TypeTag, amount: u64) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
@@ -3585,7 +4097,11 @@ pub fn managed_coin_destroy_caps(coin_type: TypeTag) -> TransactionPayload {
     ))
 }
 
+<<<<<<< HEAD
 /// Initialize new coin `CoinType` in Supra Blockchain.
+=======
+/// Initialize new coin `CoinType` in Aptos Blockchain.
+>>>>>>> aptos-framework-v1.34.0
 /// Mint and Burn Capabilities will be stored under `account` in `Capabilities` resource.
 pub fn managed_coin_initialize(
     coin_type: TypeTag,
@@ -3886,6 +4402,69 @@ pub fn multisig_account_create_with_existing_account_and_revoke_auth_key(
             bcs::to_bytes(&metadata_keys).unwrap(),
             bcs::to_bytes(&metadata_values).unwrap(),
             bcs::to_bytes(&timeout_duration).unwrap(),
+        ],
+    ))
+}
+
+/// Private entry function that creates a new multisig account on top of an existing account and immediately rotate
+/// the origin auth key to 0x0.
+///
+/// Note: If the original account is a resource account, this does not revoke all control over it as if any
+/// SignerCapability of the resource account still exists, it can still be used to generate the signer for the
+/// account.
+pub fn multisig_account_create_with_existing_account_and_revoke_auth_key_call(
+    owners: Vec<AccountAddress>,
+    num_signatures_required: u64,
+    metadata_keys: Vec<Vec<u8>>,
+    metadata_values: Vec<Vec<u8>>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("multisig_account").to_owned(),
+        ),
+        ident_str!("create_with_existing_account_and_revoke_auth_key_call").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&owners).unwrap(),
+            bcs::to_bytes(&num_signatures_required).unwrap(),
+            bcs::to_bytes(&metadata_keys).unwrap(),
+            bcs::to_bytes(&metadata_values).unwrap(),
+        ],
+    ))
+}
+
+/// Private entry function that creates a new multisig account on top of an existing account.
+///
+/// This offers a migration path for an existing account with any type of auth key.
+///
+/// Note that this does not revoke auth key-based control over the account. Owners should separately rotate the auth
+/// key after they are fully migrated to the new multisig account. Alternatively, they can call
+/// create_with_existing_account_and_revoke_auth_key_call instead.
+pub fn multisig_account_create_with_existing_account_call(
+    owners: Vec<AccountAddress>,
+    num_signatures_required: u64,
+    metadata_keys: Vec<Vec<u8>>,
+    metadata_values: Vec<Vec<u8>>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("multisig_account").to_owned(),
+        ),
+        ident_str!("create_with_existing_account_call").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&owners).unwrap(),
+            bcs::to_bytes(&num_signatures_required).unwrap(),
+            bcs::to_bytes(&metadata_keys).unwrap(),
+            bcs::to_bytes(&metadata_values).unwrap(),
         ],
     ))
 }
@@ -4396,6 +4975,41 @@ pub fn object_code_deployment_publish(
             bcs::to_bytes(&metadata_serialized).unwrap(),
             bcs::to_bytes(&code).unwrap(),
         ],
+    ))
+}
+
+/// Revoke all storable permission handle of the signer immediately.
+pub fn permissioned_signer_revoke_all_handles() -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("permissioned_signer").to_owned(),
+        ),
+        ident_str!("revoke_all_handles").to_owned(),
+        vec![],
+        vec![],
+    ))
+}
+
+/// Revoke a specific storable permission handle immediately. This will disallow owner of
+/// the storable permission handle to derive signer from it anymore.
+pub fn permissioned_signer_revoke_permission_storage_address(
+    permissions_storage_addr: AccountAddress,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("permissioned_signer").to_owned(),
+        ),
+        ident_str!("revoke_permission_storage_address").to_owned(),
+        vec![],
+        vec![bcs::to_bytes(&permissions_storage_addr).unwrap()],
     ))
 }
 
@@ -6233,6 +6847,146 @@ mod decoder {
     ) -> Option<EntryFunctionCall> {
         if let TransactionPayload::EntryFunction(_script) = payload {
             Some(EntryFunctionCall::AccountSetOriginatingAddress {})
+<<<<<<< HEAD
+=======
+        } else {
+            None
+        }
+    }
+
+    pub fn account_upsert_ed25519_backup_key_on_keyless_account(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::AccountUpsertEd25519BackupKeyOnKeylessAccount {
+                    keyless_public_key: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    backup_public_key: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    backup_key_proof: bcs::from_bytes(script.args().get(2)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_add_authentication_function(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::AccountAbstractionAddAuthenticationFunction {
+                    module_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    module_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    function_name: bcs::from_bytes(script.args().get(2)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_add_dispatchable_authentication_function(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::AccountAbstractionAddDispatchableAuthenticationFunction {
+                    _module_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    _module_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    _function_name: bcs::from_bytes(script.args().get(2)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_initialize(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(_script) = payload {
+            Some(EntryFunctionCall::AccountAbstractionInitialize {})
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_register_derivable_authentication_function(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::AccountAbstractionRegisterDerivableAuthenticationFunction {
+                    module_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    module_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    function_name: bcs::from_bytes(script.args().get(2)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_remove_authentication_function(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::AccountAbstractionRemoveAuthenticationFunction {
+                    module_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    module_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    function_name: bcs::from_bytes(script.args().get(2)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_remove_authenticator(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(_script) = payload {
+            Some(EntryFunctionCall::AccountAbstractionRemoveAuthenticator {})
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_remove_dispatchable_authentication_function(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::AccountAbstractionRemoveDispatchableAuthenticationFunction {
+                    _module_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    _module_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    _function_name: bcs::from_bytes(script.args().get(2)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn account_abstraction_remove_dispatchable_authenticator(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(_script) = payload {
+            Some(EntryFunctionCall::AccountAbstractionRemoveDispatchableAuthenticator {})
+        } else {
+            None
+        }
+    }
+
+    pub fn aptos_account_batch_transfer(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::AptosAccountBatchTransfer {
+                recipients: bcs::from_bytes(script.args().get(0)?).ok()?,
+                amounts: bcs::from_bytes(script.args().get(1)?).ok()?,
+            })
+>>>>>>> aptos-framework-v1.34.0
         } else {
             None
         }
@@ -6380,6 +7134,19 @@ mod decoder {
         if let TransactionPayload::EntryFunction(script) = payload {
             Some(EntryFunctionCall::AptosAccountCreateAccount {
                 auth_key: bcs::from_bytes(script.args().get(0)?).ok()?,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn aptos_account_fungible_transfer_only(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::AptosAccountFungibleTransferOnly {
+                to: bcs::from_bytes(script.args().get(0)?).ok()?,
+                amount: bcs::from_bytes(script.args().get(1)?).ok()?,
             })
         } else {
             None
@@ -6597,7 +7364,7 @@ mod decoder {
     ) -> Option<EntryFunctionCall> {
         if let TransactionPayload::EntryFunction(script) = payload {
             Some(EntryFunctionCall::DelegationPoolSetDelegatedVoter {
-                new_voter: bcs::from_bytes(script.args().get(0)?).ok()?,
+                _new_voter: bcs::from_bytes(script.args().get(0)?).ok()?,
             })
         } else {
             None
@@ -6917,6 +7684,40 @@ mod decoder {
         }
     }
 
+    pub fn multisig_account_create_with_existing_account_and_revoke_auth_key_call(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::MultisigAccountCreateWithExistingAccountAndRevokeAuthKeyCall {
+                    owners: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    num_signatures_required: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    metadata_keys: bcs::from_bytes(script.args().get(2)?).ok()?,
+                    metadata_values: bcs::from_bytes(script.args().get(3)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn multisig_account_create_with_existing_account_call(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::MultisigAccountCreateWithExistingAccountCall {
+                    owners: bcs::from_bytes(script.args().get(0)?).ok()?,
+                    num_signatures_required: bcs::from_bytes(script.args().get(1)?).ok()?,
+                    metadata_keys: bcs::from_bytes(script.args().get(2)?).ok()?,
+                    metadata_values: bcs::from_bytes(script.args().get(3)?).ok()?,
+                },
+            )
+        } else {
+            None
+        }
+    }
+
     pub fn multisig_account_create_with_owners(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
@@ -7176,6 +7977,30 @@ mod decoder {
                 metadata_serialized: bcs::from_bytes(script.args().get(0)?).ok()?,
                 code: bcs::from_bytes(script.args().get(1)?).ok()?,
             })
+        } else {
+            None
+        }
+    }
+
+    pub fn permissioned_signer_revoke_all_handles(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(_script) = payload {
+            Some(EntryFunctionCall::PermissionedSignerRevokeAllHandles {})
+        } else {
+            None
+        }
+    }
+
+    pub fn permissioned_signer_revoke_permission_storage_address(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(
+                EntryFunctionCall::PermissionedSignerRevokePermissionStorageAddress {
+                    permissions_storage_addr: bcs::from_bytes(script.args().get(0)?).ok()?,
+                },
+            )
         } else {
             None
         }
@@ -8282,8 +9107,13 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
             Box::new(decoder::account_abstraction_remove_dispatchable_authenticator),
         );
         map.insert(
+<<<<<<< HEAD
             "automation_registry_cancel_task".to_string(),
             Box::new(decoder::automation_registry_cancel_task),
+=======
+            "aptos_account_batch_transfer".to_string(),
+            Box::new(decoder::aptos_account_batch_transfer),
+>>>>>>> aptos-framework-v1.34.0
         );
         map.insert(
             "aptos_account_batch_transfer_coins".to_string(),
@@ -8292,6 +9122,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "aptos_account_create_account".to_string(),
             Box::new(decoder::aptos_account_create_account),
+        );
+        map.insert(
+            "aptos_account_fungible_transfer_only".to_string(),
+            Box::new(decoder::aptos_account_fungible_transfer_only),
         );
         map.insert(
             "aptos_account_set_allow_direct_coin_transfers".to_string(),
@@ -8416,6 +9250,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "committee_map_upsert_committee_member_bulk".to_string(),
             Box::new(decoder::committee_map_upsert_committee_member_bulk),
+        );
+        map.insert(
+            "jwks_update_federated_jwk_set".to_string(),
+            Box::new(decoder::jwks_update_federated_jwk_set),
         );
         map.insert(
             "jwks_update_federated_jwk_set".to_string(),
@@ -8566,6 +9404,14 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "object_code_deployment_publish".to_string(),
             Box::new(decoder::object_code_deployment_publish),
+        );
+        map.insert(
+            "permissioned_signer_revoke_all_handles".to_string(),
+            Box::new(decoder::permissioned_signer_revoke_all_handles),
+        );
+        map.insert(
+            "permissioned_signer_revoke_permission_storage_address".to_string(),
+            Box::new(decoder::permissioned_signer_revoke_permission_storage_address),
         );
         map.insert(
             "resource_account_create_resource_account".to_string(),

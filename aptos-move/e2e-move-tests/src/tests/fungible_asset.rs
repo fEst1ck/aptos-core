@@ -1,8 +1,16 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{assert_success, tests::common, MoveHarness};
-use aptos_types::account_address::{self, AccountAddress};
+use crate::{assert_success, tests::common, BlockSplit, MoveHarness, SUCCESS};
+use aptos_cached_packages::aptos_stdlib::{aptos_account_batch_transfer, aptos_account_transfer};
+use aptos_language_e2e_tests::{
+    account::Account,
+    executor::{ExecutorMode, FakeExecutor},
+};
+use aptos_types::{
+    account_address::{self, AccountAddress},
+    on_chain_config::FeatureFlag,
+};
 use move_core_types::{
     identifier::Identifier,
     language_storage::{StructTag, TypeTag},
@@ -47,17 +55,17 @@ fn test_basic_fungible_token() {
     let mut build_options = aptos_framework::BuildOptions::default();
     build_options
         .named_addresses
-        .insert("example_addr".to_string(), *alice.address());
+        .insert("example_addr".to_string(), *root.address());
 
     let result = h.publish_package_with_options(
-        &alice,
+        &root,
         &common::test_dir_path("../../../move-examples/fungible_asset/managed_fungible_asset"),
         build_options.clone(),
     );
 
     assert_success!(result);
     let result = h.publish_package_with_options(
-        &alice,
+        &root,
         &common::test_dir_path("../../../move-examples/fungible_asset/managed_fungible_token"),
         build_options,
     );
@@ -78,7 +86,7 @@ fn test_basic_fungible_token() {
         .execute_view_function(
             str::parse(&format!(
                 "0x{}::managed_fungible_token::get_metadata",
-                (*alice.address()).to_hex()
+                (*root.address()).to_hex()
             ))
             .unwrap(),
             vec![],
@@ -91,10 +99,10 @@ fn test_basic_fungible_token() {
     let metadata = bcs::from_bytes::<AccountAddress>(metadata.as_slice()).unwrap();
 
     let result = h.run_entry_function(
-        &alice,
+        &root,
         str::parse(&format!(
             "0x{}::managed_fungible_asset::mint_to_primary_stores",
-            (*alice.address()).to_hex()
+            (*root.address()).to_hex()
         ))
         .unwrap(),
         vec![],
@@ -107,10 +115,10 @@ fn test_basic_fungible_token() {
     assert_success!(result);
 
     let result = h.run_entry_function(
-        &alice,
+        &root,
         str::parse(&format!(
             "0x{}::managed_fungible_asset::transfer_between_primary_stores",
-            (*alice.address()).to_hex()
+            (*root.address()).to_hex()
         ))
         .unwrap(),
         vec![],
@@ -124,10 +132,10 @@ fn test_basic_fungible_token() {
 
     assert_success!(result);
     let result = h.run_entry_function(
-        &alice,
+        &root,
         str::parse(&format!(
             "0x{}::managed_fungible_asset::burn_from_primary_stores",
-            (*alice.address()).to_hex()
+            (*root.address()).to_hex()
         ))
         .unwrap(),
         vec![],
@@ -140,7 +148,7 @@ fn test_basic_fungible_token() {
     assert_success!(result);
 
     let token_addr = account_address::create_token_address(
-        *alice.address(),
+        *root.address(),
         "test collection name",
         "test token name",
     );
@@ -176,7 +184,12 @@ fn test_basic_fungible_token() {
 // A simple test to verify gas paying still work for prologue and epilogue.
 #[test]
 fn test_coin_to_fungible_asset_migration() {
-    let mut h = MoveHarness::new();
+    let mut h = MoveHarness::new_with_features(vec![], vec![
+        FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE,
+        FeatureFlag::OPERATIONS_DEFAULT_TO_FA_APT_STORE,
+        FeatureFlag::DEFAULT_TO_CONCURRENT_FUNGIBLE_BALANCE,
+        FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_STORE,
+    ]);
 
     let alice = h.new_account_at(AccountAddress::from_hex_literal("0xcafe").unwrap());
     let alice_primary_store_addr =
@@ -229,6 +242,7 @@ fn test_coin_to_fungible_asset_migration() {
         .is_some());
 }
 
+<<<<<<< HEAD
 #[test]
 fn test_sponsered_tx() {
     let mut h = MoveHarness::new_with_features(
@@ -383,4 +397,59 @@ fn test_sponsered_tx() {
         .unwrap();
     
     assert_ne!(alice_store, bob_store);
+=======
+/// Trigger speculative error in prologue, from accessing delayed field that was created later than
+/// last committed index (so that read_last_commited_value fails speculatively)
+///
+/// We do that by having an expensive transaction first (to make sure committed index isn't moved),
+/// and then create some new aggregators (concurrent balances for new accounts), and then have them issue
+/// transactions - so their balance is checked in prologue.
+#[test]
+fn test_prologue_speculation() {
+    let executor = FakeExecutor::from_head_genesis().set_executor_mode(ExecutorMode::ParallelOnly);
+
+    let mut harness = MoveHarness::new_with_executor(executor);
+    harness.enable_features(
+        vec![
+            FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE,
+            FeatureFlag::OPERATIONS_DEFAULT_TO_FA_APT_STORE,
+            FeatureFlag::DEFAULT_TO_CONCURRENT_FUNGIBLE_BALANCE,
+        ],
+        vec![],
+    );
+    let independent_account = harness.new_account_at(AccountAddress::random());
+
+    let sink_txn = harness.create_transaction_payload(
+        &independent_account,
+        aptos_account_batch_transfer(vec![AccountAddress::random(); 50], vec![10_000_000_000; 50]),
+    );
+
+    let account = harness.new_account_at(AccountAddress::ONE);
+    let dst_1 = Account::new();
+    let dst_2 = Account::new();
+    let dst_3 = Account::new();
+
+    let fund_txn = harness.create_transaction_payload(
+        &account,
+        aptos_account_batch_transfer(
+            vec![*dst_1.address(), *dst_2.address(), *dst_3.address()],
+            vec![10_000_000_000, 10_000_000_000, 10_000_000_000],
+        ),
+    );
+
+    let transfer_1_txn =
+        harness.create_transaction_payload(&dst_1, aptos_account_transfer(*dst_2.address(), 1));
+    let transfer_2_txn =
+        harness.create_transaction_payload(&dst_2, aptos_account_transfer(*dst_3.address(), 1));
+    let transfer_3_txn =
+        harness.create_transaction_payload(&dst_3, aptos_account_transfer(*dst_1.address(), 1));
+
+    harness.run_block_in_parts_and_check(BlockSplit::Whole, vec![
+        (SUCCESS, sink_txn),
+        (SUCCESS, fund_txn),
+        (SUCCESS, transfer_1_txn),
+        (SUCCESS, transfer_2_txn),
+        (SUCCESS, transfer_3_txn),
+    ]);
+>>>>>>> aptos-framework-v1.34.0
 }

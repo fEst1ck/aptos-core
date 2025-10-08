@@ -9,7 +9,7 @@ use aptos_crypto::{
 };
 use rand::{rngs::StdRng, SeedableRng};
 use serde::ser::Serialize;
-use std::convert::TryFrom;
+use std::{convert::TryFrom, sync::Arc};
 
 /// ValidatorSigner associates an author with public and private keys with helpers for signing and
 /// validating. This struct can be used for all signing operations including block and network
@@ -18,11 +18,19 @@ use std::convert::TryFrom;
 #[cfg_attr(any(test, feature = "fuzzing"), derive(Clone))]
 pub struct ValidatorSigner {
     author: AccountAddress,
+<<<<<<< HEAD
     private_key: ed25519::PrivateKey,
 }
 
 impl ValidatorSigner {
     pub fn new(author: AccountAddress, private_key: ed25519::PrivateKey) -> Self {
+=======
+    private_key: Arc<bls12381::PrivateKey>,
+}
+
+impl ValidatorSigner {
+    pub fn new(author: AccountAddress, private_key: Arc<bls12381::PrivateKey>) -> Self {
+>>>>>>> aptos-framework-v1.34.0
         ValidatorSigner {
             author,
             private_key,
@@ -49,8 +57,13 @@ impl ValidatorSigner {
 
     /// Returns the private key associated with this signer. Only available for testing purposes.
     #[cfg(any(test, feature = "fuzzing"))]
+<<<<<<< HEAD
     pub fn private_key(&self) -> &ed25519::PrivateKey {
         &self.private_key
+=======
+    pub fn private_key(&self) -> &bls12381::PrivateKey {
+        self.private_key.as_ref()
+>>>>>>> aptos-framework-v1.34.0
     }
 }
 
@@ -63,7 +76,11 @@ impl ValidatorSigner {
         let mut rng = StdRng::from_seed(opt_rng_seed.into().unwrap_or(TEST_SEED));
         Self::new(
             AccountAddress::random(),
+<<<<<<< HEAD
             ed25519::PrivateKey::generate(&mut rng),
+=======
+            Arc::new(bls12381::PrivateKey::generate(&mut rng)),
+>>>>>>> aptos-framework-v1.34.0
         )
     }
 
@@ -72,8 +89,16 @@ impl ValidatorSigner {
     pub fn from_int(num: u8) -> Self {
         let mut address = [0; AccountAddress::LENGTH];
         address[0] = num;
+<<<<<<< HEAD
         let private_key = ed25519::PrivateKey::generate_for_testing();
         Self::new(AccountAddress::try_from(&address[..]).unwrap(), private_key)
+=======
+        let private_key = bls12381::PrivateKey::generate_for_testing();
+        Self::new(
+            AccountAddress::try_from(&address[..]).unwrap(),
+            Arc::new(private_key),
+        )
+>>>>>>> aptos-framework-v1.34.0
     }
 }
 
@@ -99,7 +124,7 @@ pub mod proptests {
         signing_key_strategy.prop_map(|signing_key| {
             ValidatorSigner::new(
                 AccountAddress::from_bytes(&signing_key.public_key().to_bytes()[0..32]).unwrap(),
-                signing_key,
+                Arc::new(signing_key),
             )
         })
     }
@@ -114,8 +139,13 @@ pub mod proptests {
         prop_oneof![
             rand_signer(),
             LazyJust::new(|| {
+<<<<<<< HEAD
                 let genesis_key = ed25519::PrivateKey::genesis();
                 ValidatorSigner::new(AccountAddress::random(), genesis_key)
+=======
+                let genesis_key = bls12381::PrivateKey::genesis();
+                ValidatorSigner::new(AccountAddress::random(), Arc::new(genesis_key))
+>>>>>>> aptos-framework-v1.34.0
             })
         ]
     }
@@ -139,7 +169,7 @@ pub mod proptests {
         #[test]
         fn test_new_signer(signing_key in arb_signing_key()){
             let public_key = signing_key.public_key();
-            let signer = ValidatorSigner::new(AccountAddress::random(), signing_key);
+            let signer = ValidatorSigner::new(AccountAddress::random(), Arc::new(signing_key));
             prop_assert_eq!(public_key, signer.public_key());
         }
 

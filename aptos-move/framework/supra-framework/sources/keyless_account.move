@@ -293,8 +293,13 @@ module supra_framework::keyless_account {
 
         if (config_buffer::does_exist<Groth16VerificationKey>()) {
             let vk = config_buffer::extract_v2();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/keyless_account.move
             if (exists<Groth16VerificationKey>(@supra_framework)) {
                 *borrow_global_mut<Groth16VerificationKey>(@supra_framework) = vk;
+=======
+            if (exists<Groth16VerificationKey>(@aptos_framework)) {
+                *borrow_global_mut<Groth16VerificationKey>(@aptos_framework) = vk;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/keyless_account.move
             } else {
                 move_to(fx, vk);
             }
@@ -302,8 +307,13 @@ module supra_framework::keyless_account {
 
         if (config_buffer::does_exist<Configuration>()) {
             let config = config_buffer::extract_v2();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/keyless_account.move
             if (exists<Configuration>(@supra_framework)) {
                 *borrow_global_mut<Configuration>(@supra_framework) = config;
+=======
+            if (exists<Configuration>(@aptos_framework)) {
+                *borrow_global_mut<Configuration>(@aptos_framework) = config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/keyless_account.move
             } else {
                 move_to(fx, config);
             }

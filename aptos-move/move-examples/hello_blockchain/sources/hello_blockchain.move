@@ -2,7 +2,11 @@ module hello_blockchain::message {
     use std::error;
     use std::signer;
     use std::string;
+<<<<<<< HEAD
     use supra_framework::event;
+=======
+    use aptos_framework::event;
+>>>>>>> aptos-framework-v1.34.0
     #[test_only]
     use std::debug;
 

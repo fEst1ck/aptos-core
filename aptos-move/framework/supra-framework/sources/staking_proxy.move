@@ -1,12 +1,41 @@
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/staking_proxy.move
 module supra_framework::staking_proxy {
+=======
+module aptos_framework::staking_proxy {
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/staking_proxy.move
     use std::error;
     use std::signer;
     use std::vector;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/staking_proxy.move
     use supra_framework::permissioned_signer;
     use supra_framework::stake;
     use supra_framework::staking_contract;
     use supra_framework::vesting;
+
+    struct StakeProxyPermission has copy, drop, store {}
+
+    /// Signer does not have permission to perform stake proxy logic.
+    const ENO_STAKE_PERMISSION: u64 = 28;
+
+    /// Permissions
+    inline fun check_stake_proxy_permission(s: &signer) {
+        assert!(
+            permissioned_signer::check_permission_exists(s, StakeProxyPermission {}),
+            error::permission_denied(ENO_STAKE_PERMISSION),
+        );
+    }
+
+    /// Grant permission to mutate staking on behalf of the master signer.
+    public fun grant_permission(master: &signer, permissioned_signer: &signer) {
+        permissioned_signer::authorize_unlimited(master, permissioned_signer, StakeProxyPermission {})
+    }
+=======
+    use aptos_framework::permissioned_signer;
+    use aptos_framework::stake;
+    use aptos_framework::staking_contract;
+    use aptos_framework::vesting;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/staking_proxy.move
 
     struct StakeProxyPermission has copy, drop, store {}
 

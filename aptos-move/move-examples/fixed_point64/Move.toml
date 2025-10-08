@@ -8,7 +8,14 @@ fixed_point64 = "0xdeadbeef"
 
 [dev-addresses]
 
+<<<<<<< HEAD
 [dependencies]
 SupraFramework = { local = "../../../framework/supra-framework" }
+=======
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+>>>>>>> aptos-framework-v1.34.0
 
 [dev-dependencies]

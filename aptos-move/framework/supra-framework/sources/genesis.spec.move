@@ -118,6 +118,10 @@ spec supra_framework::genesis {
         pragma verify_duration_estimate = 120;
     }
 
+    spec initialize_validator {
+        pragma verify_duration_estimate = 120;
+    }
+
     spec create_initialize_validators_with_commission {
         pragma verify_duration_estimate = 120;
 
@@ -190,8 +194,13 @@ spec supra_framework::genesis {
         requires !exists<account::Account>(@supra_framework);
         requires chain_status::is_operating();
         requires len(execution_config) > 0;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/genesis.spec.move
         requires exists<staking_config::StakingRewardsConfig>(@supra_framework);
         requires exists<coin::CoinInfo<SupraCoin>>(@supra_framework);
+=======
+        requires exists<staking_config::StakingRewardsConfig>(@aptos_framework);
+        requires exists<coin::CoinInfo<AptosCoin>>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/genesis.spec.move
         include CompareTimeRequires;
     }
 

@@ -126,8 +126,13 @@ spec supra_framework::reconfiguration {
     }
 
     spec reconfigure {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/reconfiguration.spec.move
         use supra_framework::supra_coin;
         use supra_framework::staking_config;
+=======
+        use aptos_framework::aptos_coin;
+        use aptos_framework::staking_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/reconfiguration.spec.move
 
         // TODO: set because of timeout (property proved)
         pragma verify = true;
@@ -136,7 +141,11 @@ spec supra_framework::reconfiguration {
         let success = !(chain_status::is_genesis() || timestamp::spec_now_microseconds() == 0 || !reconfiguration_enabled())
             && timestamp::spec_now_microseconds() != global<Configuration>(@supra_framework).last_reconfiguration_time;
         include features::spec_periodical_reward_rate_decrease_enabled() ==> staking_config::StakingRewardsConfigEnabledRequirement;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/reconfiguration.spec.move
         include success ==> supra_coin::ExistsSupraCoin;
+=======
+        include success ==> aptos_coin::ExistsAptosCoin;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/reconfiguration.spec.move
         aborts_if false;
         // The ensure conditions of the reconfigure function are not fully written, because there is a new cycle in it,
         // but its existing ensure conditions satisfy hp.

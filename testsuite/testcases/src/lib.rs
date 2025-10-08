@@ -29,16 +29,17 @@ pub mod validator_reboot_stress_test;
 use anyhow::Context;
 use aptos_forge::{
     prometheus_metrics::{fetch_latency_breakdown, LatencyBreakdown},
-    EmitJobRequest, NetworkContext, NetworkContextSynchronizer, NetworkTest, NodeExt, Result,
-    Swarm, SwarmExt, Test, TestReport, TxnEmitter, TxnStats, Version,
+    EmitJob, EmitJobRequest, NetworkContext, NetworkContextSynchronizer, NetworkTest, NodeExt,
+    Result, Swarm, SwarmExt, Test, TestReport, TxnEmitter, TxnStats, Version,
 };
-use aptos_logger::info;
 use aptos_rest_client::Client as RestClient;
 use aptos_sdk::{transaction_builder::TransactionFactory, types::PeerId};
 use async_trait::async_trait;
 use futures::future::join_all;
+use log::info;
 use rand::{rngs::StdRng, SeedableRng};
 use std::{
+    borrow::Cow,
     fmt::Write,
     ops::DerefMut,
     sync::Arc,
@@ -142,7 +143,14 @@ pub async fn create_emitter_and_request(
 
     let chain_info = swarm.read().await.chain_info();
     let transaction_factory = TransactionFactory::new(chain_info.chain_id);
-    let emitter = TxnEmitter::new(transaction_factory, rng);
+    let rest_cli = swarm
+        .read()
+        .await
+        .validators()
+        .next()
+        .unwrap()
+        .rest_client();
+    let emitter = TxnEmitter::new(transaction_factory, rng, rest_cli);
 
     emit_job_request = emit_job_request.rest_clients(
         swarm
@@ -262,6 +270,10 @@ impl NetworkTest for dyn NetworkLoadTest {
                 duration,
                 WARMUP_DURATION_FRACTION,
                 COOLDOWN_DURATION_FRACTION,
+<<<<<<< HEAD
+=======
+                None,
+>>>>>>> aptos-framework-v1.34.0
             )
             .await?;
 
@@ -282,7 +294,10 @@ impl NetworkTest for dyn NetworkLoadTest {
                     .keys()
                     .into_iter()
                     .map(|slice| {
-                        let slice_samples = phase_stats.latency_breakdown.get_samples(&slice);
+                        let slice_samples = phase_stats
+                            .latency_breakdown
+                            .get_samples(&slice)
+                            .expect("Could not get samples");
                         format!(
                             "{:?}: max: {:.3}, avg: {:.3}",
                             slice,
@@ -334,6 +349,10 @@ pub async fn create_buffered_load(
     warmup_duration_fraction: f32,
     cooldown_duration_fraction: f32,
     mut inner_test_and_report: Option<(&dyn NetworkLoadTest, &mut TestReport)>,
+<<<<<<< HEAD
+=======
+    mut synchronized_with_job: Option<&mut EmitJob>,
+>>>>>>> aptos-framework-v1.34.0
 ) -> Result<Vec<LoadTestPhaseStats>> {
     // Generate some traffic
     let (mut emitter, emit_job_request) = create_emitter_and_request(
@@ -376,6 +395,13 @@ pub async fn create_buffered_load(
     job = job.periodic_stat_forward(warmup_duration, 60).await;
     info!("{}s warmup finished", warmup_duration.as_secs());
 
+<<<<<<< HEAD
+=======
+    if let Some(job) = synchronized_with_job.as_mut() {
+        job.start_next_phase()
+    }
+
+>>>>>>> aptos-framework-v1.34.0
     let mut phase_timing = Vec::new();
     let mut phase_start_network_state = Vec::new();
     let test_start = Instant::now();
@@ -411,6 +437,12 @@ pub async fn create_buffered_load(
 
     phase_start_network_state.push(NetworkState::new(&clients).await);
     job.start_next_phase();
+<<<<<<< HEAD
+=======
+    if let Some(job) = synchronized_with_job.as_mut() {
+        job.start_next_phase()
+    }
+>>>>>>> aptos-framework-v1.34.0
     let cooldown_start = Instant::now();
 
     let cooldown_used = cooldown_start.elapsed();
@@ -479,6 +511,10 @@ impl dyn NetworkLoadTest + '_ {
         duration: Duration,
         warmup_duration_fraction: f32,
         cooldown_duration_fraction: f32,
+<<<<<<< HEAD
+=======
+        synchronized_with_job: Option<&mut EmitJob>,
+>>>>>>> aptos-framework-v1.34.0
     ) -> Result<Vec<LoadTestPhaseStats>> {
         let destination = self.setup(ctx).await.context("setup NetworkLoadTest")?;
         let nodes_to_send_load_to = destination.get_destination_nodes(ctx.swarm.clone()).await;
@@ -491,6 +527,10 @@ impl dyn NetworkLoadTest + '_ {
             warmup_duration_fraction,
             cooldown_duration_fraction,
             Some((self, ctx.report)),
+<<<<<<< HEAD
+=======
+            synchronized_with_job,
+>>>>>>> aptos-framework-v1.34.0
         )
         .await
     }
@@ -629,6 +669,15 @@ impl NetworkTest for CompositeNetworkTest {
 impl Test for CompositeNetworkTest {
     fn name(&self) -> &'static str {
         "CompositeNetworkTest"
+    }
+
+    fn reporting_name(&self) -> Cow<'static, str> {
+        let mut name_builder = self.test.name().to_owned();
+        for wrapper in self.wrappers.iter() {
+            name_builder = format!("{}({})", wrapper.name(), name_builder);
+        }
+        name_builder = format!("CompositeNetworkTest({}) with ", name_builder);
+        Cow::Owned(name_builder)
     }
 }
 

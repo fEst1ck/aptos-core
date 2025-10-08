@@ -1,6 +1,19 @@
 [package]
+<<<<<<< HEAD
 name = "two_signer_cmp"
 version = "0.0.0"
 
 [dependencies]
 SupraFramework = { local = "../../../../../framework/supra-framework" }
+=======
+<<<<<<<< HEAD:aptos-move/e2e-move-tests/src/tests/code_publishing.data/pack_native/Move.toml
+name = "test_package"
+========
+name = "two_signer_cmp"
+>>>>>>>> aptos-framework-v1.34.0:aptos-move/e2e-move-tests/src/tests/cmp_generic.data/script/Move.toml
+version = "0.0.0"
+upgrade_policy = "compatible"
+
+[dependencies]
+AptosFramework = { local = "../../../../../framework/aptos-framework" }
+>>>>>>> aptos-framework-v1.34.0

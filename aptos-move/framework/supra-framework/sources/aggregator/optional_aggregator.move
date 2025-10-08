@@ -158,7 +158,11 @@ module supra_framework::optional_aggregator {
         option::is_some(&optional_aggregator.aggregator)
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/aggregator/optional_aggregator.move
     #[test(account = @supra_framework)]
+=======
+    #[test(account = @aptos_framework)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aggregator/optional_aggregator.move
     #[expected_failure(abort_code = 0x030003, location = Self)]
     fun optional_aggregator_swith_fail_test(account: signer) {
         aggregator_factory::initialize_aggregator_factory(&account);
@@ -167,7 +171,11 @@ module supra_framework::optional_aggregator {
         destroy(aggregator);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/aggregator/optional_aggregator.move
     #[test(account = @supra_framework)]
+=======
+    #[test(account = @aptos_framework)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aggregator/optional_aggregator.move
     fun optional_aggregator_test_integer(account: signer) {
         aggregator_factory::initialize_aggregator_factory(&account);
 
@@ -191,7 +199,11 @@ module supra_framework::optional_aggregator {
         destroy(aggregator);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/aggregator/optional_aggregator.move
     #[test(account = @supra_framework)]
+=======
+    #[test(account = @aptos_framework)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aggregator/optional_aggregator.move
     fun optional_aggregator_test_aggregator(account: signer) {
         aggregator_factory::initialize_aggregator_factory(&account);
         let aggregator = new(true);

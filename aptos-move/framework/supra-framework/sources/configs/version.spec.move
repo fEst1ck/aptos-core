@@ -24,19 +24,32 @@ spec supra_framework::version {
 
     spec set_version(account: &signer, major: u64) {
         use std::signer;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/version.spec.move
         use supra_framework::chain_status;
         use supra_framework::timestamp;
         use supra_framework::coin::CoinInfo;
         use supra_framework::supra_coin::SupraCoin;
         use supra_framework::staking_config;
         use supra_framework::reconfiguration;
+=======
+        use aptos_framework::chain_status;
+        use aptos_framework::timestamp;
+        use aptos_framework::coin::CoinInfo;
+        use aptos_framework::aptos_coin::AptosCoin;
+        use aptos_framework::staking_config;
+        use aptos_framework::reconfiguration;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/version.spec.move
 
         // TODO: set because of timeout (property proved)
         pragma verify_duration_estimate = 120;
         include staking_config::StakingRewardsConfigRequirement;
         requires chain_status::is_genesis();
         requires timestamp::spec_now_microseconds() >= reconfiguration::last_reconfiguration_time();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/version.spec.move
         requires exists<CoinInfo<SupraCoin>>(@supra_framework);
+=======
+        requires exists<CoinInfo<AptosCoin>>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/version.spec.move
 
         aborts_if !exists<SetVersionCapability>(signer::address_of(account));
         aborts_if !exists<Version>(@supra_framework);

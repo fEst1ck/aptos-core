@@ -3,7 +3,11 @@
 
 use super::{update_binary, BinaryUpdater, UpdateRequiredInfo};
 use crate::{
+<<<<<<< HEAD
     common::types::{CliCommand, CliTypedResult},
+=======
+    common::types::{CliCommand, CliTypedResult, PromptOptions},
+>>>>>>> aptos-framework-v1.34.0
     update::update_helper::{build_updater, get_path},
 };
 use anyhow::{Context, Result};
@@ -13,7 +17,11 @@ use self_update::update::ReleaseUpdate;
 use std::path::PathBuf;
 
 const FORMATTER_BINARY_NAME: &str = "movefmt";
+<<<<<<< HEAD
 const TARGET_FORMATTER_VERSION: &str = "1.0.4";
+=======
+const TARGET_FORMATTER_VERSION: &str = "1.0.8";
+>>>>>>> aptos-framework-v1.34.0
 
 const FORMATTER_EXE_ENV: &str = "FORMATTER_EXE";
 #[cfg(target_os = "windows")]
@@ -47,6 +55,12 @@ pub struct FormatterUpdateTool {
     /// If set, it will check if there are updates for the tool, but not actually update
     #[clap(long, default_value_t = false)]
     check: bool,
+<<<<<<< HEAD
+=======
+
+    #[clap(flatten)]
+    pub prompt_options: PromptOptions,
+>>>>>>> aptos-framework-v1.34.0
 }
 
 fn extract_movefmt_version(input: &str) -> String {
@@ -64,8 +78,13 @@ impl BinaryUpdater for FormatterUpdateTool {
         self.check
     }
 
+<<<<<<< HEAD
     fn pretty_name(&self) -> &'static str {
         "movefmt"
+=======
+    fn pretty_name(&self) -> String {
+        "movefmt".to_string()
+>>>>>>> aptos-framework-v1.34.0
     }
 
     /// Return information about whether an update is required.
@@ -106,6 +125,10 @@ impl BinaryUpdater for FormatterUpdateTool {
             "unknown-linux-gnu",
             "apple-darwin",
             "windows",
+<<<<<<< HEAD
+=======
+            self.prompt_options.assume_yes,
+>>>>>>> aptos-framework-v1.34.0
         )
     }
 }
@@ -127,5 +150,9 @@ pub fn get_movefmt_path() -> Result<PathBuf> {
         FORMATTER_EXE_ENV,
         FORMATTER_BINARY_NAME,
         FORMATTER_EXE,
+<<<<<<< HEAD
+=======
+        true,
+>>>>>>> aptos-framework-v1.34.0
     )
 }

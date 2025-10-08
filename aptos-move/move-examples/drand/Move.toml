@@ -3,8 +3,14 @@ name = "DrandLottery"
 version = "0.0.1"
 
 [dependencies]
+<<<<<<< HEAD
 SupraFramework = { local = "../../framework/supra-framework" }
 #AptosStdlib = { local = "../../framework/aptos-stdlib" }
+=======
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "mainnet" }
+#AptosStdlib = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-stdlib", rev = "mainnet" }
+
+>>>>>>> aptos-framework-v1.34.0
 
 [addresses]
 std = "0x1"

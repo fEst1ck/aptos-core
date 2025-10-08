@@ -593,6 +593,8 @@ impl BlockStore {
             .await??;
         Ok(())
     }
+<<<<<<< HEAD
+=======
 
     pub fn check_denied_inline_transactions(
         &self,
@@ -616,6 +618,125 @@ impl BlockStore {
     }
 }
 
+impl BlockReader for BlockStore {
+    fn block_exists(&self, block_id: HashValue) -> bool {
+        self.inner.read().block_exists(&block_id)
+    }
+
+    fn get_block(&self, block_id: HashValue) -> Option<Arc<PipelinedBlock>> {
+        self.inner.read().get_block(&block_id)
+    }
+
+    fn ordered_root(&self) -> Arc<PipelinedBlock> {
+        self.inner.read().ordered_root()
+    }
+
+    fn commit_root(&self) -> Arc<PipelinedBlock> {
+        self.inner.read().commit_root()
+    }
+
+    fn get_quorum_cert_for_block(&self, block_id: HashValue) -> Option<Arc<QuorumCert>> {
+        self.inner.read().get_quorum_cert_for_block(&block_id)
+    }
+
+    fn path_from_ordered_root(&self, block_id: HashValue) -> Option<Vec<Arc<PipelinedBlock>>> {
+        self.inner.read().path_from_ordered_root(block_id)
+    }
+
+    fn path_from_commit_root(&self, block_id: HashValue) -> Option<Vec<Arc<PipelinedBlock>>> {
+        self.inner.read().path_from_commit_root(block_id)
+    }
+
+    #[cfg(test)]
+    fn highest_certified_block(&self) -> Arc<PipelinedBlock> {
+        self.inner.read().highest_certified_block()
+    }
+
+    fn highest_quorum_cert(&self) -> Arc<QuorumCert> {
+        self.inner.read().highest_quorum_cert()
+    }
+
+    fn highest_ordered_cert(&self) -> Arc<WrappedLedgerInfo> {
+        self.inner.read().highest_ordered_cert()
+    }
+
+    fn highest_commit_cert(&self) -> Arc<WrappedLedgerInfo> {
+        self.inner.read().highest_commit_cert()
+    }
+
+    fn highest_2chain_timeout_cert(&self) -> Option<Arc<TwoChainTimeoutCertificate>> {
+        self.inner.read().highest_2chain_timeout_cert()
+    }
+
+    fn sync_info(&self) -> SyncInfo {
+        SyncInfo::new_decoupled(
+            self.highest_quorum_cert().as_ref().clone(),
+            self.highest_ordered_cert().as_ref().clone(),
+            self.highest_commit_cert().as_ref().clone(),
+            self.highest_2chain_timeout_cert()
+                .map(|tc| tc.as_ref().clone()),
+        )
+    }
+
+    /// Return if the consensus is backpressured
+    fn vote_back_pressure(&self) -> bool {
+        #[cfg(any(test, feature = "fuzzing"))]
+        {
+            if self.back_pressure_for_test.load(Ordering::Relaxed) {
+                return true;
+            }
+        }
+        let commit_round = self.commit_root().round();
+        let ordered_round = self.ordered_root().round();
+        counters::OP_COUNTERS
+            .gauge("back_pressure")
+            .set((ordered_round - commit_round) as i64);
+        ordered_round > self.vote_back_pressure_limit + commit_round
+    }
+
+    fn pipeline_pending_latency(&self, proposal_timestamp: Duration) -> Duration {
+        let ordered_root = self.ordered_root();
+        let commit_root = self.commit_root();
+        let pending_path = self
+            .path_from_commit_root(self.ordered_root().id())
+            .unwrap_or_default();
+        let pending_rounds = pending_path.len();
+        let oldest_not_committed = pending_path.into_iter().min_by_key(|b| b.round());
+>>>>>>> aptos-framework-v1.34.0
+
+    pub fn check_denied_inline_transactions(
+        &self,
+        block: &Block,
+        block_txn_filter_config: &BlockTransactionFilterConfig,
+    ) -> anyhow::Result<()> {
+        self.payload_manager
+            .check_denied_inline_transactions(block, block_txn_filter_config)
+    }
+
+    pub fn check_payload(&self, proposal: &Block) -> Result<(), BitVec> {
+        self.payload_manager.check_payload_availability(proposal)
+    }
+
+<<<<<<< HEAD
+    pub fn get_block_for_round(&self, round: Round) -> Option<Arc<PipelinedBlock>> {
+        self.inner.read().get_block_for_round(round)
+    }
+=======
+        fn latency_from_proposal(proposal_timestamp: Duration, timestamp: Duration) -> Duration {
+            if timestamp.is_zero() {
+                // latency not known without non-genesis blocks
+                Duration::ZERO
+            } else {
+                proposal_timestamp.saturating_sub(timestamp)
+            }
+        }
+>>>>>>> aptos-framework-v1.34.0
+
+    pub fn pre_commit_status(&self) -> Option<Arc<Mutex<PreCommitStatus>>> {
+        self.pre_commit_status.clone()
+    }
+
+<<<<<<< HEAD
 impl BlockReader for BlockStore {
     fn block_exists(&self, block_id: HashValue) -> bool {
         self.inner.read().block_exists(&block_id)
@@ -764,6 +885,8 @@ impl BlockReader for BlockStore {
         }
     }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
     fn get_recent_block_execution_times(&self, num_blocks: usize) -> Vec<ExecutionSummary> {
         let mut res = vec![];
         let mut cur_block = Some(self.ordered_root());

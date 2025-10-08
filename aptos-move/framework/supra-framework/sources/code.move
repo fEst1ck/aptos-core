@@ -11,11 +11,19 @@ module supra_framework::code {
     use aptos_std::copyable_any::Any;
     use std::option::Option;
     use std::string;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/code.move
     use supra_framework::event;
     use supra_framework::object::{Self, Object};
     use supra_framework::permissioned_signer;
 
     friend supra_framework::object_code_deployment;
+=======
+    use aptos_framework::event;
+    use aptos_framework::object::{Self, Object};
+    use aptos_framework::permissioned_signer;
+
+    friend aptos_framework::object_code_deployment;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/code.move
 
     // ----------------------------------------------------------------------
     // Code Publishing

@@ -1,10 +1,19 @@
 #[test_only]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
 module supra_framework::permissioned_signer_tests {
     use std::bcs;
     use std::features;
     use supra_framework::account::create_signer_for_test;
     use supra_framework::permissioned_signer;
     use supra_framework::timestamp;
+=======
+module aptos_framework::permissioned_signer_tests {
+    use std::bcs;
+    use std::features;
+    use aptos_framework::account::create_signer_for_test;
+    use aptos_framework::permissioned_signer;
+    use aptos_framework::timestamp;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
     use std::option;
     use std::signer;
 
@@ -16,8 +25,13 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     fun test_permission_e2e(creator: &signer) {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle = permissioned_signer::create_permissioned_handle(creator);
         let perm_signer = permissioned_signer::signer_from_permissioned_handle(&perm_handle);
@@ -98,8 +112,13 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     fun test_storable_permission_e2e(creator: &signer) {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle =
             permissioned_signer::create_storable_permissioned_handle(creator, 60);
@@ -167,11 +186,19 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50005, location = supra_framework::permissioned_signer
     )]
     fun test_permission_expiration(creator: &signer) {
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        abort_code = 0x50005, location = aptos_framework::permissioned_signer
+    )]
+    fun test_permission_expiration(creator: &signer) {
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle =
             permissioned_signer::create_storable_permissioned_handle(creator, 60);
@@ -191,11 +218,19 @@ module supra_framework::permissioned_signer_tests {
     // 3. permissioned and main signer address mismatch
     #[test(creator = @0xcafe)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50002, location = supra_framework::permissioned_signer
     )]
     fun test_auth_1(creator: &signer) {
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        abort_code = 0x50002, location = aptos_framework::permissioned_signer
+    )]
+    fun test_auth_1(creator: &signer) {
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle = permissioned_signer::create_permissioned_handle(creator);
         let perm_signer = permissioned_signer::signer_from_permissioned_handle(&perm_handle);
@@ -211,7 +246,11 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50002, location = supra_framework::permissioned_signer
+=======
+        abort_code = 0x50002, location = aptos_framework::permissioned_signer
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
     )]
     fun test_auth_2(creator: &signer) {
         permissioned_signer::authorize_increase(creator, creator, 100, OnePermission {});
@@ -219,11 +258,19 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe, creator2 = @0xbeef)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50002, location = supra_framework::permissioned_signer
     )]
     fun test_auth_3(creator: &signer, creator2: &signer) {
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        abort_code = 0x50002, location = aptos_framework::permissioned_signer
+    )]
+    fun test_auth_3(creator: &signer, creator2: &signer) {
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle = permissioned_signer::create_permissioned_handle(creator);
         let perm_signer = permissioned_signer::signer_from_permissioned_handle(&perm_handle);
@@ -245,7 +292,11 @@ module supra_framework::permissioned_signer_tests {
     }
 
     // Making sure master signer always have all permissions even when feature is disabled.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
     #[test(creator = @supra_framework)]
+=======
+    #[test(creator = @aptos_framework)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
     fun test_master_signer_permission(creator: &signer) {
         assert!(
             permissioned_signer::check_permission_exists(creator, OnePermission {}),
@@ -269,11 +320,19 @@ module supra_framework::permissioned_signer_tests {
     // creating permission using a permissioned signer
     #[test(creator = @0xcafe)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50001, location = supra_framework::permissioned_signer
     )]
     fun test_invalid_creation(creator: &signer) {
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        abort_code = 0x50001, location = aptos_framework::permissioned_signer
+    )]
+    fun test_invalid_creation(creator: &signer) {
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle = permissioned_signer::create_permissioned_handle(creator);
         let perm_signer = permissioned_signer::signer_from_permissioned_handle(&perm_handle);
@@ -285,8 +344,13 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     fun test_permission_revocation_success(creator: &signer) {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle =
             permissioned_signer::create_storable_permissioned_handle(creator, 60);
@@ -302,8 +366,13 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     fun test_permission_revocation_success_with_permissioned_signer(creator: &signer) {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle =
             permissioned_signer::create_storable_permissioned_handle(creator, 60);
@@ -321,11 +390,19 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator = @0xcafe)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50007, location = supra_framework::permissioned_signer
     )]
     fun test_permission_revocation_and_access(creator: &signer) {
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        abort_code = 0x50007, location = aptos_framework::permissioned_signer
+    )]
+    fun test_permission_revocation_and_access(creator: &signer) {
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle =
             permissioned_signer::create_storable_permissioned_handle(creator, 60);
@@ -343,11 +420,19 @@ module supra_framework::permissioned_signer_tests {
 
     #[test(creator1 = @0xcafe, creator2 = @0xbafe)]
     #[expected_failure(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         abort_code = 0x50008, location = supra_framework::permissioned_signer
     )]
     fun test_permission_revoke_other(creator1: &signer, creator2: &signer) {
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        abort_code = 0x50008, location = aptos_framework::permissioned_signer
+    )]
+    fun test_permission_revoke_other(creator1: &signer, creator2: &signer) {
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle_1 =
             permissioned_signer::create_storable_permissioned_handle(creator1, 60);
@@ -366,8 +451,13 @@ module supra_framework::permissioned_signer_tests {
     #[test(creator = @0xcafe)]
     #[expected_failure(abort_code = 453, location = std::bcs)]
     fun test_permissioned_signer_serialization(creator: &signer) {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/permissioned_signer_tests.move
         let supra_framework = create_signer_for_test(@0x1);
         timestamp::set_time_has_started_for_testing(&supra_framework);
+=======
+        let aptos_framework = create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/permissioned_signer_tests.move
 
         let perm_handle =
             permissioned_signer::create_storable_permissioned_handle(creator, 60);

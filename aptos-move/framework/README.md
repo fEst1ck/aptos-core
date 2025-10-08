@@ -97,7 +97,11 @@ The overall structure of the Supra Framework is as follows:
 ├── aptos-stdlib                                 # Sources, testing and generated documentation for Supra stdlib component
 ├── move-stdlib                                 # Sources, testing and generated documentation for Move stdlib component
 ├── cached-packages                                 # Tooling to generate SDK from move sources.
+<<<<<<< HEAD
 ├── src                                     # Compilation and generation of information from Move source files in the Supra Framework. Not designed to be used as a Rust library
+=======
+├── src                                     # Compilation and generation of information from Move source files in the Aptos Framework. Not designed to be used as a Rust library
+>>>>>>> aptos-framework-v1.34.0
 ├── releases                                    # Move release bundles
 └── tests
 ```

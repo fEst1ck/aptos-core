@@ -5,6 +5,7 @@ module supra_framework::reconfiguration {
     use std::features;
     use std::signer;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/reconfiguration.move
     use supra_framework::account;
     use supra_framework::event;
     use supra_framework::stake;
@@ -13,6 +14,16 @@ module supra_framework::reconfiguration {
     use supra_framework::chain_status;
     use supra_framework::reconfiguration_state;
     use supra_framework::storage_gas;
+=======
+    use aptos_framework::account;
+    use aptos_framework::event;
+    use aptos_framework::stake;
+    use aptos_framework::system_addresses;
+    use aptos_framework::timestamp;
+    use aptos_framework::chain_status;
+    use aptos_framework::reconfiguration_state;
+    use aptos_framework::storage_gas;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/reconfiguration.move
 
     friend supra_framework::supra_governance;
     friend supra_framework::block;

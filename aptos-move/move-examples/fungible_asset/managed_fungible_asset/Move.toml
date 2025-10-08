@@ -8,5 +8,10 @@ aptos_token_objects = "0x4"
 example_addr = "_"
 
 [dependencies]
+<<<<<<< HEAD
 SupraFramework = { local = "../../../framework/supra-framework" }
 AptosTokenObjects = { local = "../../../framework/aptos-token-objects" }
+=======
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "mainnet" }
+AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-token-objects", rev = "mainnet" }
+>>>>>>> aptos-framework-v1.34.0

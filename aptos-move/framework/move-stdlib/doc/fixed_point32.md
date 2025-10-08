@@ -180,6 +180,7 @@ overflows.
     // Check whether the value is too large.
     <b>assert</b>!(product &lt;= <a href="fixed_point32.md#0x1_fixed_point32_MAX_U64">MAX_U64</a>, <a href="fixed_point32.md#0x1_fixed_point32_EMULTIPLICATION">EMULTIPLICATION</a>);
     product <b>as</b> u64
+<<<<<<< HEAD
 }
 </code></pre>
 
@@ -236,6 +237,8 @@ overflows.
     // Check whether the value is too large.
     <b>assert</b>!(unscaled_product &lt;= <a href="fixed_point32.md#0x1_fixed_point32_MAX_U64">MAX_U64</a>, <a href="fixed_point32.md#0x1_fixed_point32_EMULTIPLICATION">EMULTIPLICATION</a>);
     <a href="fixed_point32.md#0x1_fixed_point32_create_from_raw_value">create_from_raw_value</a>((unscaled_product <b>as</b> u64))
+=======
+>>>>>>> aptos-framework-v1.34.0
 }
 </code></pre>
 

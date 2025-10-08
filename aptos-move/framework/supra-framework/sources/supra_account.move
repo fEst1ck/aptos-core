@@ -1,3 +1,4 @@
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.move
 module supra_framework::supra_account {
     use supra_framework::account::{Self, new_event_handle};
     use supra_framework::supra_coin::SupraCoin;
@@ -7,11 +8,27 @@ module supra_framework::supra_account {
     use supra_framework::fungible_asset::{Self, Metadata, BurnRef, FungibleAsset};
     use supra_framework::primary_fungible_store;
     use supra_framework::object;
+=======
+module aptos_framework::aptos_account {
+    use aptos_framework::account::{Self, new_event_handle};
+    use aptos_framework::aptos_coin::AptosCoin;
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::create_signer::create_signer;
+    use aptos_framework::event::{EventHandle, emit_event, emit};
+    use aptos_framework::fungible_asset::{Self, Metadata, BurnRef, FungibleAsset};
+    use aptos_framework::primary_fungible_store;
+    use aptos_framework::object;
+
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.move
     use std::error;
     use std::features;
     use std::signer;
     use std::vector;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.move
     use supra_framework::object::Object;
+=======
+    use aptos_framework::object::Object;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.move
 
     friend supra_framework::genesis;
     friend supra_framework::resource_account;
@@ -118,8 +135,13 @@ module supra_framework::supra_account {
             create_account(to);
             spec {
                 // TODO(fa_migration)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.move
                 // assume coin::spec_is_account_registered<SupraCoin>(to);
                 // assume aptos_std::type_info::type_of<CoinType>() == aptos_std::type_info::type_of<SupraCoin>() ==>
+=======
+                // assert coin::spec_is_account_registered<AptosCoin>(to);
+                // assume aptos_std::type_info::type_of<CoinType>() == aptos_std::type_info::type_of<AptosCoin>() ==>
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.move
                 //     coin::spec_is_account_registered<CoinType>(to);
             };
         };
@@ -239,7 +261,11 @@ module supra_framework::supra_account {
     /// Convenient function to transfer SUPRA to a recipient account that might not exist.
     /// This would create the recipient SUPRA PFS first, which also registers it to receive SUPRA, before transferring.
     /// TODO: once migration is complete, rename to just "transfer_only" and make it an entry function (for cheapest way
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.move
     /// to transfer SUPRA) - if we want to allow SUPRA PFS without account itself
+=======
+    /// to transfer APT) - if we want to allow APT PFS without account itself
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.move
     public(friend) entry fun fungible_transfer_only(
         source: &signer, to: address, amount: u64
     ) {
@@ -261,7 +287,11 @@ module supra_framework::supra_account {
         fungible_asset::is_address_balance_at_least(store_addr, amount)
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.move
     /// Burn from SUPRA Primary FungibleStore for gas charge
+=======
+    /// Burn from APT Primary FungibleStore for gas charge
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.move
     public(friend) fun burn_from_fungible_store_for_gas(
         ref: &BurnRef,
         account: address,
@@ -345,8 +375,13 @@ module supra_framework::supra_account {
     public fun test_transfer_to_resource_account(alice: &signer, core: &signer) {
         let (resource_account, _) = account::create_resource_account(alice, vector[]);
         let resource_acc_addr = signer::address_of(&resource_account);
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/supra_account.move
         let (burn_cap, mint_cap) = supra_framework::supra_coin::initialize_for_test(core);
         assert!(coin::is_account_registered<SupraCoin>(resource_acc_addr), 0);
+=======
+        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(core);
+        assert!(coin::is_account_registered<AptosCoin>(resource_acc_addr), 0);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aptos_account.move
 
         create_account(signer::address_of(alice));
         coin::deposit(signer::address_of(alice), coin::mint(10000, &mint_cap));

@@ -49,7 +49,10 @@ flate2 = { workspace = true }
 hex = { workspace = true }
 itertools = { workspace = true }
 legacy-move-compiler = { workspace = true }
+<<<<<<< HEAD
 keccak-hash = { workspace = true }
+=======
+>>>>>>> aptos-framework-v1.34.0
 libsecp256k1 = { workspace = true }
 log = { workspace = true }
 merlin = { workspace = true }

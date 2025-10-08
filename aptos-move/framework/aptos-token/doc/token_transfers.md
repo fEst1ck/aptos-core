@@ -176,6 +176,7 @@ This module provides the foundation for transferring of Tokens
 
 <pre><code>#[<a href="../../aptos-framework/doc/event.md#0x1_event">event</a>]
 <b>struct</b> <a href="token_transfers.md#0x3_token_transfers_Offer">Offer</a> <b>has</b> drop, store
+<<<<<<< HEAD
 </code></pre>
 
 
@@ -222,6 +223,8 @@ This module provides the foundation for transferring of Tokens
 
 <pre><code>#[<a href="../../supra-framework/doc/event.md#0x1_event">event</a>]
 <b>struct</b> <a href="token_transfers.md#0x3_token_transfers_TokenCancelOfferEvent">TokenCancelOfferEvent</a> <b>has</b> drop, store
+=======
+>>>>>>> aptos-framework-v1.34.0
 </code></pre>
 
 
@@ -231,6 +234,12 @@ This module provides the foundation for transferring of Tokens
 
 
 <dl>
+<dt>
+<code><a href="../../aptos-framework/doc/account.md#0x1_account">account</a>: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
 <dt>
 <code>to_address: <b>address</b></code>
 </dt>
@@ -427,6 +436,186 @@ This module provides the foundation for transferring of Tokens
 
 </details>
 
+<a id="0x3_token_transfers_CancelOffer"></a>
+
+## Struct `CancelOffer`
+
+
+
+<pre><code>#[<a href="../../aptos-framework/doc/event.md#0x1_event">event</a>]
+<<<<<<< HEAD
+#[deprecated]
+<b>struct</b> <a href="token_transfers.md#0x3_token_transfers_TokenCancelOffer">TokenCancelOffer</a> <b>has</b> drop, store
+=======
+<b>struct</b> <a href="token_transfers.md#0x3_token_transfers_CancelOffer">CancelOffer</a> <b>has</b> drop, store
+>>>>>>> aptos-framework-v1.34.0
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code><a href="../../aptos-framework/doc/account.md#0x1_account">account</a>: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>to_address: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>token_id: <a href="token.md#0x3_token_TokenId">token::TokenId</a></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>amount: u64</code>
+</dt>
+<dd>
+
+</dd>
+</dl>
+
+
+</details>
+
+<<<<<<< HEAD
+=======
+<a id="0x3_token_transfers_TokenClaimEvent"></a>
+
+## Struct `TokenClaimEvent`
+
+
+
+<pre><code>#[<a href="../../aptos-framework/doc/event.md#0x1_event">event</a>]
+<b>struct</b> <a href="token_transfers.md#0x3_token_transfers_TokenClaimEvent">TokenClaimEvent</a> <b>has</b> drop, store
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code>to_address: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>token_id: <a href="token.md#0x3_token_TokenId">token::TokenId</a></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>amount: u64</code>
+</dt>
+<dd>
+
+</dd>
+</dl>
+
+
+</details>
+
+<a id="0x3_token_transfers_Claim"></a>
+
+## Struct `Claim`
+
+
+
+<pre><code>#[<a href="../../aptos-framework/doc/event.md#0x1_event">event</a>]
+<b>struct</b> <a href="token_transfers.md#0x3_token_transfers_Claim">Claim</a> <b>has</b> drop, store
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code><a href="../../aptos-framework/doc/account.md#0x1_account">account</a>: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>to_address: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>token_id: <a href="token.md#0x3_token_TokenId">token::TokenId</a></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>amount: u64</code>
+</dt>
+<dd>
+
+</dd>
+</dl>
+
+
+</details>
+
+<a id="0x3_token_transfers_TokenOfferEvent"></a>
+
+## Struct `TokenOfferEvent`
+
+
+
+<pre><code>#[<a href="../../aptos-framework/doc/event.md#0x1_event">event</a>]
+#[deprecated]
+<b>struct</b> <a href="token_transfers.md#0x3_token_transfers_TokenOfferEvent">TokenOfferEvent</a> <b>has</b> drop, store
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code>to_address: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>token_id: <a href="token.md#0x3_token_TokenId">token::TokenId</a></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>amount: u64</code>
+</dt>
+<dd>
+
+</dd>
+</dl>
+
+
+</details>
+
 <a id="0x3_token_transfers_TokenCancelOffer"></a>
 
 ## Struct `TokenCancelOffer`
@@ -468,6 +657,7 @@ This module provides the foundation for transferring of Tokens
 
 </details>
 
+>>>>>>> aptos-framework-v1.34.0
 <a id="0x3_token_transfers_TokenClaim"></a>
 
 ## Struct `TokenClaim`
@@ -888,6 +1078,105 @@ Get the amount from sender token
 </code></pre>
 
 
+<<<<<<< HEAD
+=======
+
+<a id="@Specification_1_initialize_token_transfers"></a>
+
+### Function `initialize_token_transfers`
+
+
+<pre><code><b>fun</b> <a href="token_transfers.md#0x3_token_transfers_initialize_token_transfers">initialize_token_transfers</a>(<a href="../../aptos-framework/doc/account.md#0x1_account">account</a>: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>)
+</code></pre>
+
+
+
+
+<pre><code><b>include</b> <a href="token_transfers.md#0x3_token_transfers_InitializeTokenTransfersAbortsIf">InitializeTokenTransfersAbortsIf</a>;
+</code></pre>
+
+
+Abort according to the code
+
+
+<a id="0x3_token_transfers_InitializeTokenTransfersAbortsIf"></a>
+
+
+<pre><code><b>schema</b> <a href="token_transfers.md#0x3_token_transfers_InitializeTokenTransfersAbortsIf">InitializeTokenTransfersAbortsIf</a> {
+    <a href="../../aptos-framework/doc/account.md#0x1_account">account</a>: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>;
+    <b>let</b> addr = <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(<a href="../../aptos-framework/doc/account.md#0x1_account">account</a>);
+    <b>aborts_if</b> <b>exists</b>&lt;<a href="token_transfers.md#0x3_token_transfers_PendingClaims">PendingClaims</a>&gt;(addr);
+    <b>let</b> <a href="../../aptos-framework/doc/account.md#0x1_account">account</a> = <b>global</b>&lt;Account&gt;(addr);
+    <b>aborts_if</b> !<b>exists</b>&lt;Account&gt;(addr);
+    <b>aborts_if</b> <a href="../../aptos-framework/doc/account.md#0x1_account">account</a>.guid_creation_num + 3 &gt;= <a href="../../aptos-framework/doc/account.md#0x1_account_MAX_GUID_CREATION_NUM">account::MAX_GUID_CREATION_NUM</a>;
+    <b>aborts_if</b> <a href="../../aptos-framework/doc/account.md#0x1_account">account</a>.guid_creation_num + 3 &gt; MAX_U64;
+}
+</code></pre>
+
+
+
+<a id="@Specification_1_create_token_offer_id"></a>
+
+### Function `create_token_offer_id`
+
+
+<pre><code><b>fun</b> <a href="token_transfers.md#0x3_token_transfers_create_token_offer_id">create_token_offer_id</a>(to_addr: <b>address</b>, token_id: <a href="token.md#0x3_token_TokenId">token::TokenId</a>): <a href="token_transfers.md#0x3_token_transfers_TokenOfferId">token_transfers::TokenOfferId</a>
+</code></pre>
+
+
+
+
+<pre><code><b>aborts_if</b> <b>false</b>;
+</code></pre>
+
+
+
+<a id="@Specification_1_offer_script"></a>
+
+### Function `offer_script`
+
+
+<pre><code><b>public</b> entry <b>fun</b> <a href="token_transfers.md#0x3_token_transfers_offer_script">offer_script</a>(sender: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, receiver: <b>address</b>, creator: <b>address</b>, collection: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_String">string::String</a>, name: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_String">string::String</a>, property_version: u64, amount: u64)
+</code></pre>
+
+
+
+
+<pre><code><b>pragma</b> verify = <b>false</b>;
+<b>let</b> token_id = <a href="token.md#0x3_token_create_token_id_raw">token::create_token_id_raw</a>(creator, collection, name, property_version);
+</code></pre>
+
+
+
+<a id="@Specification_1_offer"></a>
+
+### Function `offer`
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="token_transfers.md#0x3_token_transfers_offer">offer</a>(sender: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, receiver: <b>address</b>, token_id: <a href="token.md#0x3_token_TokenId">token::TokenId</a>, amount: u64)
+</code></pre>
+
+
+
+
+<pre><code><b>pragma</b> verify = <b>false</b>;
+<b>let</b> sender_addr = <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(sender);
+<b>include</b> !<b>exists</b>&lt;<a href="token_transfers.md#0x3_token_transfers_PendingClaims">PendingClaims</a>&gt;(sender_addr) ==&gt; <a href="token_transfers.md#0x3_token_transfers_InitializeTokenTransfersAbortsIf">InitializeTokenTransfersAbortsIf</a>{<a href="../../aptos-framework/doc/account.md#0x1_account">account</a> : sender};
+<b>let</b> pending_claims = <b>global</b>&lt;<a href="token_transfers.md#0x3_token_transfers_PendingClaims">PendingClaims</a>&gt;(sender_addr).pending_claims;
+<b>let</b> token_offer_id = <a href="token_transfers.md#0x3_token_transfers_create_token_offer_id">create_token_offer_id</a>(receiver, token_id);
+<b>let</b> tokens = <b>global</b>&lt;TokenStore&gt;(sender_addr).tokens;
+<b>aborts_if</b> amount &lt;= 0;
+<b>aborts_if</b> <a href="token.md#0x3_token_spec_balance_of">token::spec_balance_of</a>(sender_addr, token_id) &lt; amount;
+<b>aborts_if</b> !<b>exists</b>&lt;TokenStore&gt;(sender_addr);
+<b>aborts_if</b> !<a href="../../aptos-framework/../aptos-stdlib/doc/table.md#0x1_table_spec_contains">table::spec_contains</a>(tokens, token_id);
+<b>aborts_if</b> !<a href="../../aptos-framework/../aptos-stdlib/doc/table.md#0x1_table_spec_contains">table::spec_contains</a>(pending_claims, token_offer_id);
+<b>let</b> a = <a href="../../aptos-framework/../aptos-stdlib/doc/table.md#0x1_table_spec_contains">table::spec_contains</a>(pending_claims, token_offer_id);
+<b>let</b> dst_token = <a href="../../aptos-framework/../aptos-stdlib/doc/table.md#0x1_table_spec_get">table::spec_get</a>(pending_claims, token_offer_id);
+<b>aborts_if</b> dst_token.amount + <a href="token_transfers.md#0x3_token_transfers_spce_get">spce_get</a>(<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(sender), token_id, amount) &gt; MAX_U64;
+</code></pre>
+
+
+>>>>>>> aptos-framework-v1.34.0
 
 <a id="@Specification_1_initialize_token_transfers"></a>
 

@@ -93,7 +93,11 @@ spec supra_framework::resource_account {
         include RotateAccountAuthenticationKeyAndStoreCapabilityAbortsIfWithoutAccountLimit;
 
         // TODO(fa_migration)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/resource_account.spec.move
         //aborts_if !coin::spec_is_account_registered<SupraCoin>(resource_addr) && coin_store_resource.frozen;
+=======
+        //aborts_if !coin::spec_is_account_registered<AptosCoin>(resource_addr) && coin_store_resource.frozen;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/resource_account.spec.move
         /// [high-level-req-3]
         ensures exists<supra_framework::coin::CoinStore<SupraCoin>>(resource_addr);
     }

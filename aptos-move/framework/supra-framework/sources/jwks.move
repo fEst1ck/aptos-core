@@ -4,7 +4,11 @@
 /// spawn a VM and make a Move function call. Instead, the JWK consensus Rust code will have to directly
 /// write some of the resources in this file. As a result, the structs in this file are declared so as to
 /// have a simple layout which is easily accessible in Rust.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
 module supra_framework::jwks {
+=======
+module aptos_framework::jwks {
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
     use std::bcs;
     use std::error;
     use std::features;
@@ -27,6 +31,10 @@ module supra_framework::jwks {
 
     friend supra_framework::genesis;
     friend supra_framework::reconfiguration_with_dkg;
+
+    /// We limit the size of a `PatchedJWKs` resource installed by a dapp owner for federated keyless accounts.
+    /// Note: If too large, validators waste work reading it for invalid TXN signatures.
+    const MAX_FEDERATED_JWKS_SIZE_BYTES: u64 = 2 * 1024; // 2 KiB
 
     /// We limit the size of a `PatchedJWKs` resource installed by a dapp owner for federated keyless accounts.
     /// Note: If too large, validators waste work reading it for invalid TXN signatures.
@@ -182,7 +190,11 @@ module supra_framework::jwks {
     /// reusing `PatchedJWKs { jwks: AllProviderJWKs }`, which is a JWK-consensus-specific struct.
     public fun patch_federated_jwks(jwk_owner: &signer, patches: vector<Patch>) acquires FederatedJWKs {
         // Prevents accidental calls in 0x1::jwks that install federated JWKs at the Aptos framework address.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
         assert!(!system_addresses::is_supra_framework_address(signer::address_of(jwk_owner)),
+=======
+        assert!(!system_addresses::is_aptos_framework_address(signer::address_of(jwk_owner)),
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
             error::invalid_argument(EINSTALL_FEDERATED_JWKS_AT_APTOS_FRAMEWORK)
         );
 
@@ -320,7 +332,11 @@ module supra_framework::jwks {
         let provider_set = if (config_buffer::does_exist<SupportedOIDCProviders>()) {
             config_buffer::extract_v2<SupportedOIDCProviders>()
         } else {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
             *borrow_global<SupportedOIDCProviders>(@supra_framework)
+=======
+            *borrow_global<SupportedOIDCProviders>(@aptos_framework)
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
         };
 
         let old_config_url = remove_oidc_provider_internal(&mut provider_set, name);
@@ -355,7 +371,11 @@ module supra_framework::jwks {
         let provider_set = if (config_buffer::does_exist<SupportedOIDCProviders>()) {
             config_buffer::extract_v2<SupportedOIDCProviders>()
         } else {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
             *borrow_global<SupportedOIDCProviders>(@supra_framework)
+=======
+            *borrow_global<SupportedOIDCProviders>(@aptos_framework)
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
         };
         let ret = remove_oidc_provider_internal(&mut provider_set, name);
         config_buffer::upsert(provider_set);
@@ -367,8 +387,13 @@ module supra_framework::jwks {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<SupportedOIDCProviders>()) {
             let new_config = config_buffer::extract_v2<SupportedOIDCProviders>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
             if (exists<SupportedOIDCProviders>(@supra_framework)) {
                 *borrow_global_mut<SupportedOIDCProviders>(@supra_framework) = new_config;
+=======
+            if (exists<SupportedOIDCProviders>(@aptos_framework)) {
+                *borrow_global_mut<SupportedOIDCProviders>(@aptos_framework) = new_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
             } else {
                 move_to(framework, new_config);
             }
@@ -460,8 +485,13 @@ module supra_framework::jwks {
     /// NOTE: It is assumed verification has been done to ensure each update is quorum-certified,
     /// and its `version` equals to the on-chain version + 1.
     public fun upsert_into_observed_jwks(fx: &signer, provider_jwks_vec: vector<ProviderJWKs>) acquires ObservedJWKs, PatchedJWKs, Patches {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
         system_addresses::assert_supra_framework(fx);
         let observed_jwks = borrow_global_mut<ObservedJWKs>(@supra_framework);
+=======
+        system_addresses::assert_aptos_framework(fx);
+        let observed_jwks = borrow_global_mut<ObservedJWKs>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
 
         if (features::is_jwk_consensus_per_key_mode_enabled()) {
             vector::for_each(provider_jwks_vec, |proposed_provider_jwks|{
@@ -853,6 +883,91 @@ module supra_framework::jwks {
         assert!(expected == borrow_global<PatchedJWKs>(@aptos_framework).jwks, 999);
     }
 
+    #[test(fx = @aptos_framework)]
+    fun test_observed_jwks_operations_per_key_mode(fx: &signer) acquires ObservedJWKs, PatchedJWKs, Patches {
+        initialize_for_test(fx);
+        features::change_feature_flags_for_testing(fx, vector[features::get_jwk_consensus_per_key_mode_feature()], vector[]);
+
+        let mandatory_jwk= new_rsa_jwk(
+            utf8(b"kid999"),
+            utf8(b"RS256"),
+            utf8(b"AQAB"),
+            utf8(b"999999999"),
+        );
+
+        set_patches(fx, vector[new_patch_upsert_jwk(b"alice", mandatory_jwk)]);
+
+        // Insert a key.
+        let alice_jwk_1 = new_rsa_jwk(
+            utf8(b"kid123"),
+            utf8(b"RS256"),
+            utf8(b"AQAB"),
+            utf8(b"999999999"),
+        );
+        let key_level_update_0 = ProviderJWKs {
+            issuer: b"alice",
+            version: 1,
+            jwks: vector[alice_jwk_1],
+        };
+        upsert_into_observed_jwks(fx, vector[key_level_update_0]);
+        let expected = AllProvidersJWKs {
+            entries: vector[
+                ProviderJWKs {
+                    issuer: b"alice",
+                    version: 1,
+                    jwks: vector[alice_jwk_1, mandatory_jwk],
+                },
+            ]
+        };
+        assert!(expected == borrow_global<PatchedJWKs>(@aptos_framework).jwks, 999);
+
+        // Update a key.
+        let alice_jwk_1b = new_rsa_jwk(
+            utf8(b"kid123"),
+            utf8(b"RS256"),
+            utf8(b"AQAB"),
+            utf8(b"88888888"),
+        );
+        let key_level_update_1 = ProviderJWKs {
+            issuer: b"alice",
+            version: 2,
+            jwks: vector[alice_jwk_1b],
+        };
+        upsert_into_observed_jwks(fx, vector[key_level_update_1]);
+        let expected = AllProvidersJWKs {
+            entries: vector[
+                ProviderJWKs {
+                    issuer: b"alice",
+                    version: 2,
+                    jwks: vector[alice_jwk_1b, mandatory_jwk],
+                },
+            ]
+        };
+        assert!(expected == borrow_global<PatchedJWKs>(@aptos_framework).jwks, 999);
+
+        // Delete a key.
+        let delete_command = new_unsupported_jwk(
+            b"kid123",
+            DELETE_COMMAND_INDICATOR,
+        );
+        let key_level_update_1 = ProviderJWKs {
+            issuer: b"alice",
+            version: 3,
+            jwks: vector[delete_command],
+        };
+        upsert_into_observed_jwks(fx, vector[key_level_update_1]);
+        let expected = AllProvidersJWKs {
+            entries: vector[
+                ProviderJWKs {
+                    issuer: b"alice",
+                    version: 3,
+                    jwks: vector[mandatory_jwk],
+                },
+            ]
+        };
+        assert!(expected == borrow_global<PatchedJWKs>(@aptos_framework).jwks, 999);
+    }
+
     #[test]
     fun test_apply_patch() {
         let jwks = AllProvidersJWKs {
@@ -960,12 +1075,21 @@ module supra_framework::jwks {
         assert!(jwks == AllProvidersJWKs { entries: vector[] }, 1);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
     #[test(supra_framework = @supra_framework)]
     fun test_patched_jwks(supra_framework: signer) acquires ObservedJWKs, PatchedJWKs, Patches {
         initialize_for_test(&supra_framework);
 
         features::change_feature_flags_for_testing(
             &supra_framework,
+=======
+    #[test(aptos_framework = @aptos_framework)]
+    fun test_patched_jwks(aptos_framework: signer) acquires ObservedJWKs, PatchedJWKs, Patches {
+        initialize_for_test(&aptos_framework);
+
+        features::change_feature_flags_for_testing(
+            &aptos_framework,
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
             vector[],
             vector[features::get_jwk_consensus_per_key_mode_feature()]
         );
@@ -977,7 +1101,11 @@ module supra_framework::jwks {
         let jwk_3b = new_unsupported_jwk(b"key_id_3", b"key_payload_3b");
 
         // Insert fake observation in per-issuer mode.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/jwks.move
         upsert_into_observed_jwks(&supra_framework, vector [
+=======
+        upsert_into_observed_jwks(&aptos_framework, vector [
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/jwks.move
             ProviderJWKs {
                 issuer: b"alice",
                 version: 111,

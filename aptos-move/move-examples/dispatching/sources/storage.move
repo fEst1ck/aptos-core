@@ -6,10 +6,17 @@ module dispatching::storage {
     use aptos_std::table::{Self, Table};
     use aptos_std::type_info::{Self, TypeInfo};
 
+<<<<<<< HEAD
     use supra_framework::dispatchable_fungible_asset;
     use supra_framework::function_info::FunctionInfo;
     use supra_framework::fungible_asset::{Self, Metadata};
     use supra_framework::object::{Self, ExtendRef, Object};
+=======
+    use aptos_framework::dispatchable_fungible_asset;
+    use aptos_framework::function_info::FunctionInfo;
+    use aptos_framework::fungible_asset::{Self, Metadata};
+    use aptos_framework::object::{Self, ExtendRef, Object};
+>>>>>>> aptos-framework-v1.34.0
 
     friend dispatching::engine;
 

@@ -179,6 +179,7 @@ impl HashValue {
         HashValue::from_keccak(sha3)
     }
 
+<<<<<<< HEAD
     /// Convenience function that computes a `HashValue` internally equal to
     /// the keccak_256 of a byte buffer. It will handle hasher creation, data
     /// feeding and finalization.
@@ -188,6 +189,8 @@ impl HashValue {
         HashValue::from_keccak(keccak)
     }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
     /// Convenience function that sha3_256 the set of buffers
     #[cfg(test)]
     pub fn from_iter_sha3<'a, I>(buffers: I) -> Self

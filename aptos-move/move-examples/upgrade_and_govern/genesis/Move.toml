@@ -5,5 +5,12 @@ version = '1.0.0'
 [addresses]
 upgrade_and_govern = '_'
 
+<<<<<<< HEAD
 [dependencies.SupraFramework]
 local = '../../../framework/supra-framework'
+=======
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+subdir = "aptos-framework"
+rev = "mainnet"
+>>>>>>> aptos-framework-v1.34.0

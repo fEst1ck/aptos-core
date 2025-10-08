@@ -201,6 +201,7 @@ message UserTransactionRequest {
   Signature signature = 7;
 }
 
+<<<<<<< HEAD
 message AutomatedTaskMeta {
   string sender = 1;
   uint64 index = 2 [jstype = JS_STRING];
@@ -211,6 +212,8 @@ message AutomatedTaskMeta {
   bytes registration_hash = 7;
 }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
 message WriteSet {
   enum WriteSetType {
     WRITE_SET_TYPE_UNSPECIFIED = 0;

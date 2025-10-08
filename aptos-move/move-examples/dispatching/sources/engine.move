@@ -1,6 +1,10 @@
 /// This engine module dispatches calls.
 module dispatching::engine {
+<<<<<<< HEAD
     use supra_framework::dispatchable_fungible_asset;
+=======
+    use aptos_framework::dispatchable_fungible_asset;
+>>>>>>> aptos-framework-v1.34.0
     use dispatching::storage;
 
     /// The dispatch call knows both storage and indirectly the callback, thus the separate module.

@@ -2,7 +2,11 @@
 module dispatching::sample_callback {
     use std::option;
 
+<<<<<<< HEAD
     use supra_framework::object::Object;
+=======
+    use aptos_framework::object::Object;
+>>>>>>> aptos-framework-v1.34.0
 
     use dispatching::storage;
 

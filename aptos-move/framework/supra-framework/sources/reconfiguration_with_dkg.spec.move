@@ -28,6 +28,7 @@ spec supra_framework::reconfiguration_with_dkg {
         use supra_framework::chain_status;
         use std::signer;
         use std::features;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/reconfiguration_with_dkg.spec.move
         use supra_framework::coin::CoinInfo;
         use supra_framework::supra_coin::SupraCoin;
         use supra_framework::staking_config;
@@ -40,6 +41,19 @@ spec supra_framework::reconfiguration_with_dkg {
         use supra_framework::randomness_config;
         use supra_framework::jwk_consensus_config;
         use supra_framework::supra_config;
+=======
+        use aptos_framework::coin::CoinInfo;
+        use aptos_framework::aptos_coin::AptosCoin;
+        use aptos_framework::staking_config;
+        use aptos_framework::config_buffer;
+        use aptos_framework::version;
+        use aptos_framework::consensus_config;
+        use aptos_framework::execution_config;
+        use aptos_framework::gas_schedule;
+        use aptos_framework::jwks;
+        use aptos_framework::randomness_config;
+        use aptos_framework::jwk_consensus_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/reconfiguration_with_dkg.spec.move
         framework: signer;
         requires signer::address_of(framework) == @supra_framework;
         requires chain_status::is_operating();

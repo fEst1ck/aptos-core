@@ -528,6 +528,71 @@ Full ValidatorSet, stored in @supra_framework.
 </details>
 
 <a id="0x1_stake_PendingTransactionFee"></a>
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/stake.md
+=======
+
+## Resource `PendingTransactionFee`
+
+Transaction fee that is collected in current epoch, indexed by validator_index.
+
+
+<pre><code><b>struct</b> <a href="stake.md#0x1_stake_PendingTransactionFee">PendingTransactionFee</a> <b>has</b> store, key
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code>pending_fee_by_validator: <a href="big_ordered_map.md#0x1_big_ordered_map_BigOrderedMap">big_ordered_map::BigOrderedMap</a>&lt;u64, <a href="aggregator_v2.md#0x1_aggregator_v2_Aggregator">aggregator_v2::Aggregator</a>&lt;u64&gt;&gt;</code>
+</dt>
+<dd>
+
+</dd>
+</dl>
+
+
+</details>
+
+<a id="0x1_stake_DistributeTransactionFee"></a>
+
+## Struct `DistributeTransactionFee`
+
+
+
+<pre><code>#[<a href="event.md#0x1_event">event</a>]
+<b>struct</b> <a href="stake.md#0x1_stake_DistributeTransactionFee">DistributeTransactionFee</a> <b>has</b> drop, store
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code>pool_address: <b>address</b></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>fee_amount: u64</code>
+</dt>
+<dd>
+
+</dd>
+</dl>
+
+
+</details>
+
+<a id="0x1_stake_AptosCoinCapabilities"></a>
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/stake.md
 
 ## Resource `PendingTransactionFee`
 
@@ -2414,6 +2479,44 @@ Return the validator's config.
 </details>
 
 <a id="0x1_stake_get_pending_transaction_fee"></a>
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/stake.md
+=======
+
+## Function `get_pending_transaction_fee`
+
+Returns the pending transaction fee that is accumulated in current epoch.
+
+
+<pre><code>#[view]
+<b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_get_pending_transaction_fee">get_pending_transaction_fee</a>(): <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>&lt;u64&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_get_pending_transaction_fee">get_pending_transaction_fee</a>(): <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>&lt;u64&gt; <b>acquires</b> <a href="stake.md#0x1_stake_PendingTransactionFee">PendingTransactionFee</a> {
+    <b>let</b> result = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_empty">vector::empty</a>();
+    <b>let</b> fee_table = &<b>borrow_global</b>&lt;<a href="stake.md#0x1_stake_PendingTransactionFee">PendingTransactionFee</a>&gt;(@aptos_framework).pending_fee_by_validator;
+    <b>let</b> num_validators = fee_table.compute_length();
+    <b>let</b> i = 0;
+    <b>while</b> (i &lt; num_validators) {
+        result.push_back(fee_table.borrow(&i).read());
+        i = i + 1;
+    };
+
+    result
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_stake_initialize"></a>
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/stake.md
 
 ## Function `get_pending_transaction_fee`
 
@@ -5380,6 +5483,7 @@ Returns validator's next epoch voting power, including pending_active, active, a
 
 
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/stake.md
 <pre><code><b>modifies</b> <b>global</b>&lt;<a href="stake.md#0x1_stake_ValidatorConfig">ValidatorConfig</a>&gt;(pool_address);
 </code></pre>
 
@@ -5396,6 +5500,8 @@ Returns validator's next epoch voting power, including pending_active, active, a
 
 
 
+=======
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/stake.md
 <pre><code><b>include</b> <a href="stake.md#0x1_stake_AbortsIfSignerPermissionStake">AbortsIfSignerPermissionStake</a> {
     s: operator
 };

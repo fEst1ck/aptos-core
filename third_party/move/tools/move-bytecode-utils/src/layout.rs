@@ -199,7 +199,11 @@ impl<'a, T: CompiledModuleView> SerdeLayoutBuilder<'a, T> {
                 )
             });
         #[allow(deprecated)]
+<<<<<<< HEAD
         let normalized_struct = Struct::new(declaring_module.borrow(), def).1;
+=======
+        let normalized_struct = Struct::new(declaring_module.borrow(), def)?.1;
+>>>>>>> aptos-framework-v1.34.0
         assert_eq!(
             normalized_struct.type_parameters.len(),
             type_arguments.len(),
@@ -374,6 +378,7 @@ impl TypeLayoutBuilder {
                 compiled_module_view,
                 layout_type,
             )?),
+            Function(_) => MoveTypeLayout::Function,
         })
     }
 
@@ -386,6 +391,7 @@ impl TypeLayoutBuilder {
     ) -> anyhow::Result<MoveTypeLayout> {
         use SignatureToken::*;
         Ok(match s {
+            Function(..) => bail!("function types NYI for MoveTypeLayout"),
             Vector(t) => MoveTypeLayout::Vector(Box::new(Self::build_from_signature_token(
                 m,
                 t,
@@ -532,6 +538,9 @@ impl StructLayoutBuilder {
                         MoveStructLayout::WithTypes { type_, fields }
                     },
                 })
+            },
+            StructFieldInformation::DeclaredVariants(..) => {
+                bail!("enum variants not yet supported by layouts")
             },
         }
     }

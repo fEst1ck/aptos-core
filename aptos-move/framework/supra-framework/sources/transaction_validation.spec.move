@@ -28,6 +28,7 @@ spec supra_framework::transaction_validation {
         pragma aborts_if_is_strict;
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
     /// Ensure caller is `supra_framework`.
     /// Aborts if TransactionValidation already exists.
     spec initialize(
@@ -36,6 +37,28 @@ spec supra_framework::transaction_validation {
     module_prologue_name: vector<u8>,
     multi_agent_prologue_name: vector<u8>,
     user_epilogue_name: vector<u8>,
+=======
+    spec grant_gas_permission(
+        master: &signer,
+        permissioned: &signer,
+        gas_amount: u64
+    ) {
+        pragma aborts_if_is_partial;
+    }
+
+    spec revoke_gas_permission(permissioned: &signer) {
+        pragma aborts_if_is_partial;
+    }
+
+    /// Ensure caller is `aptos_framework`.
+    /// Aborts if TransactionValidation already exists.
+    spec initialize(
+        aptos_framework: &signer,
+        script_prologue_name: vector<u8>,
+        module_prologue_name: vector<u8>,
+        multi_agent_prologue_name: vector<u8>,
+        user_epilogue_name: vector<u8>,
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
     ) {
         use std::signer;
         let addr = signer::address_of(supra_framework);
@@ -48,6 +71,7 @@ spec supra_framework::transaction_validation {
     /// Create a schema to reuse some code.
     /// Give some constraints that may abort according to the conditions.
     spec schema PrologueCommonAbortsIf {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
         use std::bcs;
         use supra_framework::timestamp::{CurrentTimeMicroseconds};
         use supra_framework::chain_id::{ChainId};
@@ -57,6 +81,14 @@ spec supra_framework::transaction_validation {
         gas_payer: address;
         txn_sequence_number: u64;
         txn_authentication_key: vector<u8>;
+=======
+        use aptos_framework::timestamp::{CurrentTimeMicroseconds};
+        use aptos_framework::chain_id::{ChainId};
+        sender: &signer;
+        gas_payer: &signer;
+        replay_protector: ReplayProtector;
+        txn_authentication_key: Option<vector<u8>>;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         txn_gas_price: u64;
         txn_max_gas_units: u64;
         txn_expiration_time: u64;
@@ -68,6 +100,7 @@ spec supra_framework::transaction_validation {
         aborts_if !exists<ChainId>(@supra_framework);
         aborts_if !(chain_id::get() == chain_id);
         let transaction_sender = signer::address_of(sender);
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
 
         aborts_if (
             !features::spec_is_enabled(features::SPONSORED_AUTOMATIC_ACCOUNT_CREATION)
@@ -95,44 +128,81 @@ spec supra_framework::transaction_validation {
         // property 1: The sender of a transaction should have sufficient coin balance to pay the transaction fee.
         /// [high-level-req-1]
         aborts_if !(global<CoinStore<SupraCoin>>(gas_payer).coin.value >= max_transaction_fee);
+=======
+        let gas_payer_addr = signer::address_of(gas_payer);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
     }
 
     spec prologue_common(
-    sender: signer,
-    gas_payer: address,
-    txn_sequence_number: u64,
-    txn_authentication_key: vector<u8>,
-    txn_gas_price: u64,
-    txn_max_gas_units: u64,
-    txn_expiration_time: u64,
-    chain_id: u8,
+        sender: &signer,
+        gas_payer: &signer,
+        replay_protector: ReplayProtector,
+        txn_authentication_key: Option<vector<u8>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
     ) {
         // TODO(fa_migration)
         pragma verify = false;
         include PrologueCommonAbortsIf;
     }
 
-    spec script_prologue(
-    sender: signer,
-    txn_sequence_number: u64,
-    txn_public_key: vector<u8>,
-    txn_gas_price: u64,
-    txn_max_gas_units: u64,
-    txn_expiration_time: u64,
-    chain_id: u8,
-    _script_hash: vector<u8>,
+    spec check_for_replay_protection_orderless_txn(
+        sender: address,
+        nonce: u64,
+        txn_expiration_time: u64,
+    ) {
+        pragma verify = false;
+    }
+
+    spec check_for_replay_protection_regular_txn(
+        sender_address: address,
+        gas_payer_address: address,
+        txn_sequence_number: u64,
+    ) {
+        pragma verify = false;
+    }
+
+    spec script_prologue_extended(
+        sender: signer,
+        txn_sequence_number: u64,
+        txn_public_key: vector<u8>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        _script_hash: vector<u8>,
+        is_simulation: bool,
     ) {
         // TODO(fa_migration)
         pragma verify = false;
         include PrologueCommonAbortsIf {
-            gas_payer: signer::address_of(sender),
-            txn_authentication_key: txn_public_key
+            gas_payer: sender,
+            txn_authentication_key: option::spec_some(txn_public_key),
+            replay_protector: ReplayProtector::SequenceNumber(txn_sequence_number),
         };
+    }
+
+    spec script_prologue(
+        sender: signer,
+        txn_sequence_number: u64,
+        txn_public_key: vector<u8>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        _script_hash: vector<u8>,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
     }
 
     spec schema MultiAgentPrologueCommonAbortsIf {
         secondary_signer_addresses: vector<address>;
-        secondary_signer_public_key_hashes: vector<vector<u8>>;
+        secondary_signer_public_key_hashes: vector<Option<vector<u8>>>;
+        is_simulation: bool;
 
         // Vectors to be `zipped with` should be of equal length.
         let num_secondary_signers = len(secondary_signer_addresses);
@@ -142,25 +212,39 @@ spec supra_framework::transaction_validation {
         // property 2: All secondary signer addresses are verified to be authentic through a validation process.
         /// [high-level-req-2]
         aborts_if exists i in 0..num_secondary_signers:
-            !account::exists_at(secondary_signer_addresses[i])
-                || secondary_signer_public_key_hashes[i] !=
-                account::get_authentication_key(secondary_signer_addresses[i]);
-
+            !account::spec_exists_at(secondary_signer_addresses[i]);
+        aborts_if exists i in 0..num_secondary_signers:
+            !can_skip(features::spec_simulation_enhancement_enabled(), is_simulation, secondary_signer_public_key_hashes[i]) &&
+                option::spec_is_some(secondary_signer_public_key_hashes[i]) && option::spec_borrow(
+                secondary_signer_public_key_hashes[i]
+            ) !=
+                    account::spec_get_authentication_key(secondary_signer_addresses[i]);
         // By the end, all secondary signers account should exist and public key hash should match.
         ensures forall i in 0..num_secondary_signers:
-            account::exists_at(secondary_signer_addresses[i])
-                && secondary_signer_public_key_hashes[i] ==
-                account::get_authentication_key(secondary_signer_addresses[i]);
+            account::spec_exists_at(secondary_signer_addresses[i]);
+        ensures forall i in 0..num_secondary_signers:
+            option::spec_is_none(secondary_signer_public_key_hashes[i]) || option::spec_borrow(
+                secondary_signer_public_key_hashes[i]
+            ) ==
+                account::spec_get_authentication_key(secondary_signer_addresses[i])
+                || can_skip(features::spec_simulation_enhancement_enabled(), is_simulation, secondary_signer_public_key_hashes[i]);
+    }
+
+    spec fun can_skip(feature_flag: bool, is_simulation: bool, auth_key: Option<vector<u8>>): bool {
+        features::spec_simulation_enhancement_enabled() && is_simulation && option::spec_is_none(auth_key)
     }
 
     spec multi_agent_common_prologue(
-    secondary_signer_addresses: vector<address>,
-    secondary_signer_public_key_hashes: vector<vector<u8>>,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<Option<vector<u8>>>,
+        is_simulation: bool,
     ) {
-        include MultiAgentPrologueCommonAbortsIf {
-            secondary_signer_addresses,
-            secondary_signer_public_key_hashes,
-        };
+        pragma aborts_if_is_partial;
+        // include MultiAgentPrologueCommonAbortsIf {
+        //     secondary_signer_addresses,
+        //     secondary_signer_public_key_hashes,
+        //     is_simulation,
+        // };
     }
 
     spec automated_transaction_prologue(
@@ -176,84 +260,127 @@ spec supra_framework::transaction_validation {
 
     /// Aborts if length of public key hashed vector
     /// not equal the number of singers.
-    spec multi_agent_script_prologue (
-    sender: signer,
-    txn_sequence_number: u64,
-    txn_sender_public_key: vector<u8>,
-    secondary_signer_addresses: vector<address>,
-    secondary_signer_public_key_hashes: vector<vector<u8>>,
-    txn_gas_price: u64,
-    txn_max_gas_units: u64,
-    txn_expiration_time: u64,
-    chain_id: u8,
+    spec multi_agent_script_prologue_extended(
+        sender: signer,
+        txn_sequence_number: u64,
+        txn_sender_public_key: vector<u8>,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<vector<u8>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
     ) {
         pragma verify_duration_estimate = 120;
-        let gas_payer = signer::address_of(sender);
+        let gas_payer = sender;
         // TODO(fa_migration)
         pragma verify = false;
-        include PrologueCommonAbortsIf {
-            gas_payer,
-            txn_sequence_number,
-            txn_authentication_key: txn_sender_public_key,
-        };
-        include MultiAgentPrologueCommonAbortsIf {
-            secondary_signer_addresses,
-            secondary_signer_public_key_hashes,
-        };
+        // include PrologueCommonAbortsIf {
+        //     gas_payer,
+        //     txn_sequence_number,
+        //     txn_authentication_key: txn_sender_public_key,
+        // };
+        // include MultiAgentPrologueCommonAbortsIf {
+        //     secondary_signer_addresses,
+        //     vector::map(secondary_signer_public_key_hashes, |x| option::spec_some(x)),
+        //     is_simulation,
+        // };
     }
 
-    spec fee_payer_script_prologue(
-    sender: signer,
-    txn_sequence_number: u64,
-    txn_sender_public_key: vector<u8>,
-    secondary_signer_addresses: vector<address>,
-    secondary_signer_public_key_hashes: vector<vector<u8>>,
-    fee_payer_address: address,
-    fee_payer_public_key_hash: vector<u8>,
-    txn_gas_price: u64,
-    txn_max_gas_units: u64,
-    txn_expiration_time: u64,
-    chain_id: u8,
+    spec multi_agent_script_prologue(
+        sender: signer,
+        txn_sequence_number: u64,
+        txn_sender_public_key: vector<u8>,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<vector<u8>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
     ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec fee_payer_script_prologue_extended(
+        sender: signer,
+        txn_sequence_number: u64,
+        txn_sender_public_key: vector<u8>,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<vector<u8>>,
+        fee_payer_address: address,
+        fee_payer_public_key_hash: vector<u8>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
+    ) {
+        pragma aborts_if_is_partial;
         pragma verify_duration_estimate = 120;
 
         aborts_if !features::spec_is_enabled(features::FEE_PAYER_ENABLED);
-        let gas_payer = fee_payer_address;
+        let gas_payer = create_signer::spec_create_signer(fee_payer_address);
         include PrologueCommonAbortsIf {
             gas_payer,
-            txn_sequence_number,
-            txn_authentication_key: txn_sender_public_key,
+            replay_protector: ReplayProtector::SequenceNumber(txn_sequence_number),
+            txn_authentication_key: option::spec_some(txn_sender_public_key),
         };
-        include MultiAgentPrologueCommonAbortsIf {
-            secondary_signer_addresses,
-            secondary_signer_public_key_hashes,
-        };
+        // include MultiAgentPrologueCommonAbortsIf {
+        //     secondary_signer_addresses,
+        //     secondary_signer_public_key_hashes,
+        //     is_simulation,
+        // };
 
-        aborts_if !account::exists_at(gas_payer);
-        aborts_if !(fee_payer_public_key_hash == account::get_authentication_key(gas_payer));
+        aborts_if !account::spec_exists_at(fee_payer_address);
+        aborts_if !(fee_payer_public_key_hash == account::spec_get_authentication_key(fee_payer_address));
         aborts_if !features::spec_fee_payer_enabled();
+    }
+
+    spec fee_payer_script_prologue(
+        sender: signer,
+        txn_sequence_number: u64,
+        txn_sender_public_key: vector<u8>,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<vector<u8>>,
+        fee_payer_address: address,
+        fee_payer_public_key_hash: vector<u8>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
     }
 
     /// Abort according to the conditions.
     /// `SupraCoinCapabilities` and `CoinInfo` should exists.
     /// Skip transaction_fee::burn_fee verification.
-    spec epilogue(
-    account: signer,
-    storage_fee_refunded: u64,
-    txn_gas_price: u64,
-    txn_max_gas_units: u64,
-    gas_units_remaining: u64
+    spec epilogue_extended(
+        account: signer,
+        storage_fee_refunded: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        gas_units_remaining: u64,
+        is_simulation: bool,
     ) {
         // TODO(fa_migration)
         pragma verify = false;
         include EpilogueGasPayerAbortsIf { gas_payer: signer::address_of(account) };
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
     spec automated_transaction_epilogue(
+=======
+    spec epilogue(
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         account: signer,
         storage_fee_refunded: u64,
         txn_gas_price: u64,
         txn_max_gas_units: u64,
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
         gas_units_remaining: u64
     ) {
         pragma verify = false;
@@ -266,28 +393,143 @@ spec supra_framework::transaction_validation {
         txn_max_gas_units: u64,
         gas_units_remaining: u64
     ) {
+=======
+        gas_units_remaining: u64,
+    ) {
+        // TODO: temporary mockup
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         pragma verify = false;
     }
 
     /// Abort according to the conditions.
     /// `SupraCoinCapabilities` and `CoinInfo` should exist.
     /// Skip transaction_fee::burn_fee verification.
-    spec epilogue_gas_payer(
-    account: signer,
-    gas_payer: address,
-    storage_fee_refunded: u64,
-    txn_gas_price: u64,
-    txn_max_gas_units: u64,
-    gas_units_remaining: u64
+    spec epilogue_gas_payer_extended(
+        account: signer,
+        gas_payer: address,
+        storage_fee_refunded: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        gas_units_remaining: u64,
+        is_simulation: bool,
     ) {
         // TODO(fa_migration)
         pragma verify = false;
         include EpilogueGasPayerAbortsIf;
     }
 
+    spec epilogue_gas_payer(
+        account: signer,
+        gas_payer: address,
+        storage_fee_refunded: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        gas_units_remaining: u64,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec unified_prologue(
+        sender: signer,
+        txn_sender_public_key: Option<vector<u8>>,
+        txn_sequence_number: u64,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<Option<vector<u8>>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec unified_prologue_fee_payer(
+        sender: signer,
+        fee_payer: signer,
+        txn_sender_public_key: Option<vector<u8>>,
+        fee_payer_public_key_hash: Option<vector<u8>>,
+        txn_sequence_number: u64,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<Option<vector<u8>>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec unified_epilogue(
+        account: signer,
+        gas_payer: signer,
+        storage_fee_refunded: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        gas_units_remaining: u64,
+        is_simulation: bool,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec unified_prologue_v2(
+        sender: signer,
+        txn_sender_public_key: Option<vector<u8>>,
+        replay_protector: ReplayProtector,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<Option<vector<u8>>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec unified_prologue_fee_payer_v2(
+        sender: signer,
+        fee_payer: signer,
+        txn_sender_public_key: Option<vector<u8>>,
+        fee_payer_public_key_hash: Option<vector<u8>>,
+        replay_protector: ReplayProtector,
+        secondary_signer_addresses: vector<address>,
+        secondary_signer_public_key_hashes: vector<Option<vector<u8>>>,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        is_simulation: bool,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+    spec unified_epilogue_v2(
+        account: signer,
+        gas_payer: signer,
+        storage_fee_refunded: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        gas_units_remaining: u64,
+        is_simulation: bool,
+        is_orderless_txn: bool,
+    ) {
+        // TODO: temporary mockup
+        pragma verify = false;
+    }
+
+
     spec schema EpilogueGasPayerAbortsIf {
         use std::option;
         use aptos_std::type_info;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
         use supra_framework::account::{Account};
         use supra_framework::aggregator;
         use supra_framework::supra_coin::{SupraCoin};
@@ -295,6 +537,14 @@ spec supra_framework::transaction_validation {
         use supra_framework::coin::{CoinStore, CoinInfo};
         use supra_framework::optional_aggregator;
         use supra_framework::transaction_fee::{SupraCoinCapabilities, SupraCoinMintCapability, CollectedFeesPerBlock};
+=======
+        use aptos_framework::account::{Account};
+        use aptos_framework::aptos_coin::{AptosCoin};
+        use aptos_framework::coin;
+        use aptos_framework::coin::{CoinStore, CoinInfo};
+        use aptos_framework::optional_aggregator;
+        use aptos_framework::transaction_fee::{AptosCoinCapabilities, AptosCoinMintCapability};
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
 
         account: signer;
         gas_payer: address;
@@ -324,6 +574,7 @@ spec supra_framework::transaction_validation {
         // ensures balance == pre_balance - transaction_fee_amount + storage_fee_refunded;
         ensures account.sequence_number == pre_account.sequence_number + 1;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
 
         // Check fee collection.
         let collect_fee_enabled = features::spec_is_enabled(features::COLLECT_AND_DISTRIBUTE_GAS_FEES);
@@ -345,6 +596,13 @@ spec supra_framework::transaction_validation {
         };
         let apt_addr = type_info::type_of<SupraCoin>().account_address;
         let maybe_apt_supply = global<CoinInfo<SupraCoin>>(apt_addr).supply;
+=======
+        // Check burning.
+        //   (Check the total supply aggregator when enabled.)
+        let amount_to_burn = transaction_fee_amount - storage_fee_refunded;
+        let apt_addr = type_info::type_of<AptosCoin>().account_address;
+        let maybe_apt_supply = global<CoinInfo<AptosCoin>>(apt_addr).supply;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         let total_supply_enabled = option::spec_is_some(maybe_apt_supply);
         let apt_supply = option::spec_borrow(maybe_apt_supply);
         let apt_supply_value = optional_aggregator::optional_aggregator_value(apt_supply);
@@ -358,6 +616,7 @@ spec supra_framework::transaction_validation {
         ensures total_supply_enabled ==> apt_supply_value - amount_to_burn == post_apt_supply_value;
 
         // Check minting.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
         let amount_to_mint = if (collect_fee_enabled) {
             storage_fee_refunded
         } else {
@@ -365,6 +624,11 @@ spec supra_framework::transaction_validation {
         };
         let total_supply = coin::supply<SupraCoin>;
         let post post_total_supply = coin::supply<SupraCoin>;
+=======
+        let amount_to_mint = storage_fee_refunded - transaction_fee_amount;
+        let total_supply = coin::supply<AptosCoin>;
+        let post post_total_supply = coin::supply<AptosCoin>;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
 
         aborts_if amount_to_mint > 0 && !exists<CoinStore<SupraCoin>>(addr);
         aborts_if amount_to_mint > 0 && !exists<SupraCoinMintCapability>(@supra_framework);

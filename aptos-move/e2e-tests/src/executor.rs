@@ -897,6 +897,7 @@ impl FakeExecutor {
             .execute_block(txn_block)
             .expect("The VM should not fail to startup");
         outputs
+<<<<<<< HEAD
             .pop()
             .expect("A block with one transaction should have one output")
     }
@@ -920,10 +921,10 @@ impl FakeExecutor {
             .execute_transaction_block(txn_block)
             .expect("The VM should not fail to startup");
         let mut txn_output = outputs
+=======
+>>>>>>> aptos-framework-v1.34.0
             .pop()
-            .expect("A block with one transaction should have one output");
-        txn_output.fill_error_status();
-        txn_output
+            .expect("A block with one transaction should have one output")
     }
 
     pub fn execute_transaction_with_gas_profiler(
@@ -961,6 +962,7 @@ impl FakeExecutor {
                             entry_func.ty_args().to_vec(),
                         )
                     },
+<<<<<<< HEAD
                     Ok(TransactionExecutableRef::AutomationRegistration(auto_payload)) => {
                         GasProfiler::new_function(
                             gas_meter,
@@ -969,6 +971,8 @@ impl FakeExecutor {
                             auto_payload.ty_args(),
                         )
                     },
+=======
+>>>>>>> aptos-framework-v1.34.0
                     Ok(_) => unimplemented!("multisig or empty payload not supported yet"),
                     Err(_) => unimplemented!("payload type is deprecated"),
                 };

@@ -1,6 +1,10 @@
 [package]
+<<<<<<<< HEAD:testsuite/benchmark-workloads/package-generator/Cargo.toml
 name = "package-generator"
 description = "Move package generator for benchmarking"
+========
+name = "compute-module-expansion-size"
+>>>>>>>> aptos-framework-v1.34.0:tools/compute-module-expansion-size/Cargo.toml
 version = "0.1.0"
 
 # Workspace inherited keys
@@ -14,8 +18,17 @@ rust-version = { workspace = true }
 
 [dependencies]
 anyhow = { workspace = true }
+<<<<<<<< HEAD:testsuite/benchmark-workloads/package-generator/Cargo.toml
 aptos-framework = { workspace = true }
 aptos-transaction-workloads-lib = { workspace = true }
 bcs = { workspace = true }
 clap = { workspace = true }
 move-package = { workspace = true }
+========
+clap = { workspace = true }
+futures = { workspace = true }
+move-binary-format = { workspace = true }
+move-core-types = { workspace = true }
+rayon = { workspace = true }
+tokio = { workspace = true }
+>>>>>>>> aptos-framework-v1.34.0:tools/compute-module-expansion-size/Cargo.toml

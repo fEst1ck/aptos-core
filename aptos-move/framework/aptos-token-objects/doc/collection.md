@@ -1229,6 +1229,13 @@ Called by token on mint to increment supply if there's an appropriate Supply str
                     <a href="token.md#0x4_token">token</a>,
                 },
             );
+        } <b>else</b> {
+            <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(&<b>mut</b> supply.mint_events,
+                <a href="collection.md#0x4_collection_MintEvent">MintEvent</a> {
+                    index: supply.total_minted,
+                    <a href="token.md#0x4_token">token</a>,
+                },
+            );
         };
         <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_some">option::some</a>(<a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_create_snapshot">aggregator_v2::create_snapshot</a>&lt;u64&gt;(supply.total_minted))
     } <b>else</b> <b>if</b> (<b>exists</b>&lt;<a href="collection.md#0x4_collection_UnlimitedSupply">UnlimitedSupply</a>&gt;(collection_addr)) {
@@ -1240,6 +1247,14 @@ Called by token on mint to increment supply if there's an appropriate Supply str
                 <a href="collection.md#0x4_collection_Mint">Mint</a> {
                     <a href="collection.md#0x4_collection">collection</a>: collection_addr,
                     index: <a href="../../supra-framework/doc/aggregator_v2.md#0x1_aggregator_v2_create_snapshot">aggregator_v2::create_snapshot</a>(supply.total_minted),
+                    <a href="token.md#0x4_token">token</a>,
+                },
+            );
+        } <b>else</b> {
+            <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
+                &<b>mut</b> supply.mint_events,
+                <a href="collection.md#0x4_collection_MintEvent">MintEvent</a> {
+                    index: supply.total_minted,
                     <a href="token.md#0x4_token">token</a>,
                 },
             );

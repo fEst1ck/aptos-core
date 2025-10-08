@@ -1,10 +1,17 @@
 [package]
 name = 'my_todo_list'
 version = '1.0.0'
+<<<<<<< HEAD
 
 [dependencies]
 SupraFramework = {local = "../../../framework/supra-framework"}
 
 
+=======
+[dependencies.AptosFramework]
+git = 'https://github.com/aptos-labs/aptos-framework.git'
+rev = 'main'
+subdir = 'aptos-framework'
+>>>>>>> aptos-framework-v1.34.0
 [addresses]
 todolist_addr='_'

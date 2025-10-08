@@ -60,8 +60,13 @@ module supra_framework::consensus_config {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<ConsensusConfig>()) {
             let new_config = config_buffer::extract_v2<ConsensusConfig>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/consensus_config.move
             if (exists<ConsensusConfig>(@supra_framework)) {
                 *borrow_global_mut<ConsensusConfig>(@supra_framework) = new_config;
+=======
+            if (exists<ConsensusConfig>(@aptos_framework)) {
+                *borrow_global_mut<ConsensusConfig>(@aptos_framework) = new_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/consensus_config.move
             } else {
                 move_to(framework, new_config);
             };

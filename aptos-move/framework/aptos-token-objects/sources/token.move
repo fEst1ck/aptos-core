@@ -10,9 +10,15 @@ module aptos_token_objects::token {
     use std::option::{Self, Option};
     use std::string::{Self, String};
     use std::signer;
+<<<<<<< HEAD
     use supra_framework::aggregator_v2::{Self, AggregatorSnapshot, DerivedStringSnapshot};
     use supra_framework::event;
     use supra_framework::object::{Self, ConstructorRef, Object};
+=======
+    use aptos_framework::aggregator_v2::{Self, AggregatorSnapshot, DerivedStringSnapshot};
+    use aptos_framework::event;
+    use aptos_framework::object::{Self, ConstructorRef, Object};
+>>>>>>> aptos-framework-v1.34.0
     use aptos_token_objects::collection::{Self, Collection};
     use aptos_token_objects::royalty::{Self, Royalty};
 

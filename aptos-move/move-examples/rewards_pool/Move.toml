@@ -6,4 +6,8 @@ version = "1.0.0"
 rewards_pool = "_"
 
 [dependencies]
+<<<<<<< HEAD
 SupraFramework = { local = "../../framework/supra-framework" }
+=======
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "mainnet" }
+>>>>>>> aptos-framework-v1.34.0

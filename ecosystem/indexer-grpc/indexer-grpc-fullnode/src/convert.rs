@@ -919,6 +919,7 @@ pub fn convert_transaction(
         Transaction::PendingTransaction(_) => panic!("PendingTransaction not supported"),
         Transaction::ValidatorTransaction(api_validator_txn) => {
             convert_validator_transaction(api_validator_txn)
+<<<<<<< HEAD
         },
         Transaction::AutomatedTransaction(at) => {
             timestamp = Some(convert_timestamp_usecs(at.timestamp.0));
@@ -938,6 +939,8 @@ pub fn convert_transaction(
                 }),
                 events: convert_events(&at.events),
             })
+=======
+>>>>>>> aptos-framework-v1.34.0
         },
     };
 

@@ -17,7 +17,10 @@ use aptos_types::{
     transaction::Transaction,
     waypoint::Waypoint,
 };
+<<<<<<< HEAD
 use aptos_types::on_chain_config::AutomationRegistryConfig;
+=======
+>>>>>>> aptos-framework-v1.34.0
 use aptos_vm::aptos_vm::AptosVMBlockExecutor;
 use aptos_vm_genesis::{AccountBalance, EmployeePool, ValidatorWithCommissionRate};
 
@@ -160,7 +163,10 @@ impl MainnetGenesisInfo {
                 initial_features_override: self.initial_features_override.clone(),
                 randomness_config_override: self.randomness_config_override.clone(),
                 jwk_consensus_config_override: self.jwk_consensus_config_override.clone(),
+<<<<<<< HEAD
                 automation_registry_config: self.automation_registry_config.clone(),
+=======
+>>>>>>> aptos-framework-v1.34.0
                 initial_jwks: vec![],
                 keyless_groth16_vk: None,
             },

@@ -68,8 +68,13 @@ module supra_framework::version {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<Version>()) {
             let new_value = config_buffer::extract_v2<Version>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/version.move
             if (exists<Version>(@supra_framework)) {
                 *borrow_global_mut<Version>(@supra_framework) = new_value;
+=======
+            if (exists<Version>(@aptos_framework)) {
+                *borrow_global_mut<Version>(@aptos_framework) = new_value;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/version.move
             } else {
                 move_to(framework, new_value);
             }

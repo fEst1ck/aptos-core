@@ -615,6 +615,7 @@ pub enum StatusCode {
     EMPTY_PAYLOAD_PROVIDED = 43,
     TRANSACTION_EXPIRATION_TOO_FAR_IN_FUTURE = 44,
 
+<<<<<<< HEAD
     // Failed to identify active automated task by provided index/sequence-number
     NO_ACTIVE_AUTOMATED_TASK = 45,
     // Length of program field of automation payload in raw transaction exceeded max length
@@ -638,6 +639,15 @@ pub enum StatusCode {
     RESERVED_VALIDATION_ERROR_13 = 54,
     RESERVED_VALIDATION_ERROR_14 = 55,
     RESERVED_VALIDATION_ERROR_15 = 56,
+=======
+    // Reserved error code for future use
+    RESERVED_VALIDATION_ERROR_10 = 45,
+    RESERVED_VALIDATION_ERROR_11 = 46,
+    RESERVED_VALIDATION_ERROR_12 = 47,
+    RESERVED_VALIDATION_ERROR_13 = 48,
+    RESERVED_VALIDATION_ERROR_14 = 49,
+    RESERVED_VALIDATION_ERROR_15 = 50,
+>>>>>>> aptos-framework-v1.34.0
 
 
     // When a code module/script is published it is verified. These are the
@@ -791,6 +801,7 @@ pub enum StatusCode {
     // Returned if init_module function is not valid during code publishing.
     INVALID_INIT_MODULE = 1134,
 
+<<<<<<< HEAD
     // Verification errors related to automation registration transaction
     // Validation of the entry function to be automated failed.
     INVALID_AUTOMATION_INNER_PAYLOAD = 1135,
@@ -802,6 +813,13 @@ pub enum StatusCode {
     RESERVED_VERIFICATION_ERROR_2 = 1138,
     RESERVED_VERIFICATION_ERROR_3 = 1139,
     RESERVED_VERIFICATION_ERROR_4 = 1140,
+=======
+    // Reserved error code for future use
+    RESERVED_VERIFICATION_ERROR_1 = 1135,
+    RESERVED_VERIFICATION_ERROR_2 = 1136,
+    RESERVED_VERIFICATION_ERROR_3 = 1137,
+    RESERVED_VERIFICATION_ERROR_4 = 1138,
+>>>>>>> aptos-framework-v1.34.0
 
     // These are errors that the VM might raise if a violation of internal
     // invariants takes place.

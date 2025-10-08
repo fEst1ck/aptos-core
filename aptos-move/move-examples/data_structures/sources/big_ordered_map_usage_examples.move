@@ -1,5 +1,9 @@
 module aptos_std::big_ordered_map_usage_examples {
+<<<<<<< HEAD
     use supra_framework::big_ordered_map;
+=======
+    use aptos_framework::big_ordered_map;
+>>>>>>> aptos-framework-v1.34.0
 
     #[test]
     fun example_with_primitive_types() {

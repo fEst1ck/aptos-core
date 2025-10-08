@@ -84,8 +84,11 @@ pub struct Layout {
     /// An optional JWK consensus config to use, instead of `default_for_genesis()`.
     #[serde(default)]
     pub jwk_consensus_config_override: Option<OnChainJWKConsensusConfig>,
+<<<<<<< HEAD
     /// An optional supra native automation config.
     pub automation_registry_config: Option<AutomationRegistryConfig>,
+=======
+>>>>>>> aptos-framework-v1.34.0
 
     /// JWKs to patch in genesis.
     #[serde(default)]
@@ -136,7 +139,10 @@ impl Default for Layout {
             on_chain_consensus_config: OnChainConsensusConfig::default(),
             on_chain_execution_config: OnChainExecutionConfig::default_for_genesis(),
             jwk_consensus_config_override: None,
+<<<<<<< HEAD
             automation_registry_config: Some(AutomationRegistryConfig::default()),
+=======
+>>>>>>> aptos-framework-v1.34.0
             initial_jwks: vec![],
             keyless_groth16_vk_override: None,
         }

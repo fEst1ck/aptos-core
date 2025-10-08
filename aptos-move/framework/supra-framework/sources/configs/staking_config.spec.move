@@ -56,9 +56,15 @@ spec supra_framework::staking_config {
     /// </high-level-req>
     ///
     spec module {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.spec.move
         use supra_framework::chain_status;
         invariant [suspendable] chain_status::is_operating() ==> exists<StakingConfig>(@supra_framework);
         invariant [suspendable] chain_status::is_operating() ==> exists<StakingRewardsConfig>(@supra_framework);
+=======
+        use aptos_framework::chain_status;
+        invariant [suspendable] chain_status::is_operating() ==> exists<StakingConfig>(@aptos_framework);
+        invariant [suspendable] chain_status::is_operating() ==> exists<StakingRewardsConfig>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.spec.move
         pragma verify = true;
         // pragma aborts_if_is_strict;
     }
@@ -106,8 +112,13 @@ spec supra_framework::staking_config {
         voting_power_increase_limit: u64,
     ) {
         use std::signer;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.spec.move
         let addr = signer::address_of(supra_framework);
         requires exists<timestamp::CurrentTimeMicroseconds>(@supra_framework);
+=======
+        let addr = signer::address_of(aptos_framework);
+        requires exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.spec.move
         /// [high-level-req-1.1]
         aborts_if addr != @supra_framework;
         aborts_if minimum_stake > maximum_stake || maximum_stake == 0;

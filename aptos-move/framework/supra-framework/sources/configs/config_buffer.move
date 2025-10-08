@@ -9,7 +9,11 @@
 ///   This is typically done by implementing `C::set()` to update the config resource directly.
 ///
 /// NOTE: on-chain config `0x1::state::ValidatorSet` implemented its own buffer.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/config_buffer.move
 module supra_framework::config_buffer {
+=======
+module aptos_framework::config_buffer {
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/config_buffer.move
     use std::error;
     use std::string::String;
     use aptos_std::any;
@@ -80,7 +84,11 @@ module supra_framework::config_buffer {
     ///
     /// Typically used in `X::on_new_epoch()` where X is an on-chaon config.
     public(friend) fun extract_v2<T: store>(): T acquires PendingConfigs {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/config_buffer.move
         let configs = borrow_global_mut<PendingConfigs>(@supra_framework);
+=======
+        let configs = borrow_global_mut<PendingConfigs>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/config_buffer.move
         let key = type_info::type_name<T>();
         let (_, value_packed) = simple_map::remove(&mut configs.configs, &key);
         any::unpack(value_packed)

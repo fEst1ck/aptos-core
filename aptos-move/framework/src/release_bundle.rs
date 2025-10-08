@@ -297,6 +297,7 @@ pub fn generate_next_execution_hash_blob(
 ) {
     match next_execution_hash {
         None => {
+<<<<<<< HEAD
             emitln!(
             writer,
             "let framework_signer = supra_governance::resolve_supra_multi_step_proposal(proposal_id, @{}, {});\n",
@@ -308,6 +309,19 @@ pub fn generate_next_execution_hash_blob(
             emitln!(
                 writer,
                 "let framework_signer = supra_governance::resolve_supra_multi_step_proposal("
+=======
+            emitln!(
+            writer,
+            "let framework_signer = aptos_governance::resolve_multi_step_proposal(proposal_id, @{}, {});\n",
+            for_address,
+            "x\"\"",
+        );
+        },
+        Some(next_execution_hash) => {
+            emitln!(
+                writer,
+                "let framework_signer = aptos_governance::resolve_multi_step_proposal("
+>>>>>>> aptos-framework-v1.34.0
             );
             writer.indent();
             emitln!(writer, "proposal_id,");

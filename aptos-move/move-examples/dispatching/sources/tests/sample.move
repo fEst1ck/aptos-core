@@ -2,7 +2,11 @@
 module dispatching::sample {
     use std::string;
 
+<<<<<<< HEAD
     use supra_framework::function_info;
+=======
+    use aptos_framework::function_info;
+>>>>>>> aptos-framework-v1.34.0
 
     use dispatching::engine;
     use dispatching::sample_callback;

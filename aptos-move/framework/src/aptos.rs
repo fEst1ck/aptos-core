@@ -60,7 +60,10 @@ impl ReleaseTarget {
         let result = vec![
             ("move-stdlib", None, false),
             ("aptos-stdlib", None, false),
+<<<<<<< HEAD
             ("supra-stdlib", None, false),
+=======
+>>>>>>> aptos-framework-v1.34.0
             (
                 "supra-framework",
                 Some("cached-packages/src/aptos_framework_sdk_builder.rs"),

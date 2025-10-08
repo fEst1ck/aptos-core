@@ -3,9 +3,15 @@ module confidential_asset_example::withdraw_example {
     use std::signer;
     use std::string::utf8;
     use aptos_std::debug::print;
+<<<<<<< HEAD
     use supra_framework::fungible_asset::Metadata;
     use supra_framework::object::Object;
     use supra_framework::primary_fungible_store;
+=======
+    use aptos_framework::fungible_asset::Metadata;
+    use aptos_framework::object::Object;
+    use aptos_framework::primary_fungible_store;
+>>>>>>> aptos-framework-v1.34.0
 
     use aptos_experimental::confidential_asset;
     use aptos_experimental::confidential_asset_tests;
@@ -79,7 +85,11 @@ module confidential_asset_example::withdraw_example {
 
     #[test(
         confidential_asset = @aptos_experimental,
+<<<<<<< HEAD
         aptos_fx = @supra_framework,
+=======
+        aptos_fx = @aptos_framework,
+>>>>>>> aptos-framework-v1.34.0
         fa = @0xfa,
         bob = @0xb0,
         alice = @0xa1

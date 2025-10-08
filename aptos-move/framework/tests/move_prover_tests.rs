@@ -79,7 +79,11 @@ pub fn run_prover_for_pkg(
 
 #[test]
 fn move_framework_prover_tests() {
+<<<<<<< HEAD
     run_prover_for_pkg("supra-framework", 1, None);
+=======
+    run_prover_for_pkg("aptos-framework", 1, None);
+>>>>>>> aptos-framework-v1.34.0
 }
 
 #[test]

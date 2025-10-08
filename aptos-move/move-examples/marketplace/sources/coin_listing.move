@@ -918,8 +918,13 @@ module listing_tests {
         coin_listing::purchase<SupraCoin>(purchaser, listing);
     }
 
+<<<<<<< HEAD
     #[test(supra_framework = @0x1, marketplace = @0x111, seller = @0x222, purchaser = @0x333)]
     #[expected_failure(abort_code = 0x10004, location = supra_framework::fungible_asset)]
+=======
+    #[test(aptos_framework = @0x1, marketplace = @0x111, seller = @0x222, purchaser = @0x333)]
+    #[expected_failure(abort_code = 0x10004, location = aptos_framework::fungible_asset)]
+>>>>>>> aptos-framework-v1.34.0
     fun test_not_enough_coin_fixed_price(
         supra_framework: &signer,
         marketplace: &signer,
@@ -941,8 +946,13 @@ module listing_tests {
         coin_listing::purchase<SupraCoin>(purchaser, listing);
     }
 
+<<<<<<< HEAD
     #[test(supra_framework = @0x1, marketplace = @0x111, seller = @0x222, purchaser = @0x333)]
     #[expected_failure(abort_code = 0x10004, location = supra_framework::fungible_asset)]
+=======
+    #[test(aptos_framework = @0x1, marketplace = @0x111, seller = @0x222, purchaser = @0x333)]
+    #[expected_failure(abort_code = 0x10004, location = aptos_framework::fungible_asset)]
+>>>>>>> aptos-framework-v1.34.0
     fun test_not_enough_coin_auction_bid(
         supra_framework: &signer,
         marketplace: &signer,
@@ -970,8 +980,13 @@ module listing_tests {
         coin_listing::bid<SupraCoin>(purchaser, listing, 125);
     }
 
+<<<<<<< HEAD
     #[test(supra_framework = @0x1, marketplace = @0x111, seller = @0x222, purchaser = @0x333)]
     #[expected_failure(abort_code = 0x10004, location = supra_framework::fungible_asset)]
+=======
+    #[test(aptos_framework = @0x1, marketplace = @0x111, seller = @0x222, purchaser = @0x333)]
+    #[expected_failure(abort_code = 0x10004, location = aptos_framework::fungible_asset)]
+>>>>>>> aptos-framework-v1.34.0
     fun test_not_enough_coin_auction_purchase(
         supra_framework: &signer,
         marketplace: &signer,

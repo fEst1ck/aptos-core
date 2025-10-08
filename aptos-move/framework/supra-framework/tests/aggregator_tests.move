@@ -6,7 +6,11 @@ module supra_framework::aggregator_tests {
 
     const MAX_U128: u128 = 340282366920938463463374607431768211455;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/aggregator_tests.move
     #[test(account = @supra_framework)]
+=======
+    #[test(account = @aptos_framework)]
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/aggregator_tests.move
     fun test_can_add_and_sub_and_read(account: signer) {
         aggregator_factory::initialize_aggregator_factory_for_test(&account);
         let aggregator = aggregator_factory::create_aggregator_for_test();

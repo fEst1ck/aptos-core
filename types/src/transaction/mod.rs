@@ -57,7 +57,10 @@ pub mod use_case;
 pub mod user_transaction_context;
 pub mod webauthn;
 
+<<<<<<< HEAD
 use crate::transaction::automated_transaction::AutomatedTransaction;
+=======
+>>>>>>> aptos-framework-v1.34.0
 pub use self::block_epilogue::{BlockEndInfo, BlockEpiloguePayload, FeeDistribution};
 use crate::{
     block_metadata_ext::BlockMetadataExt,
@@ -298,6 +301,7 @@ impl RawTransaction {
         }
     }
 
+<<<<<<< HEAD
     /// Create a new `RawTransaction` of automation type.
     pub fn new_automation(
         sender: AccountAddress,
@@ -319,6 +323,8 @@ impl RawTransaction {
         }
     }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
     // TODO[Orderless]: After the new transaction format is fully adopted, make `new_txn` as the default
     // function to create new RawTransaction, and remove other `new_..` variants.
     #[cfg(any(test, feature = "fuzzing"))]
@@ -651,6 +657,41 @@ fn gen_auth(
     })
 }
 
+fn gen_auth(
+    auth: Auth,
+    user_signed_message: &RawTransactionWithData,
+) -> Result<AccountAuthenticator> {
+    Ok(match auth {
+        Auth::Ed25519(private_key) => {
+            let sender_signature = private_key.sign(user_signed_message)?;
+            AccountAuthenticator::ed25519(Ed25519PublicKey::from(private_key), sender_signature)
+        },
+        Auth::Abstraction(function_info, sign_function) => {
+            let digest =
+                HashValue::sha3_256_of(signing_message(user_signed_message)?.as_slice()).to_vec();
+            AccountAuthenticator::abstraction(
+                function_info.clone(),
+                digest.clone(),
+                sign_function(digest.as_ref()),
+            )
+        },
+        Auth::DerivableAbstraction {
+            function_info,
+            account_identity,
+            sign_function,
+        } => {
+            let digest =
+                HashValue::sha3_256_of(signing_message(user_signed_message)?.as_slice()).to_vec();
+            AccountAuthenticator::derivable_abstraction(
+                function_info.clone(),
+                digest.clone(),
+                sign_function(digest.as_ref()),
+                account_identity.clone(),
+            )
+        },
+    })
+}
+
 #[derive(
     Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize, CryptoHasher, BCSCryptoHash,
 )]
@@ -710,8 +751,11 @@ pub enum TransactionPayload {
     /// A multisig transaction that allows an owner of a multisig account to execute a pre-approved
     /// transaction as the multisig account.
     Multisig(Multisig),
+<<<<<<< HEAD
     /// An automation registration transaction payload to register an automation task.
     AutomationRegistration(RegistrationParams),
+=======
+>>>>>>> aptos-framework-v1.34.0
     /// A new transaction payload format with support for versioning.
     /// Contains an executable (script/entry function) along with extra configuration.
     /// Once this new format is fully rolled out, above payload variants will be deprecated.
@@ -730,7 +774,10 @@ pub enum TransactionPayloadInner {
 pub enum TransactionExecutable {
     Script(Script),
     EntryFunction(EntryFunction),
+<<<<<<< HEAD
     AutomationRegistration(RegistrationParams),
+=======
+>>>>>>> aptos-framework-v1.34.0
     Empty,
 }
 
@@ -747,17 +794,23 @@ impl TransactionExecutable {
         matches!(self, Self::EntryFunction(_))
     }
 
+<<<<<<< HEAD
     pub fn is_automation_registration(&self) -> bool {
         matches!(self, Self::AutomationRegistration(_))
     }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
     pub fn as_ref(&self) -> TransactionExecutableRef {
         match self {
             TransactionExecutable::EntryFunction(entry_function) => {
                 TransactionExecutableRef::EntryFunction(entry_function)
             },
             TransactionExecutable::Script(script) => TransactionExecutableRef::Script(script),
+<<<<<<< HEAD
             TransactionExecutable::AutomationRegistration(params) => TransactionExecutableRef::AutomationRegistration(params),
+=======
+>>>>>>> aptos-framework-v1.34.0
             TransactionExecutable::Empty => TransactionExecutableRef::Empty,
         }
     }
@@ -767,7 +820,10 @@ impl TransactionExecutable {
 pub enum TransactionExecutableRef<'a> {
     Script(&'a Script),
     EntryFunction(&'a EntryFunction),
+<<<<<<< HEAD
     AutomationRegistration(&'a RegistrationParams),
+=======
+>>>>>>> aptos-framework-v1.34.0
     Empty,
 }
 
@@ -783,6 +839,7 @@ impl TransactionExecutableRef<'_> {
     pub fn is_entry_function(&self) -> bool {
         matches!(self, Self::EntryFunction(_))
     }
+<<<<<<< HEAD
 
     pub fn is_automation_registration(&self) -> bool {
         matches!(self, Self::AutomationRegistration(_))
@@ -794,6 +851,8 @@ impl TransactionExecutableRef<'_> {
         };
         Some(params)
     }
+=======
+>>>>>>> aptos-framework-v1.34.0
 }
 
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
@@ -809,10 +868,16 @@ pub enum TransactionExtraConfig {
 impl TransactionPayload {
     pub fn is_multisig(&self) -> bool {
         match self {
+<<<<<<< HEAD
             TransactionPayload::EntryFunction(_)
             | TransactionPayload::Script(_)
             | TransactionPayload::ModuleBundle(_)
             | TransactionPayload::AutomationRegistration(_) => false,
+=======
+            TransactionPayload::EntryFunction(_) => false,
+            TransactionPayload::Script(_) => false,
+            TransactionPayload::ModuleBundle(_) => false,
+>>>>>>> aptos-framework-v1.34.0
             TransactionPayload::Multisig(_) => true,
             TransactionPayload::Payload(TransactionPayloadInner::V1 { extra_config, .. }) => {
                 extra_config.is_multisig()
@@ -820,6 +885,7 @@ impl TransactionPayload {
         }
     }
 
+<<<<<<< HEAD
     pub fn is_automation_registration(&self) -> bool {
         match self {
             TransactionPayload::EntryFunction(_)
@@ -831,6 +897,8 @@ impl TransactionPayload {
         }
     }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
     pub fn into_entry_function(self) -> EntryFunction {
         match self {
             Self::EntryFunction(f) => f,
@@ -857,7 +925,10 @@ impl TransactionPayload {
             TransactionPayload::Payload(TransactionPayloadInner::V1 { executable, .. }) => {
                 Ok(executable.clone())
             },
+<<<<<<< HEAD
             TransactionPayload::AutomationRegistration(params) => Ok(TransactionExecutable::AutomationRegistration(params.clone())),
+=======
+>>>>>>> aptos-framework-v1.34.0
             TransactionPayload::ModuleBundle(_) => {
                 Err(format_err!("ModuleBundle variant is deprecated"))
             },
@@ -874,7 +945,10 @@ impl TransactionPayload {
             TransactionPayload::Payload(TransactionPayloadInner::V1 { executable, .. }) => {
                 Ok(executable.as_ref())
             },
+<<<<<<< HEAD
             TransactionPayload::AutomationRegistration(params) => Ok(TransactionExecutableRef::AutomationRegistration(params)),
+=======
+>>>>>>> aptos-framework-v1.34.0
             TransactionPayload::ModuleBundle(_) => {
                 Err(format_err!("ModuleBundle variant is deprecated"))
             },
@@ -885,7 +959,10 @@ impl TransactionPayload {
         match self {
             TransactionPayload::Script(_)
             | TransactionPayload::EntryFunction(_)
+<<<<<<< HEAD
             | AutomationRegistration(_)
+=======
+>>>>>>> aptos-framework-v1.34.0
             | TransactionPayload::ModuleBundle(_) => TransactionExtraConfig::V1 {
                 multisig_address: None,
                 replay_protection_nonce: None,
@@ -913,7 +990,10 @@ impl TransactionPayload {
             )
             .into(),
             Ok(TransactionExecutableRef::Script(_)) => "script".into(),
+<<<<<<< HEAD
             Ok(TransactionExecutableRef::AutomationRegistration(_)) => "automation_registration".into(),
+=======
+>>>>>>> aptos-framework-v1.34.0
             Ok(TransactionExecutableRef::Empty) => "empty".into(),
             Err(_) => "deprecated_payload".into(),
         }
@@ -928,7 +1008,11 @@ impl TransactionPayload {
         if use_txn_payload_v2_format {
             let executable = self
                 .executable()
+<<<<<<< HEAD
                 .expect("ModuleBundle variant is deprecated | AutomationRegistration not supported yet.");
+=======
+                .expect("ModuleBundle variant is deprecated");
+>>>>>>> aptos-framework-v1.34.0
             let mut extra_config = self.extra_config();
             if use_orderless_transactions {
                 extra_config = match extra_config {
@@ -2998,7 +3082,10 @@ impl Transaction {
             Transaction::BlockEpilogue(_) => "block_epilogue",
             Transaction::ValidatorTransaction(vt) => vt.type_name(),
             Transaction::BlockMetadataExt(bmet) => bmet.type_name(),
+<<<<<<< HEAD
             Transaction::AutomatedTransaction(_) => "automated_transaction",
+=======
+>>>>>>> aptos-framework-v1.34.0
         }
     }
 
@@ -3015,6 +3102,17 @@ impl Transaction {
             | Transaction::BlockMetadata(_)
             | Transaction::BlockMetadataExt(_)
             | Transaction::AutomatedTransaction(_)
+            | Transaction::ValidatorTransaction(_) => false,
+        }
+    }
+
+    pub fn is_block_start(&self) -> bool {
+        match self {
+            Transaction::BlockMetadata(_) | Transaction::BlockMetadataExt(_) => true,
+            Transaction::StateCheckpoint(_)
+            | Transaction::BlockEpilogue(_)
+            | Transaction::UserTransaction(_)
+            | Transaction::GenesisTransaction(_)
             | Transaction::ValidatorTransaction(_) => false,
         }
     }
@@ -3074,6 +3172,35 @@ pub trait BlockExecutableTransaction: Sync + Send + Clone + 'static {
     fn from_txn(_txn: Transaction) -> Self {
         unimplemented!()
     }
+<<<<<<< HEAD
+=======
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ViewFunctionError {
+    // This is to represent errors are from a MoveAbort and has error info from the module metadata to display.
+    // The ExecutionStatus is used to construct the error message in the same way as MoveAborts for entry functions.
+    MoveAbort(ExecutionStatus, Option<StatusCode>),
+    // This is a generic error message that takes in a string and display it in the error response.
+    ErrorMessage(String, Option<StatusCode>),
+}
+
+impl std::fmt::Display for ViewFunctionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ViewFunctionError::MoveAbort(status, vm_status) => {
+                write!(
+                    f,
+                    "Execution status: {:?}, VM status: {:?}",
+                    status, vm_status
+                )
+            },
+            ViewFunctionError::ErrorMessage(msg, vm_status) => {
+                write!(f, "Error: {}, VM status: {:?}", msg, vm_status)
+            },
+        }
+    }
+>>>>>>> aptos-framework-v1.34.0
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

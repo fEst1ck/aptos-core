@@ -145,7 +145,11 @@ pub fn decode_key<T: DeserializeOwned + ValidCryptoMaterial>(
     T::from_encoded_string(str).map_err(|_| ApiError::deserialization_failed(type_name))
 }
 
+<<<<<<< HEAD
 const APT_SYMBOL: &str = "SUPRA";
+=======
+const APT_SYMBOL: &str = "APT";
+>>>>>>> aptos-framework-v1.34.0
 const APT_DECIMALS: u8 = 8;
 
 /// Provides the [Currency] for 0x1::aptos_coin::AptosCoin aka APT

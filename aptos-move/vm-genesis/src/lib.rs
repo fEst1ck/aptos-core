@@ -17,17 +17,25 @@ use aptos_gas_schedule::{
     AptosGasParameters, InitialGasSchedule, ToOnChainGasSchedule, LATEST_GAS_FEATURE_VERSION,
 };
 use aptos_types::{
+<<<<<<< HEAD
     account_address::{create_resource_address, create_seed_for_pbo_module},
     account_config::{self, aptos_test_root_address, events::NewEpochEvent, CORE_CODE_ADDRESS},
+=======
+    account_config::{
+        self, aptos_test_root_address, events::NewEpochEvent, CORE_CODE_ADDRESS,
+        EXPERIMENTAL_CODE_ADDRESS,
+    },
+>>>>>>> aptos-framework-v1.34.0
     chain_id::ChainId,
     contract_event::{ContractEvent, ContractEventV1},
+    executable::ModulePath,
     jwks::{
-        patch::{PatchJWKMoveStruct, PatchUpsertJWK},
+        jwk::{JWKMoveStruct, JWK},
+        patch::{IssuerJWK, PatchJWKMoveStruct, PatchUpsertJWK},
         secure_test_rsa_jwk,
     },
     keyless::{
-        self, test_utils::get_sample_iss, Groth16VerificationKey, DEVNET_VERIFICATION_KEY,
-        KEYLESS_ACCOUNT_MODULE_NAME,
+        self, test_utils::get_sample_iss, Groth16VerificationKey, KEYLESS_ACCOUNT_MODULE_NAME,
     },
     move_utils::as_move_value::AsMoveValue,
     on_chain_config::{
@@ -36,28 +44,47 @@ use aptos_types::{
         OnChainEvmGenesisConfig, OnChainExecutionConfig, OnChainJWKConsensusConfig,
         OnChainRandomnessConfig, RandomnessConfigMoveStruct, APTOS_MAX_KNOWN_VERSION,
     },
+    state_store::state_key::StateKey,
     transaction::{authenticator::AuthenticationKey, ChangeSet, Transaction, WriteSetPayload},
-    write_set::TransactionWrite,
+    write_set::{TransactionWrite, WriteOp, WriteSet},
 };
 use aptos_vm::{
     data_cache::AsMoveResolver,
-    move_vm_ext::{GenesisMoveVM, SessionExt},
+    move_vm_ext::{
+        convert_modules_into_write_ops, AptosMoveResolver, GenesisMoveVm, GenesisRuntimeBuilder,
+        SessionExt,
+    },
 };
+use aptos_vm_types::{
+    change_set::VMChangeSet,
+    module_and_script_storage::{module_storage::AptosModuleStorage, AsAptosCodeStorage},
+    module_write_set::{ModuleWrite, ModuleWriteSet},
+};
+use bytes::Bytes;
+use claims::assert_ok;
+use move_binary_format::errors::{Location, VMResult};
 use move_core_types::{
     account_address::AccountAddress,
     identifier::Identifier,
     language_storage::{ModuleId, TypeTag},
-    value::{serialize_values, MoveTypeLayout, MoveValue},
+    value::{serialize_values, MoveValue},
 };
-use move_vm_runtime::module_traversal::{TraversalContext, TraversalStorage};
+use move_vm_runtime::{
+    module_traversal::{TraversalContext, TraversalStorage},
+    ModuleStorage, RuntimeEnvironment, StagingModuleStorage,
+};
 use move_vm_types::gas::UnmeteredGasMeter;
 use once_cell::sync::Lazy;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
+<<<<<<< HEAD
 use std::{
     collections::BTreeSet,
     hash::{Hash, Hasher},
 };
+=======
+use std::collections::BTreeMap;
+>>>>>>> aptos-framework-v1.34.0
 
 // The seed is arbitrarily picked to produce a consistent key. XXX make this more formal?
 const GENESIS_SEED: [u8; 32] = [42; 32];
@@ -75,6 +102,7 @@ const RANDOMNESS_API_V0_CONFIG_MODULE_NAME: &str = "randomness_api_v0_config";
 const RANDOMNESS_CONFIG_SEQNUM_MODULE_NAME: &str = "randomness_config_seqnum";
 const RANDOMNESS_CONFIG_MODULE_NAME: &str = "randomness_config";
 const RANDOMNESS_MODULE_NAME: &str = "randomness";
+const ACCOUNT_ABSTRACTION_MODULE_NAME: &str = "account_abstraction";
 const RECONFIGURATION_STATE_MODULE_NAME: &str = "reconfiguration_state";
 
 // Allows an APY with 2 decimals of precision to be specified as a u64.
@@ -107,7 +135,12 @@ pub struct GenesisConfiguration {
     pub initial_features_override: Option<Features>,
     pub randomness_config_override: Option<OnChainRandomnessConfig>,
     pub jwk_consensus_config_override: Option<OnChainJWKConsensusConfig>,
+<<<<<<< HEAD
     pub automation_registry_config: Option<AutomationRegistryConfig>,
+=======
+    pub initial_jwks: Vec<IssuerJWK>,
+    pub keyless_groth16_vk: Option<Groth16VerificationKey>,
+>>>>>>> aptos-framework-v1.34.0
 }
 
 pub static GENESIS_KEYPAIR: Lazy<(Ed25519PrivateKey, Ed25519PublicKey)> = Lazy::new(|| {
@@ -141,15 +174,23 @@ pub fn encode_supra_mainnet_genesis_transaction(
     assert!(!genesis_config.is_test, "This is mainnet!");
     validate_genesis_config(genesis_config);
 
-    // Create a Move VM session, so we can invoke on-chain genesis initializations.
     let mut state_view = GenesisStateView::new();
     for (module_bytes, module) in framework.code_and_compiled_modules() {
         state_view.add_module(&module.self_id(), module_bytes);
     }
 
-    let vm = GenesisMoveVM::new(chain_id);
+    let genesis_runtime_builder = GenesisRuntimeBuilder::new(chain_id);
+    let genesis_runtime_environment = genesis_runtime_builder.build_genesis_runtime_environment();
+
+    let module_storage = state_view.as_aptos_code_storage(&genesis_runtime_environment);
     let resolver = state_view.as_move_resolver();
-    let mut session = vm.new_genesis_session(&resolver, HashValue::zero());
+
+    let genesis_vm = genesis_runtime_builder.build_genesis_vm();
+    let genesis_change_set_configs = genesis_vm.genesis_change_set_configs();
+    let mut session = genesis_vm.new_genesis_session(&resolver, HashValue::zero());
+
+    let traversal_storage = TraversalStorage::new();
+    let mut traversal_context = TraversalContext::new(&traversal_storage);
 
     // On-chain genesis process.
     let consensus_config = OnChainConsensusConfig::default_for_genesis();
@@ -158,6 +199,8 @@ pub fn encode_supra_mainnet_genesis_transaction(
 
     initialize(
         &mut session,
+        &module_storage,
+        &mut traversal_context,
         chain_id,
         genesis_config,
         &consensus_config,
@@ -167,11 +210,14 @@ pub fn encode_supra_mainnet_genesis_transaction(
     );
     initialize_features(
         &mut session,
+        &module_storage,
+        &mut traversal_context,
         genesis_config
             .initial_features_override
             .clone()
             .map(Features::into_flag_vec),
     );
+<<<<<<< HEAD
     initialize_supra_coin(&mut session);
     initialize_supra_native_automation(&mut session, genesis_config);
     initialize_on_chain_governance(&mut session, genesis_config);
@@ -195,41 +241,58 @@ pub fn encode_supra_mainnet_genesis_transaction(
     create_vesting_without_staking_pools(&mut session, initial_unlock_vesting_pools);
 
     set_genesis_end(&mut session);
+=======
+    initialize_aptos_coin(&mut session, &module_storage, &mut traversal_context);
+    initialize_on_chain_governance(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        genesis_config,
+    );
+    create_accounts(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        accounts,
+    );
+    create_employee_validators(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        employees,
+        genesis_config,
+    );
+    create_and_initialize_validators_with_commission(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        validators,
+    );
+    set_genesis_end(&mut session, &module_storage, &mut traversal_context);
+>>>>>>> aptos-framework-v1.34.0
 
     // Reconfiguration should happen after all on-chain invocations.
-    emit_new_block_and_epoch_event(&mut session);
+    emit_new_block_and_epoch_event(&mut session, &module_storage, &mut traversal_context);
 
-    let configs = vm.genesis_change_set_configs();
-    let mut change_set = session.finish(&configs).unwrap();
+    // Create a change set with all initialized resources.
+    let mut change_set = assert_ok!(session.finish(&genesis_change_set_configs, &module_storage,));
 
-    // Publish the framework, using a different session id, in case both scripts create tables.
-    let state_view = GenesisStateView::new();
-    let resolver = state_view.as_move_resolver();
-
+    // Publish the framework, using a different session id, in case both sessions create tables.
     let mut new_id = [0u8; 32];
     new_id[31] = 1;
-    let mut session = vm.new_genesis_session(&resolver, HashValue::new(new_id));
-    publish_framework(&mut session, framework);
-    let additional_change_set = session.finish(&configs).unwrap();
-    change_set
-        .squash_additional_change_set(additional_change_set, &configs)
-        .unwrap();
 
-    // Publishing stdlib should not produce any deltas around aggregators and map to write ops and
-    // not deltas. The second session only publishes the framework module bundle, which should not
-    // produce deltas either.
-    assert!(
-        change_set.aggregator_v1_delta_set().is_empty(),
-        "non-empty delta change set in genesis"
+    let (additional_change_set, module_write_set) = publish_framework(
+        &genesis_vm,
+        &genesis_runtime_environment,
+        HashValue::new(new_id),
+        framework,
     );
-    assert!(!change_set
-        .concrete_write_set_iter()
-        .any(|(_, op)| op.expect("expect only concrete write ops").is_deletion()));
-    verify_genesis_write_set(change_set.events());
+    assert_ok!(change_set.squash_additional_change_set(additional_change_set));
 
-    let change_set = change_set
-        .try_into_storage_change_set()
-        .expect("Constructing a ChangeSet from VMChangeSet should always succeed at genesis");
+    let change_set = assert_ok!(change_set.try_combine_into_storage_change_set(module_write_set));
+    verify_genesis_module_write_set(change_set.write_set());
+    verify_genesis_events(change_set.events());
+
     Transaction::GenesisTransaction(WriteSetPayload::Direct(change_set))
 }
 
@@ -294,19 +357,29 @@ pub fn encode_genesis_change_set_for_testnet(
 ) -> ChangeSet {
     validate_genesis_config(genesis_config);
 
-    // Create a Move VM session so we can invoke on-chain genesis initializations.
     let mut state_view = GenesisStateView::new();
     for (module_bytes, module) in framework.code_and_compiled_modules() {
         state_view.add_module(&module.self_id(), module_bytes);
     }
 
+    let genesis_runtime_builder = GenesisRuntimeBuilder::new(chain_id);
+    let genesis_runtime_environment = genesis_runtime_builder.build_genesis_runtime_environment();
+
+    let module_storage = state_view.as_aptos_code_storage(&genesis_runtime_environment);
     let resolver = state_view.as_move_resolver();
-    let vm = GenesisMoveVM::new(chain_id);
-    let mut session = vm.new_genesis_session(&resolver, HashValue::zero());
+
+    let genesis_vm = genesis_runtime_builder.build_genesis_vm();
+    let genesis_change_set_configs = genesis_vm.genesis_change_set_configs();
+    let mut session = genesis_vm.new_genesis_session(&resolver, HashValue::zero());
+
+    let traversal_storage = TraversalStorage::new();
+    let mut traversal_context = TraversalContext::new(&traversal_storage);
 
     // On-chain genesis process.
     initialize(
         &mut session,
+        &module_storage,
+        &mut traversal_context,
         chain_id,
         genesis_config,
         consensus_config,
@@ -316,12 +389,15 @@ pub fn encode_genesis_change_set_for_testnet(
     );
     initialize_features(
         &mut session,
+        &module_storage,
+        &mut traversal_context,
         genesis_config
             .initial_features_override
             .clone()
             .map(Features::into_flag_vec),
     );
     if genesis_config.is_test {
+<<<<<<< HEAD
         initialize_core_resources_and_supra_coin(&mut session, core_resources_key);
     } else {
         initialize_supra_coin(&mut session);
@@ -330,10 +406,25 @@ pub fn encode_genesis_change_set_for_testnet(
     initialize_config_buffer(&mut session);
     initialize_dkg(&mut session);
     initialize_reconfiguration_state(&mut session);
+=======
+        initialize_core_resources_and_aptos_coin(
+            &mut session,
+            &module_storage,
+            &mut traversal_context,
+            core_resources_key,
+        );
+    } else {
+        initialize_aptos_coin(&mut session, &module_storage, &mut traversal_context);
+    }
+    initialize_config_buffer(&mut session, &module_storage, &mut traversal_context);
+    initialize_dkg(&mut session, &module_storage, &mut traversal_context);
+    initialize_reconfiguration_state(&mut session, &module_storage, &mut traversal_context);
+>>>>>>> aptos-framework-v1.34.0
     let randomness_config = genesis_config
         .randomness_config_override
         .clone()
         .unwrap_or_else(OnChainRandomnessConfig::default_for_genesis);
+<<<<<<< HEAD
     initialize_randomness_api_v0_config(&mut session);
     initialize_randomness_config_seqnum(&mut session);
     initialize_randomness_config(&mut session, randomness_config);
@@ -371,52 +462,82 @@ pub fn encode_genesis_change_set_for_testnet(
         create_vesting_without_staking_pools(&mut session, initial_unlock_vesting_pools);
     }
 
+=======
+    initialize_randomness_api_v0_config(&mut session, &module_storage, &mut traversal_context);
+    initialize_randomness_config_seqnum(&mut session, &module_storage, &mut traversal_context);
+    initialize_randomness_config(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        randomness_config,
+    );
+    initialize_randomness_resources(&mut session, &module_storage, &mut traversal_context);
+    initialize_on_chain_governance(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        genesis_config,
+    );
+    initialize_account_abstraction(&mut session, &module_storage, &mut traversal_context);
+    create_and_initialize_validators(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        validators,
+    );
+>>>>>>> aptos-framework-v1.34.0
     if genesis_config.is_test {
-        allow_core_resources_to_set_version(&mut session);
+        allow_core_resources_to_set_version(&mut session, &module_storage, &mut traversal_context);
     }
     let jwk_consensus_config = genesis_config
         .jwk_consensus_config_override
         .clone()
         .unwrap_or_else(OnChainJWKConsensusConfig::default_for_genesis);
-    initialize_jwk_consensus_config(&mut session, &jwk_consensus_config);
-    initialize_jwks_resources(&mut session);
-    initialize_keyless_accounts(&mut session, chain_id);
-    set_genesis_end(&mut session);
+    initialize_jwk_consensus_config(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        &jwk_consensus_config,
+    );
+    initialize_jwks_resources(&mut session, &module_storage, &mut traversal_context);
+    initialize_keyless_accounts(
+        &mut session,
+        &module_storage,
+        &mut traversal_context,
+        chain_id,
+        genesis_config.initial_jwks.clone(),
+        genesis_config.keyless_groth16_vk.clone(),
+    );
+    initialize_confidential_asset(
+        &mut session,
+        &module_storage,
+        chain_id,
+        &mut traversal_context,
+    );
+    set_genesis_end(&mut session, &module_storage, &mut traversal_context);
 
     // Reconfiguration should happen after all on-chain invocations.
-    emit_new_block_and_epoch_event(&mut session);
+    emit_new_block_and_epoch_event(&mut session, &module_storage, &mut traversal_context);
 
-    let configs = vm.genesis_change_set_configs();
-    let mut change_set = session.finish(&configs).unwrap();
+    let mut change_set = assert_ok!(session.finish(&genesis_change_set_configs, &module_storage,));
 
-    let state_view = GenesisStateView::new();
-    let resolver = state_view.as_move_resolver();
-
-    // Publish the framework, using a different id, in case both scripts create tables.
+    // Publish the framework, using a different id, in case both sessions create tables.
     let mut new_id = [0u8; 32];
     new_id[31] = 1;
-    let mut session = vm.new_genesis_session(&resolver, HashValue::new(new_id));
-    publish_framework(&mut session, framework);
-    let additional_change_set = session.finish(&configs).unwrap();
-    change_set
-        .squash_additional_change_set(additional_change_set, &configs)
-        .unwrap();
 
-    // Publishing stdlib should not produce any deltas around aggregators and map to write ops and
-    // not deltas. The second session only publishes the framework module bundle, which should not
-    // produce deltas either.
-    assert!(
-        change_set.aggregator_v1_delta_set().is_empty(),
-        "non-empty delta change set in genesis"
+    let (additional_change_set, module_write_set) = publish_framework(
+        &genesis_vm,
+        &genesis_runtime_environment,
+        HashValue::new(new_id),
+        framework,
     );
+    assert_ok!(change_set.squash_additional_change_set(additional_change_set));
 
-    assert!(!change_set
-        .concrete_write_set_iter()
-        .any(|(_, op)| op.expect("expect only concrete write ops").is_deletion()));
-    verify_genesis_write_set(change_set.events());
+    let change_set = assert_ok!(change_set.try_combine_into_storage_change_set(module_write_set));
+    verify_genesis_module_write_set(change_set.write_set());
+    verify_genesis_events(change_set.events());
+
     change_set
-        .try_into_storage_change_set()
-        .expect("Constructing a ChangeSet from VMChangeSet should always succeed at genesis")
 }
 
 fn validate_genesis_config(genesis_config: &GenesisConfiguration) {
@@ -456,26 +577,30 @@ fn validate_genesis_config(genesis_config: &GenesisConfiguration) {
     );
 }
 
-fn exec_function(
-    session: &mut SessionExt,
+fn exec_function_internal(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl ModuleStorage,
+    traversal_context: &mut TraversalContext,
     module_name: &str,
     function_name: &str,
     ty_args: Vec<TypeTag>,
     args: Vec<Vec<u8>>,
+    address: AccountAddress,
 ) {
-    let storage = TraversalStorage::new();
     session
         .execute_function_bypass_visibility(
-            &ModuleId::new(CORE_CODE_ADDRESS, Identifier::new(module_name).unwrap()),
+            &ModuleId::new(address, Identifier::new(module_name).unwrap()),
             &Identifier::new(function_name).unwrap(),
             ty_args,
             args,
             &mut UnmeteredGasMeter,
-            &mut TraversalContext::new(&storage),
+            traversal_context,
+            module_storage,
         )
         .unwrap_or_else(|e| {
             panic!(
-                "Error calling {}.{}: ({:#x}) {}",
+                "Error calling {}.{}.{}: ({:#x}) {}",
+                address,
                 module_name,
                 function_name,
                 e.sub_status().unwrap_or_default(),
@@ -484,8 +609,52 @@ fn exec_function(
         });
 }
 
+fn exec_function(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl ModuleStorage,
+    traversal_context: &mut TraversalContext,
+    module_name: &str,
+    function_name: &str,
+    ty_args: Vec<TypeTag>,
+    args: Vec<Vec<u8>>,
+) {
+    exec_function_internal(
+        session,
+        module_storage,
+        traversal_context,
+        module_name,
+        function_name,
+        ty_args,
+        args,
+        CORE_CODE_ADDRESS,
+    );
+}
+
+fn exec_experimental_function(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl ModuleStorage,
+    traversal_context: &mut TraversalContext,
+    module_name: &str,
+    function_name: &str,
+    ty_args: Vec<TypeTag>,
+    args: Vec<Vec<u8>>,
+) {
+    exec_function_internal(
+        session,
+        module_storage,
+        traversal_context,
+        module_name,
+        function_name,
+        ty_args,
+        args,
+        EXPERIMENTAL_CODE_ADDRESS,
+    );
+}
+
 fn initialize(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
     chain_id: ChainId,
     genesis_config: &GenesisConfiguration,
     consensus_config: &OnChainConsensusConfig,
@@ -516,6 +685,8 @@ fn initialize(
     let epoch_interval_usecs = genesis_config.epoch_duration_secs * MICRO_SECONDS_PER_SECOND;
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "initialize",
         vec![],
@@ -539,7 +710,12 @@ fn initialize(
     );
 }
 
-fn initialize_features(session: &mut SessionExt, features_override: Option<Vec<FeatureFlag>>) {
+fn initialize_features(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    features_override: Option<Vec<FeatureFlag>>,
+) {
     let features: Vec<u64> = features_override
         .unwrap_or_else(FeatureFlag::default_features)
         .into_iter()
@@ -552,6 +728,8 @@ fn initialize_features(session: &mut SessionExt, features_override: Option<Vec<F
 
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         "features",
         "change_feature_flags_internal",
         vec![],
@@ -559,9 +737,19 @@ fn initialize_features(session: &mut SessionExt, features_override: Option<Vec<F
     );
 }
 
+<<<<<<< HEAD
 fn initialize_supra_coin(session: &mut SessionExt) {
+=======
+fn initialize_aptos_coin(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
+>>>>>>> aptos-framework-v1.34.0
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "initialize_supra_coin",
         vec![],
@@ -569,6 +757,7 @@ fn initialize_supra_coin(session: &mut SessionExt) {
     );
 }
 
+<<<<<<< HEAD
 fn initialize_supra_native_automation(
     session: &mut SessionExt,
     genesis_config: &GenesisConfiguration,
@@ -605,8 +794,17 @@ fn initialize_evm_genesis_config(
 }
 
 fn initialize_config_buffer(session: &mut SessionExt) {
+=======
+fn initialize_config_buffer(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
+>>>>>>> aptos-framework-v1.34.0
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         CONFIG_BUFFER_MODULE_NAME,
         "initialize",
         vec![],
@@ -614,9 +812,15 @@ fn initialize_config_buffer(session: &mut SessionExt) {
     );
 }
 
-fn initialize_dkg(session: &mut SessionExt) {
+fn initialize_dkg(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         DKG_MODULE_NAME,
         "initialize",
         vec![],
@@ -624,9 +828,15 @@ fn initialize_dkg(session: &mut SessionExt) {
     );
 }
 
-fn initialize_randomness_config_seqnum(session: &mut SessionExt) {
+fn initialize_randomness_config_seqnum(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         RANDOMNESS_CONFIG_SEQNUM_MODULE_NAME,
         "initialize",
         vec![],
@@ -634,9 +844,15 @@ fn initialize_randomness_config_seqnum(session: &mut SessionExt) {
     );
 }
 
-fn initialize_randomness_api_v0_config(session: &mut SessionExt) {
+fn initialize_randomness_api_v0_config(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         RANDOMNESS_API_V0_CONFIG_MODULE_NAME,
         "initialize",
         vec![],
@@ -649,11 +865,15 @@ fn initialize_randomness_api_v0_config(session: &mut SessionExt) {
 }
 
 fn initialize_randomness_config(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
     randomness_config: OnChainRandomnessConfig,
 ) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         RANDOMNESS_CONFIG_MODULE_NAME,
         "initialize",
         vec![],
@@ -664,9 +884,15 @@ fn initialize_randomness_config(
     );
 }
 
-fn initialize_randomness_resources(session: &mut SessionExt) {
+fn initialize_randomness_resources(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         RANDOMNESS_MODULE_NAME,
         "initialize",
         vec![],
@@ -674,9 +900,78 @@ fn initialize_randomness_resources(session: &mut SessionExt) {
     );
 }
 
-fn initialize_reconfiguration_state(session: &mut SessionExt) {
+fn initialize_account_abstraction(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
+        ACCOUNT_ABSTRACTION_MODULE_NAME,
+        "initialize",
+        vec![],
+        serialize_values(&vec![MoveValue::Signer(CORE_CODE_ADDRESS)]),
+    );
+
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
+        ACCOUNT_ABSTRACTION_MODULE_NAME,
+        "register_derivable_authentication_function",
+        vec![],
+        serialize_values(&vec![
+            MoveValue::Signer(CORE_CODE_ADDRESS),
+            MoveValue::Address(AccountAddress::SEVEN),
+            "test_derivable_account_abstraction_ed25519_hex"
+                .to_string()
+                .as_move_value(),
+            "authenticate".to_string().as_move_value(),
+        ]),
+    );
+
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
+        ACCOUNT_ABSTRACTION_MODULE_NAME,
+        "register_derivable_authentication_function",
+        vec![],
+        serialize_values(&vec![
+            MoveValue::Signer(CORE_CODE_ADDRESS),
+            MoveValue::Address(AccountAddress::ONE),
+            "solana_derivable_account".to_string().as_move_value(),
+            "authenticate".to_string().as_move_value(),
+        ]),
+    );
+
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
+        ACCOUNT_ABSTRACTION_MODULE_NAME,
+        "register_derivable_authentication_function",
+        vec![],
+        serialize_values(&vec![
+            MoveValue::Signer(CORE_CODE_ADDRESS),
+            MoveValue::Address(AccountAddress::ONE),
+            "ethereum_derivable_account".to_string().as_move_value(),
+            "authenticate".to_string().as_move_value(),
+        ]),
+    );
+}
+
+fn initialize_reconfiguration_state(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
         RECONFIGURATION_STATE_MODULE_NAME,
         "initialize",
         vec![],
@@ -685,11 +980,15 @@ fn initialize_reconfiguration_state(session: &mut SessionExt) {
 }
 
 fn initialize_jwk_consensus_config(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
     jwk_consensus_config: &OnChainJWKConsensusConfig,
 ) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         JWK_CONSENSUS_CONFIG_MODULE_NAME,
         "initialize",
         vec![],
@@ -700,9 +999,15 @@ fn initialize_jwk_consensus_config(
     );
 }
 
-fn initialize_jwks_resources(session: &mut SessionExt) {
+fn initialize_jwks_resources(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         JWKS_MODULE_NAME,
         "initialize",
         vec![],
@@ -710,9 +1015,15 @@ fn initialize_jwks_resources(session: &mut SessionExt) {
     );
 }
 
-fn set_genesis_end(session: &mut SessionExt) {
+fn set_genesis_end(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "set_genesis_end",
         vec![],
@@ -720,13 +1031,22 @@ fn set_genesis_end(session: &mut SessionExt) {
     );
 }
 
+<<<<<<< HEAD
 fn initialize_core_resources_and_supra_coin(
     session: &mut SessionExt,
+=======
+fn initialize_core_resources_and_aptos_coin(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+>>>>>>> aptos-framework-v1.34.0
     core_resources_key: &Ed25519PublicKey,
 ) {
     let core_resources_auth_key = AuthenticationKey::ed25519(core_resources_key);
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "initialize_core_resources_and_supra_coin",
         vec![],
@@ -738,9 +1058,16 @@ fn initialize_core_resources_and_supra_coin(
 }
 
 /// Create and initialize Association and Core Code accounts.
-fn initialize_on_chain_governance(session: &mut SessionExt, genesis_config: &GenesisConfiguration) {
+fn initialize_on_chain_governance(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    genesis_config: &GenesisConfiguration,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GOVERNANCE_MODULE_NAME,
         "initialize",
         vec![],
@@ -753,10 +1080,19 @@ fn initialize_on_chain_governance(session: &mut SessionExt, genesis_config: &Gen
     );
 }
 
-fn initialize_keyless_accounts(session: &mut SessionExt, chain_id: ChainId) {
+fn initialize_keyless_accounts(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    chain_id: ChainId,
+    mut initial_jwks: Vec<IssuerJWK>,
+    vk: Option<Groth16VerificationKey>,
+) {
     let config = keyless::Configuration::new_for_devnet();
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         KEYLESS_ACCOUNT_MODULE_NAME,
         "update_configuration",
         vec![],
@@ -765,37 +1101,56 @@ fn initialize_keyless_accounts(session: &mut SessionExt, chain_id: ChainId) {
             config.as_move_value(),
         ]),
     );
-    if !chain_id.is_mainnet() {
-        let vk = Groth16VerificationKey::from(&*DEVNET_VERIFICATION_KEY);
+
+    if vk.is_some() {
         exec_function(
             session,
+            module_storage,
+            traversal_context,
             KEYLESS_ACCOUNT_MODULE_NAME,
             "update_groth16_verification_key",
             vec![],
             serialize_values(&vec![
                 MoveValue::Signer(CORE_CODE_ADDRESS),
-                vk.as_move_value(),
+                vk.unwrap().as_move_value(),
             ]),
         );
-
-        let patch: PatchJWKMoveStruct = PatchUpsertJWK {
+    }
+    if !chain_id.is_mainnet() {
+        let additional_jwk_patch = IssuerJWK {
             issuer: get_sample_iss(),
-            jwk: secure_test_rsa_jwk().into(),
-        }
-        .into();
+            jwk: JWK::RSA(secure_test_rsa_jwk()),
+        };
+        initial_jwks.insert(0, additional_jwk_patch);
+
+        let jwk_patches: Vec<PatchJWKMoveStruct> = initial_jwks
+            .into_iter()
+            .map(|issuer_jwk| {
+                let IssuerJWK { issuer, jwk } = issuer_jwk;
+                let upsert_patch = PatchUpsertJWK {
+                    issuer,
+                    jwk: JWKMoveStruct::from(jwk),
+                };
+                PatchJWKMoveStruct::from(upsert_patch)
+            })
+            .collect();
+
         exec_function(
             session,
+            module_storage,
+            traversal_context,
             JWKS_MODULE_NAME,
             "set_patches",
             vec![],
             serialize_values(&vec![
                 MoveValue::Signer(CORE_CODE_ADDRESS),
-                MoveValue::Vector(vec![patch.as_move_value()]),
+                jwk_patches.as_move_value(),
             ]),
         );
     }
 }
 
+<<<<<<< HEAD
 fn create_accounts(session: &mut SessionExt, accounts: &BTreeSet<AccountBalance>) {
     // Creating accounts one by one avoids the quadratic complexity of the Move function create_accounts,
     // which checks uniqueness.
@@ -813,17 +1168,88 @@ fn create_accounts(session: &mut SessionExt, accounts: &BTreeSet<AccountBalance>
             serialized_values,
         );
     }
+=======
+fn initialize_confidential_asset(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    chain_id: ChainId,
+    traversal_context: &mut TraversalContext,
+) {
+    if !chain_id.is_mainnet() && !chain_id.is_testnet() {
+        exec_experimental_function(
+            session,
+            module_storage,
+            traversal_context,
+            "confidential_asset",
+            "init_module_for_genesis",
+            vec![],
+            serialize_values(&vec![MoveValue::Signer(EXPERIMENTAL_CODE_ADDRESS)]),
+        );
+    }
+}
+
+fn create_accounts(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    accounts: &[AccountBalance],
+) {
+    let accounts_bytes = bcs::to_bytes(accounts).expect("AccountMaps can be serialized");
+    let mut serialized_values = serialize_values(&vec![MoveValue::Signer(CORE_CODE_ADDRESS)]);
+    serialized_values.push(accounts_bytes);
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
+        GENESIS_MODULE_NAME,
+        "create_accounts",
+        vec![],
+        serialized_values,
+    );
+}
+
+fn create_employee_validators(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    employees: &[EmployeePool],
+    genesis_config: &GenesisConfiguration,
+) {
+    let employees_bytes = bcs::to_bytes(employees).expect("AccountMaps can be serialized");
+    let mut serialized_values = serialize_values(&vec![
+        MoveValue::U64(genesis_config.employee_vesting_start),
+        MoveValue::U64(genesis_config.employee_vesting_period_duration),
+    ]);
+    serialized_values.push(employees_bytes);
+
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
+        GENESIS_MODULE_NAME,
+        "create_employee_validators",
+        vec![],
+        serialized_values,
+    );
+>>>>>>> aptos-framework-v1.34.0
 }
 
 /// Creates and initializes each validator owner and validator operator. This method creates all
 /// the required accounts, sets the validator operators for each validator owner, and sets the
 /// validator config on-chain.
-fn create_and_initialize_validators(session: &mut SessionExt, validators: &[Validator]) {
+fn create_and_initialize_validators(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    validators: &[Validator],
+) {
     let validators_bytes = bcs::to_bytes(validators).expect("Validators can be serialized");
     let mut serialized_values = serialize_values(&vec![MoveValue::Signer(CORE_CODE_ADDRESS)]);
     serialized_values.push(validators_bytes);
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "create_initialize_validators",
         vec![],
@@ -831,9 +1257,17 @@ fn create_and_initialize_validators(session: &mut SessionExt, validators: &[Vali
     );
 }
 
+<<<<<<< HEAD
 fn create_multiple_multisig_accounts_with_schema(
     session: &mut SessionExt,
     multiple_multi_sig_account_with_balance: MultiSigAccountSchema,
+=======
+fn create_and_initialize_validators_with_commission(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+    validators: &[ValidatorWithCommissionRate],
+>>>>>>> aptos-framework-v1.34.0
 ) {
     let mut serialized_values = serialize_values(&vec![MoveValue::Signer(CORE_CODE_ADDRESS)]);
 
@@ -876,6 +1310,8 @@ fn create_multiple_multisig_accounts_with_schema(
 
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "create_multiple_multisig_accounts_with_schema",
         vec![],
@@ -883,6 +1319,7 @@ fn create_multiple_multisig_accounts_with_schema(
     );
 }
 
+<<<<<<< HEAD
 fn create_multisig_accounts_with_balance(
     session: &mut SessionExt,
     multisig_accounts: &[MultiSigAccountWithBalance],
@@ -987,8 +1424,17 @@ fn create_vesting_without_staking_pools(
 }
 
 fn allow_core_resources_to_set_version(session: &mut SessionExt) {
+=======
+fn allow_core_resources_to_set_version(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
+>>>>>>> aptos-framework-v1.34.0
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         VERSION_MODULE_NAME,
         "initialize_for_test",
         vec![],
@@ -996,23 +1442,84 @@ fn allow_core_resources_to_set_version(session: &mut SessionExt) {
     );
 }
 
-/// Publish the framework release bundle.
-fn publish_framework(session: &mut SessionExt, framework: &ReleaseBundle) {
-    for pack in &framework.packages {
-        publish_package(session, pack)
-    }
+fn initialize_package(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl ModuleStorage,
+    traversal_context: &mut TraversalContext,
+    addr: AccountAddress,
+    package: &ReleasePackage,
+) {
+    exec_function(
+        session,
+        module_storage,
+        traversal_context,
+        CODE_MODULE_NAME,
+        "initialize",
+        vec![],
+        vec![
+            MoveValue::Signer(CORE_CODE_ADDRESS)
+                .simple_serialize()
+                .unwrap(),
+            MoveValue::Signer(addr).simple_serialize().unwrap(),
+            bcs::to_bytes(package.package_metadata()).unwrap(),
+        ],
+    );
 }
 
-/// Publish the given package.
-fn publish_package(session: &mut SessionExt, pack: &ReleasePackage) {
-    let modules = pack.sorted_code_and_modules();
-    let addr = *modules.first().unwrap().1.self_id().address();
-    let code = modules
-        .into_iter()
-        .map(|(c, _)| c.to_vec())
-        .collect::<Vec<_>>();
-    session
-        .publish_module_bundle(code, addr, &mut UnmeteredGasMeter)
+fn code_to_writes_for_publishing(
+    genesis_runtime_environment: &RuntimeEnvironment,
+    genesis_features: &Features,
+    genesis_state_view: &GenesisStateView,
+    addr: AccountAddress,
+    code: Vec<Bytes>,
+) -> VMResult<BTreeMap<StateKey, ModuleWrite<WriteOp>>> {
+    let module_storage = genesis_state_view.as_aptos_code_storage(genesis_runtime_environment);
+    let resolver = genesis_state_view.as_move_resolver();
+
+    let module_storage_with_staged_modules =
+        StagingModuleStorage::create(&addr, &module_storage, code)?;
+    let verified_module_bundle =
+        module_storage_with_staged_modules.release_verified_module_bundle();
+
+    convert_modules_into_write_ops(
+        &resolver,
+        genesis_features,
+        &module_storage,
+        verified_module_bundle,
+    )
+    .map_err(|e| e.finish(Location::Undefined))
+}
+
+/// Produces the changes when a framework is published:
+///  1. Resources containing package information.
+///  2. Module write set with published code.
+fn publish_framework(
+    genesis_vm: &GenesisMoveVm,
+    genesis_runtime_environment: &RuntimeEnvironment,
+    hash_value: HashValue,
+    framework: &ReleaseBundle,
+) -> (VMChangeSet, ModuleWriteSet) {
+    // Reset state view to be empty, to make sure all module write ops are creations.
+    let mut state_view = GenesisStateView::new();
+
+    // First, publish modules.
+    let mut writes = BTreeMap::new();
+    for pack in &framework.packages {
+        let modules = pack.sorted_code_and_modules();
+
+        let addr = *modules.first().unwrap().1.self_id().address();
+        let code = modules
+            .into_iter()
+            .map(|(c, _)| c.to_vec().into())
+            .collect::<Vec<_>>();
+
+        let package_writes = code_to_writes_for_publishing(
+            genesis_runtime_environment,
+            genesis_vm.genesis_features(),
+            &state_view,
+            addr,
+            code,
+        )
         .unwrap_or_else(|e| {
             panic!(
                 "Failure publishing package `{}`: {:?}",
@@ -1021,6 +1528,7 @@ fn publish_package(session: &mut SessionExt, pack: &ReleasePackage) {
             )
         });
 
+<<<<<<< HEAD
     // Call the initialize function with the metadata.
     exec_function(
         session,
@@ -1035,12 +1543,59 @@ fn publish_package(session: &mut SessionExt, pack: &ReleasePackage) {
             bcs::to_bytes(pack.package_metadata()).unwrap(),
         ],
     );
+=======
+        // Add write ops so that we can later create a module write set. Also add them to the state
+        // view so that modules in subsequent packages can link to them.
+        writes.extend(package_writes.clone());
+        state_view.add_module_write_ops(package_writes);
+    }
+    let module_write_set = ModuleWriteSet::new(writes);
+
+    // At this point we processed all packages, and the state view contains all the code. We can
+    // run package initialization.
+
+    let module_storage = state_view.as_aptos_code_storage(genesis_runtime_environment);
+    let resolver = state_view.as_move_resolver();
+    let mut session = genesis_vm.new_genesis_session(&resolver, hash_value);
+
+    let traversal_storage = TraversalStorage::new();
+    let mut traversal_context = TraversalContext::new(&traversal_storage);
+
+    for pack in &framework.packages {
+        // Unfortunately, package does not contain address information, so we have to access its
+        // modules to extract the destination address.
+        let addr = *pack
+            .sorted_code_and_modules()
+            .first()
+            .unwrap()
+            .1
+            .self_id()
+            .address();
+        initialize_package(
+            &mut session,
+            &module_storage,
+            &mut traversal_context,
+            addr,
+            pack,
+        );
+    }
+
+    let change_set =
+        assert_ok!(session.finish(&genesis_vm.genesis_change_set_configs(), &module_storage,));
+    (change_set, module_write_set)
+>>>>>>> aptos-framework-v1.34.0
 }
 
 /// Trigger a reconfiguration. This emits an event that will be passed along to the storage layer.
-fn emit_new_block_and_epoch_event(session: &mut SessionExt) {
+fn emit_new_block_and_epoch_event(
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl AptosModuleStorage,
+    traversal_context: &mut TraversalContext,
+) {
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         "block",
         "emit_genesis_block_event",
         vec![],
@@ -1050,6 +1605,8 @@ fn emit_new_block_and_epoch_event(session: &mut SessionExt) {
     );
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         "reconfiguration",
         "emit_genesis_reconfiguration_event",
         vec![],
@@ -1057,11 +1614,20 @@ fn emit_new_block_and_epoch_event(session: &mut SessionExt) {
     );
 }
 
-/// Verify the consistency of the genesis `WriteSet`
-fn verify_genesis_write_set(events: &[(ContractEvent, Option<MoveTypeLayout>)]) {
+/// Verify the consistency of modules in the genesis write set.
+fn verify_genesis_module_write_set(write_set: &WriteSet) {
+    for (state_key, write_op) in write_set.expect_write_op_iter() {
+        if state_key.is_module_path() {
+            assert!(write_op.is_creation())
+        }
+    }
+}
+
+/// Verify the consistency of events emitted during genesis.
+fn verify_genesis_events(events: &[ContractEvent]) {
     let new_epoch_events: Vec<&ContractEventV1> = events
         .iter()
-        .filter_map(|(e, _)| {
+        .filter_map(|e| {
             if e.event_key() == Some(&NewEpochEvent::event_key()) {
                 Some(e.v1().unwrap())
             } else {
@@ -1176,11 +1742,15 @@ impl TestValidator {
         let network_address = [0u8; 0].to_vec();
         let full_node_network_address = [0u8; 0].to_vec();
 
+<<<<<<< HEAD
         let stake_amount = if let Some(amount) = initial_stake {
             amount
         } else {
             0
         };
+=======
+        let stake_amount = initial_stake.unwrap_or(1);
+>>>>>>> aptos-framework-v1.34.0
         let data = Validator {
             owner_address,
             consensus_pubkey,
@@ -1242,7 +1812,12 @@ pub fn generate_test_genesis(
             initial_features_override: None,
             randomness_config_override: None,
             jwk_consensus_config_override: None,
+<<<<<<< HEAD
             automation_registry_config: Some(AutomationRegistryConfig::default()),
+=======
+            initial_jwks: vec![],
+            keyless_groth16_vk: None,
+>>>>>>> aptos-framework-v1.34.0
         },
         &OnChainConsensusConfig::default_for_genesis(),
         &OnChainExecutionConfig::default_for_genesis(),
@@ -1310,7 +1885,12 @@ fn mainnet_genesis_config() -> GenesisConfiguration {
         initial_features_override: None,
         randomness_config_override: None,
         jwk_consensus_config_override: None,
+<<<<<<< HEAD
         automation_registry_config: Some(AutomationRegistryConfig::default()),
+=======
+        initial_jwks: vec![],
+        keyless_groth16_vk: None,
+>>>>>>> aptos-framework-v1.34.0
     }
 }
 
@@ -1428,26 +2008,35 @@ pub struct MultiSigAccountSchema {
 
 #[test]
 pub fn test_genesis_module_publishing() {
-    // create a state view for move_vm
-    let mut state_view = GenesisStateView::new();
-    for (module_bytes, module) in
-        aptos_cached_packages::head_release_bundle().code_and_compiled_modules()
-    {
-        state_view.add_module(&module.self_id(), module_bytes);
-    }
+    let genesis_runtime_builder = GenesisRuntimeBuilder::new(ChainId::test());
 
-    let vm = GenesisMoveVM::new(ChainId::test());
-    let resolver = state_view.as_move_resolver();
+    let genesis_vm = genesis_runtime_builder.build_genesis_vm();
+    let genesis_runtime_environment = genesis_runtime_builder.build_genesis_runtime_environment();
 
-    let mut session = vm.new_genesis_session(&resolver, HashValue::zero());
-    publish_framework(&mut session, aptos_cached_packages::head_release_bundle());
+    let (change_set, module_write_set) = publish_framework(
+        &genesis_vm,
+        &genesis_runtime_environment,
+        HashValue::zero(),
+        aptos_cached_packages::head_release_bundle(),
+    );
+
+    // All write ops must be a creation!
+    let change_set = assert_ok!(change_set.try_combine_into_storage_change_set(module_write_set));
+    verify_genesis_module_write_set(change_set.write_set());
 }
 
 #[test]
 #[ignore] // TODO: This test needs fixing. Genesis transactions encoding are verified in e2e tests at smr-moonshot
 pub fn test_mainnet_end_to_end() {
+<<<<<<< HEAD
     const TOTAL_SUPPLY: u64 = 100_000_000_000 * APTOS_COINS_BASE_WITH_DECIMALS;
     const PBO_DELEGATOR_STAKE: u64 = 9_000_000 * APTOS_COINS_BASE_WITH_DECIMALS; // 9 mil
+=======
+    use aptos_types::{
+        account_address, on_chain_config::ValidatorSet, state_store::state_key::StateKey,
+        write_set::TransactionWrite,
+    };
+>>>>>>> aptos-framework-v1.34.0
 
     use aptos_types::write_set::{TransactionWrite, WriteSet};
 
@@ -1926,7 +2515,7 @@ pub fn test_mainnet_end_to_end() {
         panic!("Invalid WriteSetPayload");
     };
 
-    let WriteSet::V0(writeset) = changeset.write_set();
+    let writeset = changeset.write_set().as_v0();
 
     print!("CHANGESET: {:?}", changeset.events());
 

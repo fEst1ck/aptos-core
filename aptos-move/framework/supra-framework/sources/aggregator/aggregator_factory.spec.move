@@ -70,9 +70,15 @@ spec supra_framework::aggregator_factory {
         use std::signer;
         let addr = signer::address_of(account);
         /// [high-level-req-3]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/aggregator/aggregator_factory.spec.move
         aborts_if addr != @supra_framework;
         aborts_if limit != MAX_U128;
         aborts_if !exists<AggregatorFactory>(@supra_framework);
+=======
+        aborts_if addr != @aptos_framework;
+        aborts_if limit != MAX_U128;
+        aborts_if !exists<AggregatorFactory>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aggregator/aggregator_factory.spec.move
     }
 
     spec native fun spec_new_aggregator(limit: u128): Aggregator;

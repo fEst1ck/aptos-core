@@ -2,25 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    aptos_cli::validator::generate_blob, smoke_test_environment::SwarmBuilder,
-    txn_emitter::generate_traffic,
+    consensus::helpers::generate_traffic_and_assert_committed,
+    smoke_test_environment::SwarmBuilder, txn_emitter::generate_traffic,
+    utils::update_consensus_config,
 };
-use aptos::test::CliTestFramework;
 use aptos_consensus::QUORUM_STORE_DB_NAME;
 use aptos_forge::{
     args::TransactionTypeArg, reconfig, wait_for_all_nodes_to_catchup, NodeExt, Swarm, SwarmExt,
-    TransactionType,
 };
 use aptos_logger::info;
 use aptos_rest_client::Client;
-use aptos_types::{
-    on_chain_config::{ConsensusConfigV1, OnChainConsensusConfig},
-    PeerId,
-};
+use aptos_types::on_chain_config::{ConsensusConfigV1, OnChainConsensusConfig};
 use std::{fs, sync::Arc, time::Duration};
 
 const MAX_WAIT_SECS: u64 = 60;
 
+<<<<<<< HEAD
 async fn generate_traffic_and_assert_committed(
     swarm: &mut dyn Swarm,
     nodes: &[PeerId],
@@ -85,6 +82,8 @@ async fn update_consensus_config(
         .unwrap();
 }
 
+=======
+>>>>>>> aptos-framework-v1.34.0
 // TODO: remove when quorum store becomes the in-code default
 #[tokio::test]
 async fn test_onchain_config_quorum_store_enabled_and_disabled() {
@@ -370,21 +369,24 @@ async fn test_swarm_with_bad_non_qs_node() {
         .unwrap();
 
     info!("generate traffic");
-    let tx_stat = generate_traffic(
-        &mut swarm,
-        &[dishonest_peer_id],
-        Duration::from_secs(20),
-        1,
-        vec![vec![
-            (TransactionTypeArg::CoinTransfer.materialize_default(), 70),
-            (
-                TransactionTypeArg::AccountGeneration.materialize_default(),
-                20,
-            ),
-        ]],
+    let tx_stat = tokio::time::timeout(
+        Duration::from_secs(60),
+        generate_traffic(
+            &mut swarm,
+            &[dishonest_peer_id],
+            Duration::from_secs(20),
+            1,
+            vec![vec![
+                (TransactionTypeArg::CoinTransfer.materialize_default(), 70),
+                (
+                    TransactionTypeArg::AccountGeneration.materialize_default(),
+                    20,
+                ),
+            ]],
+        ),
     )
     .await;
-    assert!(tx_stat.is_err());
+    assert!(tx_stat.is_err() || tx_stat.is_ok_and(|result| result.is_err()));
 
     generate_traffic_and_assert_committed(
         &mut swarm,

@@ -1,6 +1,14 @@
 [package]
+<<<<<<< HEAD
 name = 'EnableRewardsRateDecrease'
 version = "0.0.0"
 
 [dependencies]
 SupraFramework = { local = "../../../../../framework/supra-framework" }
+=======
+name = 'FederatedKeylessInitConfig'
+version = "0.0.0"
+
+[dependencies]
+AptosFramework = { local = "../../../../../framework/aptos-framework" }
+>>>>>>> aptos-framework-v1.34.0

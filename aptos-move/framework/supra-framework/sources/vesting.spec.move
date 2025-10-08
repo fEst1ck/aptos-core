@@ -434,7 +434,11 @@ spec supra_framework::vesting {
         pragma aborts_if_is_partial;
         aborts_if !account::spec_exists_at(new_beneficiary);
         // TODO(fa_migration)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/vesting.spec.move
         // aborts_if !coin::spec_is_account_registered<SupraCoin>(new_beneficiary);
+=======
+        // aborts_if !coin::spec_is_account_registered<AptosCoin>(new_beneficiary);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/vesting.spec.move
         include VerifyAdminAbortsIf;
         let post vesting_contract = global<VestingContract>(contract_address);
         ensures simple_map::spec_contains_key(vesting_contract.beneficiaries,shareholder);

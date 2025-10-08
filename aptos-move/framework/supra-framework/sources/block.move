@@ -1,12 +1,17 @@
 /// This module defines a struct storing the metadata of the block and new block events.
 module supra_framework::block {
     use std::error;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/block.move
+=======
+    use std::vector;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/block.move
     use std::option;
     use std::vector;
     use aptos_std::table_with_length::{Self, TableWithLength};
     use std::option::Option;
     use supra_framework::randomness;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/block.move
     use supra_framework::account;
     use supra_framework::event::{Self, EventHandle};
     use supra_framework::reconfiguration;
@@ -16,6 +21,16 @@ module supra_framework::block {
     use supra_framework::system_addresses;
     use supra_framework::timestamp;
     use supra_framework::automation_registry;
+=======
+    use aptos_framework::account;
+    use aptos_framework::event::{Self, EventHandle};
+    use aptos_framework::reconfiguration;
+    use aptos_framework::reconfiguration_with_dkg;
+    use aptos_framework::stake;
+    use aptos_framework::state_storage;
+    use aptos_framework::system_addresses;
+    use aptos_framework::timestamp;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/block.move
 
     friend supra_framework::genesis;
 

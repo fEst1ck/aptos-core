@@ -34,6 +34,10 @@ pub fn build_updater(
     linux_name: &str,
     mac_os_name: &str,
     windows_name: &str,
+<<<<<<< HEAD
+=======
+    assume_yes: bool,
+>>>>>>> aptos-framework-v1.34.0
 ) -> Result<Box<dyn ReleaseUpdate>> {
     // Determine the target we should download based on how the CLI itself was built.
     let arch_str = get_arch();
@@ -71,11 +75,25 @@ pub fn build_updater(
         .current_version(current_version)
         .target_version_tag(&format!("v{}", info.target_version))
         .target(&target)
+<<<<<<< HEAD
+=======
+        .no_confirm(assume_yes)
+>>>>>>> aptos-framework-v1.34.0
         .build()
         .map_err(|e| anyhow!("Failed to build self-update configuration: {:#}", e))
 }
 
+<<<<<<< HEAD
 pub fn get_path(name: &str, exe_env: &str, binary_name: &str, exe: &str) -> Result<PathBuf> {
+=======
+pub fn get_path(
+    name: &str,
+    exe_env: &str,
+    binary_name: &str,
+    exe: &str,
+    find_in_path: bool,
+) -> Result<PathBuf> {
+>>>>>>> aptos-framework-v1.34.0
     // Look at the environment variable first.
     if let Ok(path) = std::env::var(exe_env) {
         return Ok(PathBuf::from(path));
@@ -87,15 +105,27 @@ pub fn get_path(name: &str, exe_env: &str, binary_name: &str, exe: &str) -> Resu
         return Ok(path);
     }
 
+<<<<<<< HEAD
     // See if we can find the binary in the PATH.
     if let Some(path) = pathsearch::find_executable_in_path(exe) {
         return Ok(path);
+=======
+    if find_in_path {
+        // See if we can find the binary in the PATH.
+        if let Some(path) = pathsearch::find_executable_in_path(exe) {
+            return Ok(path);
+        }
+>>>>>>> aptos-framework-v1.34.0
     }
 
     Err(anyhow!(
         "Cannot locate the {} executable. \
             Environment variable `{}` is not set, and `{}` is not in the PATH. \
+<<<<<<< HEAD
             Try running `supra update {}` to download it and then \
+=======
+            Try running `aptos update {}` to download it and then \
+>>>>>>> aptos-framework-v1.34.0
             updating the environment variable `{}` or adding the executable to PATH",
         name,
         exe_env,

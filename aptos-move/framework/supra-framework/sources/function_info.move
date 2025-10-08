@@ -5,9 +5,15 @@ module supra_framework::function_info {
     use std::signer;
     use std::string::{Self, String};
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/function_info.move
     friend supra_framework::fungible_asset;
     friend supra_framework::dispatchable_fungible_asset;
     friend supra_framework::account_abstraction;
+=======
+    friend aptos_framework::fungible_asset;
+    friend aptos_framework::dispatchable_fungible_asset;
+    friend aptos_framework::account_abstraction;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/function_info.move
 
     /// String is not a valid Move identifier
     const EINVALID_IDENTIFIER: u64 = 1;

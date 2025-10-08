@@ -208,8 +208,12 @@ pub enum ReplayProtector {
 #[oai(one_of, discriminator_name = "type", rename_all = "snake_case")]
 pub enum Transaction {
     PendingTransaction(PendingTransaction),
+<<<<<<< HEAD
     UserTransaction(Box<UserTransaction>),
     AutomatedTransaction(Box<AutomatedTransaction>),
+=======
+    UserTransaction(UserTransaction),
+>>>>>>> aptos-framework-v1.34.0
     GenesisTransaction(GenesisTransaction),
     BlockMetadataTransaction(BlockMetadataTransaction),
     StateCheckpointTransaction(StateCheckpointTransaction),
@@ -337,6 +341,7 @@ impl
             events,
             timestamp: timestamp.into(),
         })
+<<<<<<< HEAD
     }
 }
 
@@ -377,6 +382,8 @@ impl
             events,
             timestamp: timestamp.into(),
         }))
+=======
+>>>>>>> aptos-framework-v1.34.0
     }
 }
 
@@ -401,6 +408,7 @@ impl From<(&SignedTransaction, TransactionPayload)> for UserTransactionRequest {
             signature: Some(txn.authenticator().into()),
             payload,
             replay_protection_nonce: txn.replay_protector().get_nonce().map(|nonce| nonce.into()),
+<<<<<<< HEAD
         }
     }
 }
@@ -421,6 +429,8 @@ impl From<(HashValue, &UserAutomatedTransaction, TransactionPayload)> for Automa
             expiration_timestamp_secs: txn.expiration_timestamp_secs().into(),
             registration_hash,
             payload,
+=======
+>>>>>>> aptos-framework-v1.34.0
         }
     }
 }
@@ -607,6 +617,7 @@ impl UserTransactionRequest {
             aptos_types::transaction::ReplayProtector::SequenceNumber(self.sequence_number.0)
         }
     }
+<<<<<<< HEAD
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Object)]
@@ -618,6 +629,8 @@ pub struct AutomatedTaskMeta {
     pub expiration_timestamp_secs: U64,
     pub payload: TransactionPayload,
     pub registration_hash: HashValue,
+=======
+>>>>>>> aptos-framework-v1.34.0
 }
 
 /// Request to create signing messages

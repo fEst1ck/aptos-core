@@ -3,7 +3,11 @@
 
 use aptos_gas_algebra::{
     DynamicExpression, Fee, FeePerGasUnit, Gas, GasExpression, InternalGas, InternalGasUnit,
+<<<<<<< HEAD
     NumBytes, Quant,
+=======
+    NumBytes, Octa,
+>>>>>>> aptos-framework-v1.34.0
 };
 use aptos_gas_meter::GasAlgebra;
 use aptos_gas_schedule::VMGasParameters;

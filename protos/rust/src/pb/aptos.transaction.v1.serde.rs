@@ -8099,6 +8099,13 @@ impl serde::Serialize for TransactionPayload {
                 }
             }
         }
+        if let Some(v) = self.extra_config.as_ref() {
+            match v {
+                transaction_payload::ExtraConfig::ExtraConfigV1(v) => {
+                    struct_ser.serialize_field("extraConfigV1", v)?;
+                }
+            }
+        }
         struct_ser.end()
     }
 }
@@ -8118,8 +8125,11 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
             "writeSetPayload",
             "multisig_payload",
             "multisigPayload",
+<<<<<<< HEAD
             "automation_payload",
             "automationPayload",
+=======
+>>>>>>> aptos-framework-v1.34.0
             "extra_config_v1",
             "extraConfigV1",
         ];
@@ -8131,7 +8141,10 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
             ScriptPayload,
             WriteSetPayload,
             MultisigPayload,
+<<<<<<< HEAD
             AutomationPayload,
+=======
+>>>>>>> aptos-framework-v1.34.0
             ExtraConfigV1,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -8159,7 +8172,10 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
                             "scriptPayload" | "script_payload" => Ok(GeneratedField::ScriptPayload),
                             "writeSetPayload" | "write_set_payload" => Ok(GeneratedField::WriteSetPayload),
                             "multisigPayload" | "multisig_payload" => Ok(GeneratedField::MultisigPayload),
+<<<<<<< HEAD
                             "automationPayload" | "automation_payload" => Ok(GeneratedField::AutomationPayload),
+=======
+>>>>>>> aptos-framework-v1.34.0
                             "extraConfigV1" | "extra_config_v1" => Ok(GeneratedField::ExtraConfigV1),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
@@ -8219,6 +8235,7 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
                             payload__ = map.next_value::<::std::option::Option<_>>()?.map(transaction_payload::Payload::MultisigPayload)
 ;
                         }
+<<<<<<< HEAD
                         GeneratedField::AutomationPayload => {
                             if payload__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("automationPayload"));
@@ -8226,6 +8243,8 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
                             payload__ = map.next_value::<::std::option::Option<_>>()?.map(transaction_payload::Payload::AutomationPayload)
 ;
                         }
+=======
+>>>>>>> aptos-framework-v1.34.0
                         GeneratedField::ExtraConfigV1 => {
                             if extra_config__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("extraConfigV1"));

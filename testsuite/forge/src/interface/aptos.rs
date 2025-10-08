@@ -322,7 +322,11 @@ pub async fn reconfig(
         vec![root_account.sign_with_transaction_builder(
             transaction_factory
                 .clone()
+<<<<<<< HEAD
                 .payload(aptos_stdlib::supra_governance_force_end_epoch_test_only()),
+=======
+                .payload(aptos_stdlib::aptos_governance_force_end_epoch_test_only()),
+>>>>>>> aptos-framework-v1.34.0
         )]
     };
 

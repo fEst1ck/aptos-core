@@ -10,4 +10,8 @@ dispatching = "_"
 #dispatching = "0xd119"
 
 [dependencies]
+<<<<<<< HEAD
 SupraFramework = { local = "../../framework/supra-framework" }
+=======
+AptosFramework = { local = "../../framework/aptos-framework" }
+>>>>>>> aptos-framework-v1.34.0

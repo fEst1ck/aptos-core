@@ -11,9 +11,13 @@ use aptos_gas_schedule::{
 };
 use aptos_logger::{enabled, Level};
 use aptos_memory_usage_tracker::MemoryTrackedGasMeter;
+<<<<<<< HEAD
 use aptos_types::on_chain_config::{ConfigStorage, FeatureFlag, Features, GasSchedule, GasScheduleV2, OnChainConfig};
 use aptos_types::transaction::{RawTransaction, TransactionPayload};
 use aptos_types::transaction::automation::RegistrationParams;
+=======
+use aptos_types::on_chain_config::Features;
+>>>>>>> aptos-framework-v1.34.0
 use aptos_vm_logging::{log_schema::AdapterLogSchema, speculative_log, speculative_warn};
 use aptos_vm_types::{
     resolver::BlockSynchronizationKillSwitch,
@@ -21,7 +25,10 @@ use aptos_vm_types::{
 };
 use move_core_types::vm_status::{StatusCode, VMStatus};
 use move_vm_runtime::ModuleStorage;
+<<<<<<< HEAD
 use move_core_types::gas_algebra::NumBytes;
+=======
+>>>>>>> aptos-framework-v1.34.0
 
 /// This is used until gas version 18, which introduces a configurable entry for this.
 const MAXIMUM_APPROVED_TRANSACTION_SIZE_LEGACY: u64 = 1024 * 1024;

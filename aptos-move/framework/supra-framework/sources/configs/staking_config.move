@@ -132,6 +132,7 @@ module supra_framework::staking_config {
             error::invalid_argument(EINVALID_REWARDS_RATE)
         );
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.move
         move_to(
             supra_framework,
             StakingConfig {
@@ -144,11 +145,26 @@ module supra_framework::staking_config {
                 voting_power_increase_limit
             }
         );
+=======
+        move_to(aptos_framework, StakingConfig {
+            minimum_stake,
+            maximum_stake,
+            recurring_lockup_duration_secs,
+            allow_validator_set_change,
+            rewards_rate,
+            rewards_rate_denominator,
+            voting_power_increase_limit,
+        });
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.move
 
         // Initialize StakingRewardsConfig with the given rewards_rate and rewards_rate_denominator,
         // while setting min_rewards_rate and rewards_rate_decrease_rate to 0.
         initialize_rewards(
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.move
             supra_framework,
+=======
+            aptos_framework,
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.move
             fixed_point64::create_from_rational((rewards_rate as u128), (rewards_rate_denominator as u128)),
             fixed_point64::create_from_rational(0, 1000),
             ONE_YEAR_IN_SECS,
@@ -459,11 +475,19 @@ module supra_framework::staking_config {
     #[test_only]
     use aptos_std::fixed_point64::{equal, create_from_rational};
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.move
     #[test(supra_framework = @supra_framework)]
     public entry fun test_change_staking_configs(supra_framework: signer) acquires StakingConfig {
         initialize_for_test(&supra_framework, 0, 1, 1, false, 1, 1, 1);
         // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
         features::change_feature_flags_for_testing(&supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+=======
+    #[test(aptos_framework = @aptos_framework)]
+    public entry fun test_change_staking_configs(aptos_framework: signer) acquires StakingConfig {
+        initialize_for_test(&aptos_framework, 0, 1, 1, false, 1, 1, 1);
+        // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
+        features::change_feature_flags_for_testing(&aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.move
 
         update_required_stake(&supra_framework, 100, 1000);
         update_recurring_lockup_duration_secs(&supra_framework, 10000);
@@ -602,6 +626,7 @@ module supra_framework::staking_config {
         update_recurring_lockup_duration_secs(&account, 1);
     }
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.move
     #[test(supra_framework = @0x1, account = @0x123)]
     #[expected_failure(abort_code = 0x50003, location = supra_framework::system_addresses)]
     public entry fun test_update_rewards_unauthorized_should_fail(
@@ -609,6 +634,13 @@ module supra_framework::staking_config {
     ) acquires StakingConfig {
         // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
         features::change_feature_flags_for_testing(&supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+=======
+    #[test(aptos_framework = @0x1, account = @0x123)]
+    #[expected_failure(abort_code = 0x50003, location = aptos_framework::system_addresses)]
+    public entry fun test_update_rewards_unauthorized_should_fail(aptos_framework: signer, account: signer) acquires StakingConfig {
+        // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
+        features::change_feature_flags_for_testing(&aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.move
         update_rewards_rate(&account, 1, 10);
     }
 
@@ -665,12 +697,19 @@ module supra_framework::staking_config {
 
     #[test(supra_framework = @supra_framework)]
     #[expected_failure(abort_code = 0x10002, location = Self)]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.move
     public entry fun test_update_rewards_invalid_denominator_should_fail(
         supra_framework: signer
     ) acquires StakingConfig {
         // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
         features::change_feature_flags_for_testing(&supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
         update_rewards_rate(&supra_framework, 1, 0);
+=======
+    public entry fun test_update_rewards_invalid_denominator_should_fail(aptos_framework: signer) acquires StakingConfig {
+        // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
+        features::change_feature_flags_for_testing(&aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+        update_rewards_rate(&aptos_framework, 1, 0);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.move
     }
 
     #[test(supra_framework = @supra_framework)]
@@ -761,8 +800,13 @@ module supra_framework::staking_config {
         supra_framework: signer
     ) acquires StakingConfig {
         // This test case checks the behavior when the periodical_reward_rate_decrease feature is disabled.
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/staking_config.move
         features::change_feature_flags_for_testing(&supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
         update_voting_power_increase_limit(&supra_framework, 0);
+=======
+        features::change_feature_flags_for_testing(&aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+        update_voting_power_increase_limit(&aptos_framework, 0);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/staking_config.move
     }
 
     #[test(supra_framework = @supra_framework)]

@@ -1,9 +1,16 @@
 #[test_only]
 module 0xcafe::native_dispatch_token {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/tests/native_dispatch_token.move
     use supra_framework::fungible_asset::{FungibleAsset, TransferRef};
     use supra_framework::dispatchable_fungible_asset;
     use supra_framework::object::{ConstructorRef, Object};
     use supra_framework::function_info;
+=======
+    use aptos_framework::fungible_asset::{FungibleAsset, TransferRef};
+    use aptos_framework::dispatchable_fungible_asset;
+    use aptos_framework::object::{ConstructorRef, Object};
+    use aptos_framework::function_info;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/tests/native_dispatch_token.move
 
     use std::option;
     use std::signer;

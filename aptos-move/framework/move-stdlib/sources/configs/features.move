@@ -729,7 +729,11 @@ module std::features {
     /// Whether the account abstraction is enabled.
     ///
     /// Lifetime: transient
+<<<<<<< HEAD
     const DERIVABLE_ACCOUNT_ABSTRACTION: u64 = 96;
+=======
+    const DERIVABLE_ACCOUNT_ABSTRACTION: u64 = 88;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun is_derivable_account_abstraction_enabled(): bool acquires Features {
         is_enabled(DERIVABLE_ACCOUNT_ABSTRACTION)
@@ -744,11 +748,19 @@ module std::features {
     /// Lifetime: transient
     ///
     /// We do not expect use from Move, so for now only for documentation purposes here
+<<<<<<< HEAD
     const ENABLE_FUNCTION_VALUES: u64 = 97;
 
     /// Whether new accounts default to the Fungible Asset store.
     /// Lifetime: transient
     const NEW_ACCOUNTS_DEFAULT_TO_FA_STORE: u64 = 98;
+=======
+    const ENABLE_FUNCTION_VALUES: u64 = 89;
+
+    /// Whether new accounts default to the Fungible Asset store.
+    /// Lifetime: transient
+    const NEW_ACCOUNTS_DEFAULT_TO_FA_STORE: u64 = 90;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun get_new_accounts_default_to_fa_store_feature(): u64 { NEW_ACCOUNTS_DEFAULT_TO_FA_STORE }
 
@@ -757,7 +769,11 @@ module std::features {
     }
 
     /// Lifetime: transient
+<<<<<<< HEAD
     const DEFAULT_ACCOUNT_RESOURCE: u64 = 99;
+=======
+    const DEFAULT_ACCOUNT_RESOURCE: u64 = 91;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun get_default_account_resource_feature(): u64 { DEFAULT_ACCOUNT_RESOURCE }
 
@@ -772,7 +788,11 @@ module std::features {
     /// - while a key-level update is mostly represented by a new type `KeyLevelUpdate` locally,
     ///   For simplicity, it is represented by type `ProviderJWKs` (used to represent issuer-level update)
     ///   in JWK Consensus messages, in validator transactions, and in Move.
+<<<<<<< HEAD
     const JWK_CONSENSUS_PER_KEY_MODE: u64 = 100;
+=======
+    const JWK_CONSENSUS_PER_KEY_MODE: u64 = 92;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun get_jwk_consensus_per_key_mode_feature(): u64 { JWK_CONSENSUS_PER_KEY_MODE }
 
@@ -782,7 +802,11 @@ module std::features {
 
     /// Whether orderless transactions are enabled.
     /// Lifetime: transient
+<<<<<<< HEAD
     const ORDERLESS_TRANSACTIONS: u64 = 102;
+=======
+    const ORDERLESS_TRANSACTIONS: u64 = 94;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun get_orderless_transactions_feature(): u64 { ORDERLESS_TRANSACTIONS }
 
@@ -791,7 +815,11 @@ module std::features {
     }
 
     /// Whether to calculate the transaction fee for distribution.
+<<<<<<< HEAD
     const CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION: u64 = 104;
+=======
+    const CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION: u64 = 96;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun get_calculate_transaction_fee_for_distribution_feature(): u64 { CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION }
 
@@ -800,7 +828,11 @@ module std::features {
     }
 
     /// Whether to distribute transaction fee to validators.
+<<<<<<< HEAD
     const DISTRIBUTE_TRANSACTION_FEE: u64 = 105;
+=======
+    const DISTRIBUTE_TRANSACTION_FEE: u64 = 97;
+>>>>>>> aptos-framework-v1.34.0
 
     public fun get_distribute_transaction_fee_feature(): u64 { DISTRIBUTE_TRANSACTION_FEE }
 
@@ -808,6 +840,7 @@ module std::features {
         is_enabled(DISTRIBUTE_TRANSACTION_FEE)
     }
 
+<<<<<<< HEAD
 
     /// Whether Supra native automation is enabled. Once enabled, the native automation feature can be utilized,
     /// enabling automation task registration, execution and cancellation.
@@ -888,6 +921,8 @@ module std::features {
     }
 
 
+=======
+>>>>>>> aptos-framework-v1.34.0
     // ============================================================================================
     // Feature Flag Implementation
 

@@ -55,7 +55,11 @@ pub const METADATA_FILE_NAME: &str = "package-metadata.bcs";
 pub const UPGRADE_POLICY_CUSTOM_FIELD: &str = "upgrade_policy";
 
 pub const APTOS_PACKAGES: [&str; 6] = [
+<<<<<<< HEAD
     "SupraFramework",
+=======
+    "AptosFramework",
+>>>>>>> aptos-framework-v1.34.0
     "MoveStdlib",
     "AptosStdlib",
     "AptosToken",

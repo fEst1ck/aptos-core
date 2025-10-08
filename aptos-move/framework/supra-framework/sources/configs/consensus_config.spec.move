@@ -47,9 +47,15 @@ spec supra_framework::consensus_config {
         use supra_framework::chain_status;
         use supra_framework::timestamp;
         use std::signer;
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/consensus_config.spec.move
         use supra_framework::coin::CoinInfo;
         use supra_framework::supra_coin::SupraCoin;
         use supra_framework::staking_config;
+=======
+        use aptos_framework::coin::CoinInfo;
+        use aptos_framework::aptos_coin::AptosCoin;
+        use aptos_framework::staking_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/consensus_config.spec.move
 
         // TODO: set because of timeout (property proved)
         pragma verify_duration_estimate = 600;
@@ -63,8 +69,13 @@ spec supra_framework::consensus_config {
 
         requires chain_status::is_genesis();
         requires timestamp::spec_now_microseconds() >= reconfiguration::last_reconfiguration_time();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/consensus_config.spec.move
         requires exists<CoinInfo<SupraCoin>>(@supra_framework);
         ensures global<ConsensusConfig>(@supra_framework).config == config;
+=======
+        requires exists<CoinInfo<AptosCoin>>(@aptos_framework);
+        ensures global<ConsensusConfig>(@aptos_framework).config == config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/consensus_config.spec.move
     }
 
     spec set_for_next_epoch(account: &signer, config: vector<u8>) {

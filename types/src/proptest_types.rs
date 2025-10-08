@@ -24,7 +24,11 @@ use crate::{
     proof::TransactionInfoListWithProof,
     state_store::state_key::StateKey,
     transaction::{
+<<<<<<< HEAD
         automated_transaction::AutomatedTransaction, block_epilogue::BlockEndInfo, ChangeSet, EntryFunction, ExecutionStatus,
+=======
+        block_epilogue::BlockEndInfo, ChangeSet, EntryFunction, ExecutionStatus,
+>>>>>>> aptos-framework-v1.34.0
         IndexedTransactionSummary, Module, Multisig, MultisigTransactionPayload, RawTransaction,
         ReplayProtector, Script, SignatureCheckedTransaction, SignedTransaction, Transaction,
         TransactionArgument, TransactionAuxiliaryData, TransactionExecutable,
@@ -416,6 +420,7 @@ fn new_raw_transaction(
             sender,
             sequence_number,
             payload,
+<<<<<<< HEAD
             max_gas_amount,
             gas_unit_price,
             expiration_time_secs,
@@ -425,6 +430,8 @@ fn new_raw_transaction(
             sender,
             sequence_number,
             automation,
+=======
+>>>>>>> aptos-framework-v1.34.0
             max_gas_amount,
             gas_unit_price,
             expiration_time_secs,
@@ -514,18 +521,45 @@ impl Arbitrary for SignedTransaction {
     }
 }
 
+<<<<<<< HEAD
 /// This `Arbitrary` impl only generates valid automated transactions.
 /// This `Arbitrary` impl only generates valid automated transactions.
 impl Arbitrary for AutomatedTransaction {
+=======
+impl Arbitrary for TransactionExecutable {
+>>>>>>> aptos-framework-v1.34.0
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_args: ()) -> Self::Strategy {
+<<<<<<< HEAD
         any::<RawTransaction>()
             .prop_map(|txn| {
                 let authenticator = txn.hash();
                 AutomatedTransaction::new(txn, authenticator, 1)
             })
+=======
+        prop_oneof![
+            any::<Script>().prop_map(TransactionExecutable::Script),
+            any::<EntryFunction>().prop_map(TransactionExecutable::EntryFunction),
+        ]
+        .boxed()
+    }
+}
+
+impl Arbitrary for TransactionExtraConfig {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_args: ()) -> Self::Strategy {
+        (any::<Option<AccountAddress>>(), any::<Option<u64>>())
+            .prop_map(
+                |(multisig_address, replay_protection_nonce)| TransactionExtraConfig::V1 {
+                    multisig_address,
+                    replay_protection_nonce,
+                },
+            )
+>>>>>>> aptos-framework-v1.34.0
             .boxed()
     }
 }
@@ -559,6 +593,7 @@ impl Arbitrary for TransactionExtraConfig {
     }}
 
 prop_compose! {
+<<<<<<< HEAD
     fn arb_transaction_status()(vm_status in any::<VMStatus>()
                 .prop_filter(
                     "filter incompatible combinations of vm status and status codes",
@@ -573,6 +608,10 @@ prop_compose! {
     ) -> TransactionStatus {
         let (txn_status, _) = TransactionStatus::from_vm_status(vm_status, true, &Features::default());
         txn_status
+=======
+    fn arb_transaction_status()(vm_status in any::<VMStatus>()) -> TransactionStatus {
+        TransactionStatus::from_vm_status(vm_status, &Features::default())
+>>>>>>> aptos-framework-v1.34.0
     }
 }
 

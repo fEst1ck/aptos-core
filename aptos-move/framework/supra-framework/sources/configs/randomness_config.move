@@ -60,8 +60,13 @@ module supra_framework::randomness_config {
         system_addresses::assert_supra_framework(framework);
         if (config_buffer::does_exist<RandomnessConfig>()) {
             let new_config = config_buffer::extract_v2<RandomnessConfig>();
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/configs/randomness_config.move
             if (exists<RandomnessConfig>(@supra_framework)) {
                 *borrow_global_mut<RandomnessConfig>(@supra_framework) = new_config;
+=======
+            if (exists<RandomnessConfig>(@aptos_framework)) {
+                *borrow_global_mut<RandomnessConfig>(@aptos_framework) = new_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/configs/randomness_config.move
             } else {
                 move_to(framework, new_config);
             }

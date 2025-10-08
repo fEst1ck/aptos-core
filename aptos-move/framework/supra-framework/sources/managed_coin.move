@@ -6,7 +6,11 @@ module supra_framework::managed_coin {
     use std::error;
     use std::signer;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/managed_coin.move
     use supra_framework::coin::{Self, BurnCapability, FreezeCapability, MintCapability, destroy_burn_cap,
+=======
+    use aptos_framework::coin::{Self, BurnCapability, FreezeCapability, MintCapability, destroy_burn_cap,
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/managed_coin.move
         destroy_freeze_cap, destroy_mint_cap
     };
 

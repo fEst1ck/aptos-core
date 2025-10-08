@@ -115,7 +115,11 @@ spec supra_framework::optional_aggregator {
     }
 
     spec new(parallelizable: bool): OptionalAggregator {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/aggregator/optional_aggregator.spec.move
         aborts_if parallelizable && !exists<aggregator_factory::AggregatorFactory>(@supra_framework);
+=======
+        aborts_if parallelizable && !exists<aggregator_factory::AggregatorFactory>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/aggregator/optional_aggregator.spec.move
         ensures parallelizable ==> is_parallelizable(result);
         ensures !parallelizable ==> !is_parallelizable(result);
         ensures optional_aggregator_value(result) == 0;

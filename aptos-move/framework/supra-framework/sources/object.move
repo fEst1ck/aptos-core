@@ -23,12 +23,21 @@ module supra_framework::object {
 
     use aptos_std::from_bcs;
 
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/object.move
     use supra_framework::account;
     use supra_framework::transaction_context;
     use supra_framework::create_signer::create_signer;
     use supra_framework::event;
     use supra_framework::guid;
     use supra_framework::permissioned_signer;
+=======
+    use aptos_framework::account;
+    use aptos_framework::transaction_context;
+    use aptos_framework::create_signer::create_signer;
+    use aptos_framework::event;
+    use aptos_framework::guid;
+    use aptos_framework::permissioned_signer;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/object.move
 
     friend supra_framework::primary_fungible_store;
     friend supra_framework::coin;
@@ -1180,7 +1189,11 @@ module supra_framework::object {
     }
 
     #[test_only]
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/object.move
     use supra_framework::timestamp;
+=======
+    use aptos_framework::timestamp;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/object.move
 
     #[test(creator = @0x123)]
     fun test_transfer_permission_e2e(

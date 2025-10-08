@@ -41,7 +41,11 @@ spec supra_framework::block {
     /// </high-level-req>
     ///
     spec module {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/block.spec.move
         use supra_framework::chain_status;
+=======
+        use aptos_framework::chain_status;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/block.spec.move
         pragma verify = false;
         // After genesis, `BlockResource` exist.
         invariant [suspendable] chain_status::is_operating() ==> exists<BlockResource>(@supra_framework);
@@ -125,10 +129,17 @@ spec supra_framework::block {
     }
 
     spec schema BlockRequirement {
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/block.spec.move
         use supra_framework::chain_status;
         use supra_framework::coin::CoinInfo;
         use supra_framework::supra_coin::SupraCoin;
         use supra_framework::staking_config;
+=======
+        use aptos_framework::chain_status;
+        use aptos_framework::coin::CoinInfo;
+        use aptos_framework::aptos_coin::AptosCoin;
+        use aptos_framework::staking_config;
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/block.spec.move
 
         vm: signer;
         hash: address;
@@ -145,7 +156,11 @@ spec supra_framework::block {
         requires proposer == @vm_reserved || stake::spec_is_current_epoch_validator(proposer);
         requires (proposer == @vm_reserved) ==> (timestamp::spec_now_microseconds() == timestamp);
         requires (proposer != @vm_reserved) ==> (timestamp::spec_now_microseconds() < timestamp);
+<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/block.spec.move
         requires exists<CoinInfo<SupraCoin>>(@supra_framework);
+=======
+        requires exists<CoinInfo<AptosCoin>>(@aptos_framework);
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/block.spec.move
         include staking_config::StakingRewardsConfigRequirement;
     }
 

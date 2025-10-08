@@ -41,7 +41,11 @@ spec aptos_token::property_map {
     }
 
     spec add(self: &mut PropertyMap, key: String, value: PropertyValue) {
+<<<<<<< HEAD
         use supra_framework::simple_map;
+=======
+        use aptos_framework::simple_map;
+>>>>>>> aptos-framework-v1.34.0
 
         aborts_if !(key.length() <= MAX_PROPERTY_NAME_LENGTH);
         aborts_if !(!simple_map::spec_contains_key(self.map, key));
@@ -65,7 +69,11 @@ spec aptos_token::property_map {
     }
 
     spec borrow(self: &PropertyMap, key: &String): &PropertyValue {
+<<<<<<< HEAD
         use supra_framework::simple_map;
+=======
+        use aptos_framework::simple_map;
+>>>>>>> aptos-framework-v1.34.0
         aborts_if !simple_map::spec_contains_key(self.map, key);
     }
 

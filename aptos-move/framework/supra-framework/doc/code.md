@@ -794,6 +794,7 @@ package.
     // in a single <a href="code.md#0x1_code">code</a> <a href="object.md#0x1_object">object</a>.
     <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_for_each">vector::for_each</a>(registry.packages, |pack| {
         <a href="code.md#0x1_code_check_dependencies">check_dependencies</a>(code_object_addr, &pack);
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/code.md
     });
 
     // We unfortunately have <b>to</b> make a <b>copy</b> of each package <b>to</b> avoid borrow checker issues <b>as</b> check_dependencies
@@ -802,6 +803,8 @@ package.
     // in a single <a href="code.md#0x1_code">code</a> <a href="object.md#0x1_object">object</a>.
     <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_for_each">vector::for_each</a>(registry.packages, |pack| {
         <a href="code.md#0x1_code_check_dependencies">check_dependencies</a>(code_object_addr, &pack);
+=======
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/code.md
     });
 }
 </code></pre>
