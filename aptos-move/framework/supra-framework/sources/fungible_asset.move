@@ -452,9 +452,9 @@ module supra_framework::fungible_asset {
     inline fun register_dispatch_function_sanity_check(
         constructor_ref: &ConstructorRef,
     )  {
-        // Cannot register hook for APT.
+        // Cannot register hook for SUPRA.
         assert!(
-            object::address_from_constructor_ref(constructor_ref) != @aptos_fungible_asset,
+            object::address_from_constructor_ref(constructor_ref) != @supra_fungible_asset,
             error::permission_denied(EAPT_NOT_DISPATCHABLE)
         );
         assert!(
@@ -742,7 +742,7 @@ module supra_framework::fungible_asset {
     fun has_balance_dispatch_function(metadata: Object<Metadata>): bool acquires DispatchFunctionStore {
         let metadata_addr = object::object_address(&metadata);
         // Short circuit on APT for better perf
-        if (metadata_addr != @aptos_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
+        if (metadata_addr != @supra_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
             option::is_some(&borrow_global<DispatchFunctionStore>(metadata_addr).derived_balance_function)
         } else {
             false
@@ -751,7 +751,7 @@ module supra_framework::fungible_asset {
 
     fun has_supply_dispatch_function(metadata_addr: address): bool {
         // Short circuit on APT for better perf
-        if (metadata_addr != @aptos_fungible_asset) {
+        if (metadata_addr != @supra_fungible_asset) {
             exists<DeriveSupply>(metadata_addr)
         } else {
             false
