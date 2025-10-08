@@ -28,16 +28,6 @@ spec supra_framework::transaction_validation {
         pragma aborts_if_is_strict;
     }
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
-    /// Ensure caller is `supra_framework`.
-    /// Aborts if TransactionValidation already exists.
-    spec initialize(
-    supra_framework: &signer,
-    script_prologue_name: vector<u8>,
-    module_prologue_name: vector<u8>,
-    multi_agent_prologue_name: vector<u8>,
-    user_epilogue_name: vector<u8>,
-=======
     spec grant_gas_permission(
         master: &signer,
         permissioned: &signer,
@@ -50,15 +40,14 @@ spec supra_framework::transaction_validation {
         pragma aborts_if_is_partial;
     }
 
-    /// Ensure caller is `aptos_framework`.
+    /// Ensure caller is `supra_framework`.
     /// Aborts if TransactionValidation already exists.
     spec initialize(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         script_prologue_name: vector<u8>,
         module_prologue_name: vector<u8>,
         multi_agent_prologue_name: vector<u8>,
         user_epilogue_name: vector<u8>,
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
     ) {
         use std::signer;
         let addr = signer::address_of(supra_framework);
@@ -71,24 +60,12 @@ spec supra_framework::transaction_validation {
     /// Create a schema to reuse some code.
     /// Give some constraints that may abort according to the conditions.
     spec schema PrologueCommonAbortsIf {
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
-        use std::bcs;
         use supra_framework::timestamp::{CurrentTimeMicroseconds};
         use supra_framework::chain_id::{ChainId};
-        use supra_framework::account::{Account};
-        use supra_framework::coin::{CoinStore};
-        sender: signer;
-        gas_payer: address;
-        txn_sequence_number: u64;
-        txn_authentication_key: vector<u8>;
-=======
-        use aptos_framework::timestamp::{CurrentTimeMicroseconds};
-        use aptos_framework::chain_id::{ChainId};
         sender: &signer;
         gas_payer: &signer;
         replay_protector: ReplayProtector;
         txn_authentication_key: Option<vector<u8>>;
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         txn_gas_price: u64;
         txn_max_gas_units: u64;
         txn_expiration_time: u64;
@@ -100,37 +77,7 @@ spec supra_framework::transaction_validation {
         aborts_if !exists<ChainId>(@supra_framework);
         aborts_if !(chain_id::get() == chain_id);
         let transaction_sender = signer::address_of(sender);
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
-
-        aborts_if (
-            !features::spec_is_enabled(features::SPONSORED_AUTOMATIC_ACCOUNT_CREATION)
-                || account::exists_at(transaction_sender)
-                || transaction_sender == gas_payer
-                || txn_sequence_number > 0
-        ) && (
-            !(txn_sequence_number >= global<Account>(transaction_sender).sequence_number)
-                || !(txn_authentication_key == global<Account>(transaction_sender).authentication_key)
-                || !account::exists_at(transaction_sender)
-                || !(txn_sequence_number == global<Account>(transaction_sender).sequence_number)
-        );
-
-        aborts_if features::spec_is_enabled(features::SPONSORED_AUTOMATIC_ACCOUNT_CREATION)
-            && transaction_sender != gas_payer
-            && txn_sequence_number == 0
-            && !account::exists_at(transaction_sender)
-            && txn_authentication_key != bcs::to_bytes(transaction_sender);
-
-        aborts_if !(txn_sequence_number < (1u64 << 63));
-
-        let max_transaction_fee = txn_gas_price * txn_max_gas_units;
-        aborts_if max_transaction_fee > MAX_U64;
-        aborts_if !exists<CoinStore<SupraCoin>>(gas_payer);
-        // property 1: The sender of a transaction should have sufficient coin balance to pay the transaction fee.
-        /// [high-level-req-1]
-        aborts_if !(global<CoinStore<SupraCoin>>(gas_payer).coin.value >= max_transaction_fee);
-=======
         let gas_payer_addr = signer::address_of(gas_payer);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
     }
 
     spec prologue_common(
@@ -371,16 +318,11 @@ spec supra_framework::transaction_validation {
         include EpilogueGasPayerAbortsIf { gas_payer: signer::address_of(account) };
     }
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
     spec automated_transaction_epilogue(
-=======
-    spec epilogue(
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         account: signer,
         storage_fee_refunded: u64,
         txn_gas_price: u64,
         txn_max_gas_units: u64,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
         gas_units_remaining: u64
     ) {
         pragma verify = false;
@@ -393,11 +335,17 @@ spec supra_framework::transaction_validation {
         txn_max_gas_units: u64,
         gas_units_remaining: u64
     ) {
-=======
+        pragma verify = false;
+    }
+
+    spec epilogue(
+        account: signer,
+        storage_fee_refunded: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
         gas_units_remaining: u64,
     ) {
         // TODO: temporary mockup
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
         pragma verify = false;
     }
 
@@ -529,22 +477,12 @@ spec supra_framework::transaction_validation {
     spec schema EpilogueGasPayerAbortsIf {
         use std::option;
         use aptos_std::type_info;
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
         use supra_framework::account::{Account};
-        use supra_framework::aggregator;
-        use supra_framework::supra_coin::{SupraCoin};
+        use supra_framework::aptos_coin::{SupraCoin};
         use supra_framework::coin;
         use supra_framework::coin::{CoinStore, CoinInfo};
         use supra_framework::optional_aggregator;
-        use supra_framework::transaction_fee::{SupraCoinCapabilities, SupraCoinMintCapability, CollectedFeesPerBlock};
-=======
-        use aptos_framework::account::{Account};
-        use aptos_framework::aptos_coin::{AptosCoin};
-        use aptos_framework::coin;
-        use aptos_framework::coin::{CoinStore, CoinInfo};
-        use aptos_framework::optional_aggregator;
-        use aptos_framework::transaction_fee::{AptosCoinCapabilities, AptosCoinMintCapability};
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
+        use supra_framework::transaction_fee::{AptosCoinCapabilities, AptosCoinMintCapability};
 
         account: signer;
         gas_payer: address;
@@ -574,35 +512,11 @@ spec supra_framework::transaction_validation {
         // ensures balance == pre_balance - transaction_fee_amount + storage_fee_refunded;
         ensures account.sequence_number == pre_account.sequence_number + 1;
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
-
-        // Check fee collection.
-        let collect_fee_enabled = features::spec_is_enabled(features::COLLECT_AND_DISTRIBUTE_GAS_FEES);
-        let collected_fees = global<CollectedFeesPerBlock>(@supra_framework).amount;
-        let aggr = collected_fees.value;
-        let aggr_val = aggregator::spec_aggregator_get_val(aggr);
-        let aggr_lim = aggregator::spec_get_limit(aggr);
-
-        /// [high-level-req-3]
-        aborts_if collect_fee_enabled && !exists<CollectedFeesPerBlock>(@supra_framework);
-        aborts_if collect_fee_enabled && transaction_fee_amount > 0 && aggr_val + transaction_fee_amount > aggr_lim;
-
-        // Check burning.
-        //   (Check the total supply aggregator when enabled.)
-        let amount_to_burn = if (collect_fee_enabled) {
-            0
-        } else {
-            transaction_fee_amount - storage_fee_refunded
-        };
-        let apt_addr = type_info::type_of<SupraCoin>().account_address;
-        let maybe_apt_supply = global<CoinInfo<SupraCoin>>(apt_addr).supply;
-=======
         // Check burning.
         //   (Check the total supply aggregator when enabled.)
         let amount_to_burn = transaction_fee_amount - storage_fee_refunded;
-        let apt_addr = type_info::type_of<AptosCoin>().account_address;
-        let maybe_apt_supply = global<CoinInfo<AptosCoin>>(apt_addr).supply;
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
+        let apt_addr = type_info::type_of<SupraCoin>().account_address;
+        let maybe_apt_supply = global<CoinInfo<SupraCoin>>(apt_addr).supply;
         let total_supply_enabled = option::spec_is_some(maybe_apt_supply);
         let apt_supply = option::spec_borrow(maybe_apt_supply);
         let apt_supply_value = optional_aggregator::optional_aggregator_value(apt_supply);
@@ -616,19 +530,9 @@ spec supra_framework::transaction_validation {
         ensures total_supply_enabled ==> apt_supply_value - amount_to_burn == post_apt_supply_value;
 
         // Check minting.
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/transaction_validation.spec.move
-        let amount_to_mint = if (collect_fee_enabled) {
-            storage_fee_refunded
-        } else {
-            storage_fee_refunded - transaction_fee_amount
-        };
+        let amount_to_mint = storage_fee_refunded - transaction_fee_amount;
         let total_supply = coin::supply<SupraCoin>;
         let post post_total_supply = coin::supply<SupraCoin>;
-=======
-        let amount_to_mint = storage_fee_refunded - transaction_fee_amount;
-        let total_supply = coin::supply<AptosCoin>;
-        let post post_total_supply = coin::supply<AptosCoin>;
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/transaction_validation.spec.move
 
         aborts_if amount_to_mint > 0 && !exists<CoinStore<SupraCoin>>(addr);
         aborts_if amount_to_mint > 0 && !exists<SupraCoinMintCapability>(@supra_framework);

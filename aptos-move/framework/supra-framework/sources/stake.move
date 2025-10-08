@@ -25,9 +25,10 @@ module supra_framework::stake {
     use std::vector;
     use aptos_std::ed25519;
     use aptos_std::math64::min;
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    use aptos_std::table::{Self, Table};
-    use supra_framework::supra_coin::SupraCoin;
+    use aptos_std::big_ordered_map::{Self, BigOrderedMap};
+    use aptos_std::table::Table;
+    use supra_framework::aggregator_v2::{Self, Aggregator};
+    use supra_framework::aptos_coin::AptosCoin;
     use supra_framework::account;
     use supra_framework::coin::{Self, Coin, MintCapability};
     use supra_framework::event::{Self, EventHandle};
@@ -35,20 +36,7 @@ module supra_framework::stake {
     use supra_framework::system_addresses;
     use supra_framework::staking_config::{Self, StakingConfig, StakingRewardsConfig};
     use supra_framework::chain_status;
-=======
-    use aptos_std::big_ordered_map::{Self, BigOrderedMap};
-    use aptos_std::table::Table;
-    use aptos_framework::aggregator_v2::{Self, Aggregator};
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::account;
-    use aptos_framework::coin::{Self, Coin, MintCapability};
-    use aptos_framework::event::{Self, EventHandle};
-    use aptos_framework::timestamp;
-    use aptos_framework::system_addresses;
-    use aptos_framework::staking_config::{Self, StakingConfig, StakingRewardsConfig};
-    use aptos_framework::chain_status;
-    use aptos_framework::permissioned_signer;
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    use supra_framework::permissioned_signer;
 
     friend supra_framework::block;
     friend supra_framework::genesis;
@@ -204,9 +192,6 @@ module supra_framework::stake {
         total_joining_power: u128,
     }
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    /// SupraCoin capabilities, set during genesis and stored in @CoreResource account.
-=======
     /// Transaction fee that is collected in current epoch, indexed by validator_index.
     struct PendingTransactionFee has key, store {
         pending_fee_by_validator: BigOrderedMap<u64, Aggregator<u64>>,
@@ -218,8 +203,7 @@ module supra_framework::stake {
         fee_amount: u64,
     }
 
-    /// AptosCoin capabilities, set during genesis and stored in @CoreResource account.
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    /// SupraCoin capabilities, set during genesis and stored in @CoreResource account.
     /// This allows the Stake module to mint rewards to stakers.
     struct SupraCoinCapabilities has key {
         mint_cap: MintCapability<SupraCoin>,
@@ -381,28 +365,6 @@ module supra_framework::stake {
         fees_table: Table<address, Coin<SupraCoin>>,
     }
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    /// Initializes the resource storing information about collected transaction fees per validator.
-    /// Used by `transaction_fee.move` to initialize fee collection and distribution.
-    public(friend) fun initialize_validator_fees(supra_framework: &signer) {
-        system_addresses::assert_supra_framework(supra_framework);
-        assert!(
-            !exists<ValidatorFees>(@supra_framework),
-            error::already_exists(EFEES_TABLE_ALREADY_EXISTS)
-        );
-        move_to(supra_framework, ValidatorFees { fees_table: table::new() });
-    }
-
-    /// Stores the transaction fee collected to the specified validator address.
-    public(friend) fun add_transaction_fee(validator_addr: address, fee: Coin<SupraCoin>) acquires ValidatorFees {
-        let fees_table = &mut borrow_global_mut<ValidatorFees>(@supra_framework).fees_table;
-        if (table::contains(fees_table, validator_addr)) {
-            let collected_fee = table::borrow_mut(fees_table, validator_addr);
-            coin::merge(collected_fee, fee);
-        } else {
-            table::add(fees_table, validator_addr, fee);
-        }
-=======
     /// Permissions
     inline fun check_stake_permission(s: &signer) {
         assert!(
@@ -414,7 +376,6 @@ module supra_framework::stake {
     /// Grant permission to mutate staking on behalf of the master signer.
     public fun grant_permission(master: &signer, permissioned_signer: &signer) {
         permissioned_signer::authorize_unlimited(master, permissioned_signer, StakeManagementPermission {})
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
     }
 
     #[view]
@@ -686,19 +647,10 @@ module supra_framework::stake {
         network_addresses: vector<u8>,
         fullnode_addresses: vector<u8>,
     ) acquires AllowedValidators {
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
+        check_stake_permission(account);
         // Checks the public key is valid to prevent rogue-key attacks.
         let valid_public_key = ed25519::new_validated_public_key_from_bytes(consensus_pubkey);
         assert!(option::is_some(&valid_public_key), error::invalid_argument(EINVALID_PUBLIC_KEY));
-=======
-        check_stake_permission(account);
-        // Checks the public key has a valid proof-of-possession to prevent rogue-key attacks.
-        let pubkey_from_pop = &bls12381::public_key_from_bytes_with_pop(
-            consensus_pubkey,
-            &proof_of_possession_from_bytes(proof_of_possession)
-        );
-        assert!(option::is_some(pubkey_from_pop), error::invalid_argument(EINVALID_PUBLIC_KEY));
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         initialize_owner(account);
         move_to(account, ValidatorConfig {
@@ -842,11 +794,7 @@ module supra_framework::stake {
         // Only track and validate voting power increase for active and pending_active validator.
         // Pending_inactive validator will be removed from the validator set in the next epoch.
         // Inactive validator's total stake will be tracked when they join the validator set.
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-        let validator_set = borrow_global_mut<ValidatorSet>(@supra_framework);
-=======
-        let validator_set = borrow_global<ValidatorSet>(@aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+        let validator_set = borrow_global<ValidatorSet>(@supra_framework);
         // Search directly rather using get_validator_state to save on unnecessary loops.
         if (option::is_some(&find_validator(&validator_set.active_validators, pool_address)) ||
             option::is_some(&find_validator(&validator_set.pending_active, pool_address))) {
@@ -944,7 +892,6 @@ module supra_framework::stake {
         assert!(exists<ValidatorConfig>(pool_address), error::not_found(EVALIDATOR_CONFIG));
         let validator_info = borrow_global_mut<ValidatorConfig>(pool_address);
         let old_consensus_pubkey = validator_info.consensus_pubkey;
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
         // Checks the public key is valid to prevent rogue-key attacks.
         if (!genesis) {
             let validated_public_key = ed25519::new_validated_public_key_from_bytes(new_consensus_pubkey);
@@ -953,14 +900,6 @@ module supra_framework::stake {
             let validated_public_key = ed25519::new_validated_public_key_from_bytes(new_consensus_pubkey);
             assert!(option::is_some(&validated_public_key), error::invalid_argument(EINVALID_PUBLIC_KEY));
         };
-=======
-        // Checks the public key has a valid proof-of-possession to prevent rogue-key attacks.
-        let pubkey_from_pop = &bls12381::public_key_from_bytes_with_pop(
-            new_consensus_pubkey,
-            &proof_of_possession_from_bytes(proof_of_possession)
-        );
-        assert!(option::is_some(pubkey_from_pop), error::invalid_argument(EINVALID_PUBLIC_KEY));
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         validator_info.consensus_pubkey = new_consensus_pubkey;
 
         if (std::features::module_event_migration_enabled()) {
@@ -1394,13 +1333,8 @@ module supra_framework::stake {
     /// 4. The validator's voting power in the validator set is updated to be the corresponding staking pool's voting
     /// power.
     public(friend) fun on_new_epoch(
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-        let validator_set = borrow_global_mut<ValidatorSet>(@supra_framework);
-=======
     ) acquires AptosCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        let validator_set = borrow_global_mut<ValidatorSet>(@aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+        let validator_set = borrow_global_mut<ValidatorSet>(@supra_framework);
         let config = staking_config::get();
         let validator_perf = borrow_global_mut<ValidatorPerformance>(@supra_framework);
 
@@ -1582,18 +1516,6 @@ module supra_framework::stake {
                 0
             };
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-            let cur_fee = 0;
-            if (features::collect_and_distribute_gas_fees()) {
-                let fees_table = &borrow_global<ValidatorFees>(@supra_framework).fees_table;
-                if (table::contains(fees_table, candidate.addr)) {
-                    let fee_coin = table::borrow(fees_table, candidate.addr);
-                    cur_fee = coin::value(fee_coin);
-                }
-            };
-
-=======
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
             let lockup_expired = get_reconfig_start_time_secs() >= stake_pool.locked_until_secs;
             spec {
                 assume cur_active + cur_pending_active + cur_reward <= MAX_U64;
@@ -1722,11 +1644,7 @@ module supra_framework::stake {
         validator_perf: &ValidatorPerformance,
         pool_address: address,
         staking_config: &StakingConfig,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorFees {
-=======
-    ) acquires AptosCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires SupraCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig {
         let stake_pool = borrow_global_mut<StakePool>(pool_address);
         let validator_config = borrow_global<ValidatorConfig>(pool_address);
         let validator_index = validator_config.validator_index;
@@ -1790,18 +1708,6 @@ module supra_framework::stake {
         // Pending active stake can now be active.
         coin::merge(&mut stake_pool.active, coin::extract_all(&mut stake_pool.pending_active));
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-        // Additionally, distribute transaction fees.
-        if (features::collect_and_distribute_gas_fees()) {
-            let fees_table = &mut borrow_global_mut<ValidatorFees>(@supra_framework).fees_table;
-            if (table::contains(fees_table, pool_address)) {
-                let coin = table::remove(fees_table, pool_address);
-                coin::merge(&mut stake_pool.active, coin);
-            };
-        };
-
-=======
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Pending inactive stake is only fully unlocked and moved into inactive if the current lockup cycle has expired
         let current_lockup_expiration = stake_pool.locked_until_secs;
         if (get_reconfig_start_time_secs() >= current_lockup_expiration) {
@@ -2002,17 +1908,11 @@ module supra_framework::stake {
     const LOCKUP_CYCLE_SECONDS: u64 = 3600;
 
     #[test_only]
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
     public fun initialize_for_test(supra_framework: &signer) {
         reconfiguration_state::initialize(supra_framework);
         initialize_for_test_custom(supra_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 100, 1000000);
-=======
-    public fun initialize_for_test(aptos_framework: &signer) {
-        reconfiguration_state::initialize(aptos_framework);
-        initialize_for_test_custom(aptos_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 100, 1000000);
         // In the test environment, the periodical_reward_rate_decrease feature is initially turned off.
-        features::change_feature_flags_for_testing(aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+        features::change_feature_flags_for_testing(supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
     }
 
     #[test_only]
@@ -2021,16 +1921,9 @@ module supra_framework::stake {
         operator: &signer,
         pool_address: address,
         should_end_epoch: bool,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires SupraCoinCapabilities, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires SupraCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let pk_bytes = ed25519::unvalidated_public_key_to_bytes(pk);
         rotate_consensus_key(operator, pool_address, pk_bytes);
-=======
-    ) acquires AptosCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        let pk_bytes = bls12381::public_key_to_bytes(pk);
-        let pop_bytes = bls12381::proof_of_possession_to_bytes(pop);
-        rotate_consensus_key(operator, pool_address, pk_bytes, pop_bytes);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         join_validator_set(operator, pool_address);
         if (should_end_epoch) {
             end_epoch();
@@ -2039,11 +1932,7 @@ module supra_framework::stake {
 
     #[test_only]
     public fun fast_forward_to_unlock(pool_address: address)
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    acquires SupraCoinCapabilities, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    acquires AptosCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    acquires SupraCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let expiration_time = get_lockup_secs(pool_address);
         timestamp::update_global_time_for_test_secs(expiration_time);
         end_epoch();
@@ -2114,11 +2003,7 @@ module supra_framework::stake {
         amount: u64,
         should_join_validator_set: bool,
         should_end_epoch: bool,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let validator_address = signer::address_of(validator);
         account::create_account_for_test(validator_address);
 
@@ -2210,17 +2095,10 @@ module supra_framework::stake {
     public entry fun test_inactive_validator_can_add_stake_if_exceeding_max_allowed(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, false, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, false, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Add more stake to exceed max. This should fail.
         mint_and_add_stake(validator, 9901);
@@ -2232,13 +2110,8 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 100000);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test_custom(aptos_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 100000);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Have one validator join the set to ensure the validator set is not empty when main validator joins.
         let (_sk_1, pk_1) = generate_identity();
         initialize_test_validator(&pk_1, validator_1, 100, true, true);
@@ -2256,13 +2129,8 @@ module supra_framework::stake {
     public entry fun test_active_validator_cannot_add_stake_if_exceeding_max_allowed(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Validator joins validator set and waits for epoch end so it's in the validator set.
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
@@ -2276,13 +2144,8 @@ module supra_framework::stake {
     public entry fun test_active_validator_with_pending_inactive_stake_cannot_add_stake_if_exceeding_max_allowed(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Validator joins validator set and waits for epoch end so it's in the validator set.
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
@@ -2301,21 +2164,12 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk_1, pk_1) = generate_identity();
         let (_sk_2, pk_2) = generate_identity();
         initialize_test_validator(&pk_1, validator_1, 100, true, false);
         initialize_test_validator(&pk_2, validator_2, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk_1, pk_1, pop_1) = generate_identity();
-        let (_sk_2, pk_2, pop_2) = generate_identity();
-        initialize_test_validator(&pk_1, &pop_1, validator_1, 100, true, false);
-        initialize_test_validator(&pk_2, &pop_2, validator_2, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Leave validator set so validator is in pending_inactive state.
         leave_validator_set(validator_1, signer::address_of(validator_1));
@@ -2328,17 +2182,10 @@ module supra_framework::stake {
     public entry fun test_end_to_end(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Validator has a lockup now that they've joined the validator set.
         let validator_address = signer::address_of(validator);
@@ -2392,17 +2239,10 @@ module supra_framework::stake {
     public entry fun test_inactive_validator_with_existing_lockup_join_validator_set(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, false, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, false, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Validator sets lockup before even joining the set and lets half of lockup pass by.
         increase_lockup(validator);
@@ -2425,17 +2265,10 @@ module supra_framework::stake {
     public entry fun test_cannot_reduce_lockup(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, false, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, false, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Increase lockup.
         increase_lockup(validator);
@@ -2451,11 +2284,7 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 50);
         let (_sk_1, pk_1) = generate_identity();
@@ -2477,13 +2306,8 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 10000);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test_custom(aptos_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 10000);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Need 1 validator to be in the active validator set so joining limit works.
         let (_sk_1, pk_1) = generate_identity();
         let (_sk_2, pk_2) = generate_identity();
@@ -2504,11 +2328,7 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // 100% voting power increase is allowed in each epoch.
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 100);
         // Need 1 validator to be in the active validator set so joining limit works.
@@ -2528,13 +2348,8 @@ module supra_framework::stake {
     public entry fun test_pending_active_validator_leaves_validator_set(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Validator joins but epoch hasn't ended, so the validator is still pending_active.
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, false);
@@ -2557,11 +2372,7 @@ module supra_framework::stake {
     public entry fun test_active_validator_cannot_add_more_stake_than_limit_in_multiple_epochs(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 50);
         // Add initial stake and join the validator set.
@@ -2583,11 +2394,7 @@ module supra_framework::stake {
     public entry fun test_active_validator_cannot_add_more_stake_than_limit(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 50);
         let (_sk, pk) = generate_identity();
@@ -2601,11 +2408,7 @@ module supra_framework::stake {
     public entry fun test_active_validator_unlock_partial_stake(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // Reward rate = 10%.
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 100);
         let (_sk, pk) = generate_identity();
@@ -2631,17 +2434,10 @@ module supra_framework::stake {
     public entry fun test_active_validator_can_withdraw_all_stake_and_rewards_at_once(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         let validator_address = signer::address_of(validator);
         assert!(get_remaining_lockup_secs(validator_address) == LOCKUP_CYCLE_SECONDS, 0);
 
@@ -2675,17 +2471,10 @@ module supra_framework::stake {
     public entry fun test_active_validator_unlocking_more_than_available_stake_should_cap(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, false, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, false, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Validator unlocks more stake than they have active. This should limit the unlock to 100.
         unlock(validator, 200);
@@ -2696,13 +2485,8 @@ module supra_framework::stake {
     public entry fun test_active_validator_withdraw_should_cap_by_inactive_stake(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // Initial balance = 900 (idle) + 100 (staked) = 1000.
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
@@ -2726,17 +2510,10 @@ module supra_framework::stake {
     public entry fun test_active_validator_can_reactivate_pending_inactive_stake(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Validator unlocks stake, which gets moved into pending_inactive.
         unlock(validator, 50);
@@ -2752,17 +2529,10 @@ module supra_framework::stake {
     public entry fun test_active_validator_reactivate_more_than_available_pending_inactive_stake_should_cap(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Validator tries to reactivate more than available pending_inactive stake, which should limit to 50.
         unlock(validator, 50);
@@ -2776,17 +2546,10 @@ module supra_framework::stake {
     public entry fun test_active_validator_having_insufficient_remaining_stake_after_withdrawal_gets_kicked(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Unlock enough coins that the remaining is not enough to meet the min required.
         let validator_address = signer::address_of(validator);
@@ -2811,19 +2574,11 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk_1, pk_1) = generate_identity();
         let (_sk_2, pk_2) = generate_identity();
         initialize_test_validator(&pk_1, validator, 100, true, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk_1, pk_1, pop_1) = generate_identity();
-        let (_sk_2, pk_2, pop_2) = generate_identity();
-        initialize_test_validator(&pk_1, &pop_1, validator, 100, true, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // We need a second validator here just so the first validator can leave.
         initialize_test_validator(&pk_2, validator_2, 100, true, true);
 
@@ -2863,19 +2618,11 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk_1, pk_1) = generate_identity();
         let (_sk_2, pk_2) = generate_identity();
         initialize_test_validator(&pk_1, validator, 100, true, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk_1, pk_1, pop_1) = generate_identity();
-        let (_sk_2, pk_2, pop_2) = generate_identity();
-        initialize_test_validator(&pk_1, &pop_1, validator, 100, true, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         // We need a second validator here just so the first validator can leave.
         initialize_test_validator(&pk_2, validator_2, 100, true, true);
 
@@ -2902,11 +2649,7 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(supra_framework, 50, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 10, 50);
         let (_sk_1, pk_1) = generate_identity();
@@ -2927,11 +2670,7 @@ module supra_framework::stake {
         validator_1: &signer,
         validator_2: &signer,
         validator_3: &signer
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let validator_1_address = signer::address_of(validator_1);
         let validator_2_address = signer::address_of(validator_2);
         let validator_3_address = signer::address_of(validator_3);
@@ -3024,17 +2763,10 @@ module supra_framework::stake {
     public entry fun test_delegated_staking_with_owner_cap(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test_custom(supra_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 100, 100);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 0, false, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test_custom(aptos_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, true, 1, 100, 100);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 0, false, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         let owner_cap = extract_owner_cap(validator);
 
         // Add stake when the validator is not yet activated.
@@ -3083,13 +2815,8 @@ module supra_framework::stake {
     public entry fun test_validator_cannot_join_post_genesis(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test_custom(supra_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, false, 1, 100, 100);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test_custom(aptos_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, false, 1, 100, 100);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Joining the validator set should fail as post genesis validator set change is not allowed.
         let (_sk, pk) = generate_identity();
@@ -3101,17 +2828,10 @@ module supra_framework::stake {
     public entry fun test_invalid_pool_address(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, true, true);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, true, true);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
         join_validator_set(validator, @0x234);
     }
 
@@ -3120,17 +2840,10 @@ module supra_framework::stake {
     public entry fun test_validator_cannot_leave_post_genesis(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test_custom(supra_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, false, 1, 100, 100);
         let (_sk, pk) = generate_identity();
         initialize_test_validator(&pk, validator, 100, false, false);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test_custom(aptos_framework, 100, 10000, LOCKUP_CYCLE_SECONDS, false, 1, 100, 100);
-        let (_sk, pk, pop) = generate_identity();
-        initialize_test_validator(&pk, &pop, validator, 100, false, false);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Bypass the check to join. This is the same function called during Genesis.
         let validator_address = signer::address_of(validator);
@@ -3156,11 +2869,7 @@ module supra_framework::stake {
         validator_3: &signer,
         validator_4: &signer,
         validator_5: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let v1_addr = signer::address_of(validator_1);
         let v2_addr = signer::address_of(validator_2);
         let v3_addr = signer::address_of(validator_3);
@@ -3229,11 +2938,7 @@ module supra_framework::stake {
         validator_3: &signer,
         validator_4: &signer,
         validator_5: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let v1_addr = signer::address_of(validator_1);
         let v2_addr = signer::address_of(validator_2);
         let v3_addr = signer::address_of(validator_3);
@@ -3296,13 +3001,8 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         let validator_1_address = signer::address_of(validator_1);
         let validator_2_address = signer::address_of(validator_2);
@@ -3349,13 +3049,8 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         let genesis_time_in_secs = timestamp::now_seconds();
 
@@ -3410,13 +3105,8 @@ module supra_framework::stake {
     public entry fun test_update_performance_statistics_should_not_fail_due_to_out_of_bounds(
         supra_framework: &signer,
         validator: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         let validator_address = signer::address_of(validator);
         let (_sk, pk) = generate_identity();
@@ -3537,23 +3227,13 @@ module supra_framework::stake {
         supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires AllowedValidators, OwnerCapability, StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(supra_framework);
         let (_sk_1, pk_1) = generate_identity();
         let (_sk_2, pk_2) = generate_identity();
         initialize_test_validator(&pk_1, validator_1, 100, true, false);
         initialize_test_validator(&pk_2, validator_2, 100, true, true);
         assert!(vector::length(&borrow_global<ValidatorSet>(@supra_framework).active_validators) == 2, 0);
-=======
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        let (_sk_1, pk_1, pop_1) = generate_identity();
-        let (_sk_2, pk_2, pop_2) = generate_identity();
-        initialize_test_validator(&pk_1, &pop_1, validator_1, 100, true, false);
-        initialize_test_validator(&pk_2, &pop_2, validator_2, 100, true, true);
-        assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 2, 0);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 
         // Remove validator 1 from the active validator set. Only validator 2 remains.
         let validator_to_remove = signer::address_of(validator_1);
@@ -3650,11 +3330,7 @@ module supra_framework::stake {
 
     #[test_only]
     public fun end_epoch(
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-    ) acquires StakePool, SupraCoinCapabilities, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-=======
-    ) acquires AptosCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
+    ) acquires SupraCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         // Set the number of blocks to 1, to give out rewards to non-failing validators.
         set_validator_perf_at_least_one_block();
         timestamp::fast_forward_seconds(EPOCH_DURATION);
@@ -3734,77 +3410,4 @@ module supra_framework::stake {
         let (numerator, denominator) = staking_config::get_reward_rate(&staking_config::get());
         amount + amount * numerator / denominator
     }
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/stake.move
-
-    #[test_only]
-    public fun get_validator_fee(validator_addr: address): u64 acquires ValidatorFees {
-        let fees_table = &borrow_global<ValidatorFees>(@supra_framework).fees_table;
-        let coin = table::borrow(fees_table, validator_addr);
-        coin::value(coin)
-    }
-
-    #[test_only]
-    public fun assert_no_fees_for_validator(validator_addr: address) acquires ValidatorFees {
-        let fees_table = &borrow_global<ValidatorFees>(@supra_framework).fees_table;
-        assert!(!table::contains(fees_table, validator_addr), 0);
-    }
-
-    #[test_only]
-    const COLLECT_AND_DISTRIBUTE_GAS_FEES: u64 = 6;
-
-    #[test(supra_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234, validator_3 = @0x345)]
-    fun test_distribute_validator_fees(
-        supra_framework: &signer,
-        validator_1: &signer,
-        validator_2: &signer,
-        validator_3: &signer,
-    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet, ValidatorFees {
-        // Make sure that fees collection and distribution is enabled.
-        features::change_feature_flags_for_testing(supra_framework, vector[COLLECT_AND_DISTRIBUTE_GAS_FEES], vector[]);
-        assert!(features::collect_and_distribute_gas_fees(), 0);
-
-        // Initialize staking and validator fees table.
-        initialize_for_test(supra_framework);
-        initialize_validator_fees(supra_framework);
-
-        let validator_1_address = signer::address_of(validator_1);
-        let validator_2_address = signer::address_of(validator_2);
-        let validator_3_address = signer::address_of(validator_3);
-
-        // Validators join the set and epoch ends.
-        let (_sk_1, pk_1) = generate_identity();
-        let (_sk_2, pk_2) = generate_identity();
-        let (_sk_3, pk_3) = generate_identity();
-        initialize_test_validator(&pk_1, validator_1, 100, true, false);
-        initialize_test_validator(&pk_2, validator_2, 100, true, false);
-        initialize_test_validator(&pk_3, validator_3, 100, true, true);
-
-        // Next, simulate fees collection during three blocks, where proposers are
-        // validators 1, 2, and 1 again.
-        add_transaction_fee(validator_1_address, mint_coins(100));
-        add_transaction_fee(validator_2_address, mint_coins(500));
-        add_transaction_fee(validator_1_address, mint_coins(200));
-
-        // Fess have to be assigned to the right validators, but not
-        // distributed yet.
-        assert!(get_validator_fee(validator_1_address) == 300, 0);
-        assert!(get_validator_fee(validator_2_address) == 500, 0);
-        assert_no_fees_for_validator(validator_3_address);
-        assert_validator_state(validator_1_address, 100, 0, 0, 0, 2);
-        assert_validator_state(validator_2_address, 100, 0, 0, 0, 1);
-        assert_validator_state(validator_3_address, 100, 0, 0, 0, 0);
-
-        end_epoch();
-
-        // Epoch ended. Validators must have recieved their rewards and, most importantly,
-        // their fees.
-        assert_no_fees_for_validator(validator_1_address);
-        assert_no_fees_for_validator(validator_2_address);
-        assert_no_fees_for_validator(validator_3_address);
-        assert_validator_state(validator_1_address, 401, 0, 0, 0, 2);
-        assert_validator_state(validator_2_address, 601, 0, 0, 0, 1);
-        assert_validator_state(validator_3_address, 101, 0, 0, 0, 0);
-    }
-=======
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/stake.move
 }

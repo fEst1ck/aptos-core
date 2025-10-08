@@ -1,21 +1,12 @@
 /// This defines the fungible asset module that can issue fungible asset of any `Metadata` object. The
 /// metadata object can be any object that equipped with `Metadata` resource.
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/fungible_asset.move
 module supra_framework::fungible_asset {
     use supra_framework::aggregator_v2::{Self, Aggregator};
     use supra_framework::create_signer;
     use supra_framework::event;
     use supra_framework::function_info::{Self, FunctionInfo};
     use supra_framework::object::{Self, Object, ConstructorRef, DeleteRef, ExtendRef};
-=======
-module aptos_framework::fungible_asset {
-    use aptos_framework::aggregator_v2::{Self, Aggregator};
-    use aptos_framework::create_signer;
-    use aptos_framework::event;
-    use aptos_framework::function_info::{Self, FunctionInfo};
-    use aptos_framework::object::{Self, Object, ConstructorRef, DeleteRef, ExtendRef};
-    use aptos_framework::permissioned_signer;
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/fungible_asset.move
+    use supra_framework::permissioned_signer;
     use std::string;
     use std::features;
 
@@ -170,16 +161,12 @@ module aptos_framework::fungible_asset {
         derived_balance_function: Option<FunctionInfo>,
     }
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/fungible_asset.move
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
-=======
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
     struct DeriveSupply has key {
         dispatch_function: Option<FunctionInfo>
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/fungible_asset.move
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// The store object that holds concurrent fungible asset balance.
     struct ConcurrentFungibleBalance has key {
         /// The balance of the fungible metadata.
@@ -397,20 +384,7 @@ module aptos_framework::fungible_asset {
                 )
             );
         });
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/fungible_asset.move
-
-        // Cannot register hook for SUPRA.
-        assert!(
-            object::address_from_constructor_ref(constructor_ref) != @supra_fungible_asset,
-            error::permission_denied(ESUP_NOT_DISPATCHABLE)
-        );
-        assert!(
-            !object::can_generate_delete_ref(constructor_ref),
-            error::invalid_argument(EOBJECT_IS_DELETABLE)
-        );
-=======
         register_dispatch_function_sanity_check(constructor_ref);
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/fungible_asset.move
         assert!(
             !exists<DispatchFunctionStore>(
                 object::address_from_constructor_ref(constructor_ref)
@@ -1215,15 +1189,6 @@ module aptos_framework::fungible_asset {
         let store = borrow_global_mut<FungibleStore>(store_addr);
         assert!(metadata == store.metadata, error::invalid_argument(EFUNGIBLE_ASSET_AND_STORE_MISMATCH));
 
-<<<<<<< HEAD:aptos-move/framework/supra-framework/sources/fungible_asset.move
-        if (amount == 0) return;
-
-        if (store.balance == 0 && concurrent_fungible_balance_exists_inline(store_addr)) {
-            let balance_resource = borrow_global_mut<ConcurrentFungibleBalance>(store_addr);
-            aggregator_v2::add(&mut balance_resource.balance, amount);
-        } else {
-            store.balance = store.balance + amount;
-=======
         if (amount != 0) {
             if (store.balance == 0 && concurrent_fungible_balance_exists_inline(store_addr)) {
                 let balance_resource = borrow_global_mut<ConcurrentFungibleBalance>(store_addr);
@@ -1231,7 +1196,6 @@ module aptos_framework::fungible_asset {
             } else {
                 store.balance = store.balance + amount;
             };
->>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/sources/fungible_asset.move
         };
         amount
     }
