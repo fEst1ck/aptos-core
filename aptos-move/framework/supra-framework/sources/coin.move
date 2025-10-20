@@ -1227,6 +1227,13 @@ module supra_framework::coin {
                 !coin_store.frozen,
                 error::permission_denied(EFROZEN),
             );
+            if (std::features::module_event_migration_enabled()) {
+                event::emit(
+                    CoinWithdraw {
+                        coin_type: type_name<CoinType>(), account: account_addr, amount: coin_amount_to_withdraw
+                    }
+                );
+            };
             event::emit_event<WithdrawEvent>(
                 &mut coin_store.withdraw_events,
                 WithdrawEvent { amount: coin_amount_to_withdraw },
