@@ -894,10 +894,15 @@ module supra_framework::coin {
                 !coin_store.frozen,
                 error::permission_denied(EFROZEN),
             );
-                event::emit_event<DepositEvent>(
-                    &mut coin_store.deposit_events,
-                    DepositEvent { amount: coin.value },
+            if (std::features::module_event_migration_enabled()) {
+                event::emit(
+                    CoinDeposit { coin_type: type_name<CoinType>(), account: account_addr, amount: coin.value }
                 );
+            };
+            event::emit_event<DepositEvent>(
+                &mut coin_store.deposit_events,
+                DepositEvent { amount: coin.value },
+            );
             merge(&mut coin_store.coin, coin);
         } else {
             let metadata = ensure_paired_metadata<CoinType>();
@@ -1023,8 +1028,30 @@ module supra_framework::coin {
 
     /// Upgrade total supply to use a parallelizable implementation if it is
     /// available.
-    public entry fun upgrade_supply<CoinType>(_account: &signer) {
-        abort error::invalid_state(ECOIN_SUPPLY_UPGRADE_NOT_SUPPORTED)
+    public entry fun upgrade_supply<CoinType>(account: &signer) acquires CoinInfo, SupplyConfig {
+        let account_addr = signer::address_of(account);
+
+        // Only coin creators can upgrade total supply.
+        assert!(
+            coin_address<CoinType>() == account_addr,
+            error::invalid_argument(ECOIN_INFO_ADDRESS_MISMATCH),
+        );
+
+        // Can only succeed once on-chain governance agreed on the upgrade.
+        assert!(
+            borrow_global_mut<SupplyConfig>(@aptos_framework).allow_upgrades,
+            error::permission_denied(ECOIN_SUPPLY_UPGRADE_NOT_SUPPORTED)
+        );
+
+        let maybe_supply = &mut borrow_global_mut<CoinInfo<CoinType>>(account_addr).supply;
+        if (option::is_some(maybe_supply)) {
+            let supply = option::borrow_mut(maybe_supply);
+
+            // If supply is tracked and the current implementation uses an integer - upgrade.
+            if (!optional_aggregator::is_parallelizable(supply)) {
+                optional_aggregator::switch(supply);
+            }
+        }
     }
 
     /// Creates a new Coin with given `CoinType` and returns minting/freezing/burning capabilities.
@@ -1843,6 +1870,50 @@ module supra_framework::coin {
         optional_aggregator::add(supply, MAX_U128);
         optional_aggregator::add(supply, 1);
         optional_aggregator::sub(supply, 1);
+    }
+
+    #[test(framework = @supra_framework)]
+    #[expected_failure(abort_code = 0x5000B, location = supra_framework::coin)]
+    fun test_supply_upgrade_fails(framework: signer) acquires CoinInfo, SupplyConfig {
+        initialize_supply_config(&framework);
+        aggregator_factory::initialize_aggregator_factory_for_test(&framework);
+        initialize_with_integer(&framework);
+
+        let maybe_supply = &mut borrow_global_mut<CoinInfo<FakeMoney>>(coin_address<FakeMoney>()).supply;
+        let supply = option::borrow_mut(maybe_supply);
+
+        // Supply should be non-parallelizable.
+        assert!(!optional_aggregator::is_parallelizable(supply), 0);
+
+        optional_aggregator::add(supply, 100);
+        optional_aggregator::sub(supply, 50);
+        optional_aggregator::add(supply, 950);
+        assert!(optional_aggregator::read(supply) == 1000, 0);
+
+        upgrade_supply<FakeMoney>(&framework);
+    }
+
+    #[test(framework = @supra_framework)]
+    fun test_supply_upgrade(framework: signer) acquires CoinInfo, SupplyConfig {
+        initialize_supply_config(&framework);
+        aggregator_factory::initialize_aggregator_factory_for_test(&framework);
+        initialize_with_integer(&framework);
+
+        // Ensure we have a non-parellelizable non-zero supply.
+        let maybe_supply = &mut borrow_global_mut<CoinInfo<FakeMoney>>(coin_address<FakeMoney>()).supply;
+        let supply = option::borrow_mut(maybe_supply);
+        assert!(!optional_aggregator::is_parallelizable(supply), 0);
+        optional_aggregator::add(supply, 100);
+
+        // Upgrade.
+        allow_supply_upgrades(&framework, true);
+        upgrade_supply<FakeMoney>(&framework);
+
+        // Check supply again.
+        let maybe_supply = &mut borrow_global_mut<CoinInfo<FakeMoney>>(coin_address<FakeMoney>()).supply;
+        let supply = option::borrow_mut(maybe_supply);
+        assert!(optional_aggregator::is_parallelizable(supply), 0);
+        assert!(optional_aggregator::read(supply) == 100, 0);
     }
 
     #[test_only]
