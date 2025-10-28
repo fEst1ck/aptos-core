@@ -478,11 +478,11 @@ spec supra_framework::transaction_validation {
         use std::option;
         use aptos_std::type_info;
         use supra_framework::account::{Account};
-        use supra_framework::aptos_coin::{SupraCoin};
+        use supra_framework::supra_coin::{SupraCoin};
         use supra_framework::coin;
         use supra_framework::coin::{CoinStore, CoinInfo};
         use supra_framework::optional_aggregator;
-        use supra_framework::transaction_fee::{AptosCoinCapabilities, AptosCoinMintCapability};
+        use supra_framework::transaction_fee::{SupraCoinCapabilities, SupraCoinMintCapability};
 
         account: signer;
         gas_payer: address;

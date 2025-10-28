@@ -1,8 +1,8 @@
 // This module provides an interface to burn or collect and redistribute transaction fees.
 module supra_framework::transaction_fee {
     use supra_framework::coin::{Self, AggregatableCoin, BurnCapability, MintCapability};
-    use supra_framework::aptos_account;
-    use supra_framework::aptos_coin::AptosCoin;
+    use supra_framework::supra_account;
+    use supra_framework::supra_coin::SupraCoin;
     use supra_framework::fungible_asset::BurnRef;
     use supra_framework::system_addresses;
     use std::error;
@@ -127,9 +127,9 @@ module supra_framework::transaction_fee {
     }
 
     /// Only called during genesis.
-    public(friend) fun store_aptos_coin_mint_cap(aptos_framework: &signer, mint_cap: MintCapability<AptosCoin>) {
-        system_addresses::assert_aptos_framework(aptos_framework);
-        move_to(aptos_framework, AptosCoinMintCapability { mint_cap })
+    public(friend) fun store_aptos_coin_mint_cap(supra_framework: &signer, mint_cap: MintCapability<SupraCoin>) {
+        system_addresses::assert_supra_framework(supra_framework);
+        move_to(supra_framework, SupraCoinMintCapability { mint_cap })
     }
 
     // Called by the VM after epilogue.
@@ -143,21 +143,21 @@ module supra_framework::transaction_fee {
     /// DEPRECATED: Stores information about the block proposer and the amount of fees
     /// collected when executing the block.
     struct CollectedFeesPerBlock has key {
-        amount: AggregatableCoin<AptosCoin>,
+        amount: AggregatableCoin<SupraCoin>,
         proposer: Option<address>,
         burn_percentage: u8,
     }
 
     #[deprecated]
     /// DEPRECATED
-    public fun initialize_fee_collection_and_distribution(_aptos_framework: &signer, _burn_percentage: u8) {
+    public fun initialize_fee_collection_and_distribution(_supra_framework: &signer, _burn_percentage: u8) {
         abort error::not_implemented(ENO_LONGER_SUPPORTED)
     }
 
     #[deprecated]
     /// DEPRECATED
     public fun upgrade_burn_percentage(
-        _aptos_framework: &signer,
+        _supra_framework: &signer,
         _new_burn_percentage: u8
     ) {
         abort error::not_implemented(ENO_LONGER_SUPPORTED)

@@ -497,7 +497,7 @@ module supra_framework::stake {
     /// Returns the pending transaction fee that is accumulated in current epoch.
     public fun get_pending_transaction_fee(): vector<u64> acquires PendingTransactionFee {
         let result = vector::empty();
-        let fee_table = &borrow_global<PendingTransactionFee>(@aptos_framework).pending_fee_by_validator;
+        let fee_table = &borrow_global<PendingTransactionFee>(@supra_framework).pending_fee_by_validator;
         let num_validators = fee_table.compute_length();
         let i = 0;
         while (i < num_validators) {
@@ -578,7 +578,7 @@ module supra_framework::stake {
     public fun initialize_pending_transaction_fee(framework: &signer) {
         system_addresses::assert_supra_framework(framework);
 
-        if (!exists<PendingTransactionFee>(@aptos_framework)) {
+        if (!exists<PendingTransactionFee>(@supra_framework)) {
             move_to(framework, PendingTransactionFee {
                 // The max leaf order is set to 10 because there is a existing limitation that a
                 // resource can only have 10 aggregators at max.
@@ -598,7 +598,7 @@ module supra_framework::stake {
         assert!(fee_distribution_validator_indices.length() == fee_amounts_octa.length());
 
         let num_validators_to_distribute = fee_distribution_validator_indices.length();
-        let pending_fee = borrow_global_mut<PendingTransactionFee>(@aptos_framework);
+        let pending_fee = borrow_global_mut<PendingTransactionFee>(@supra_framework);
         let i = 0;
         while (i < num_validators_to_distribute) {
             let validator_index = fee_distribution_validator_indices[i];
@@ -1442,8 +1442,8 @@ module supra_framework::stake {
             validator_index = validator_index + 1;
         };
 
-        if (exists<PendingTransactionFee>(@aptos_framework)) {
-            let pending_fee_by_validator = &mut borrow_global_mut<PendingTransactionFee>(@aptos_framework).pending_fee_by_validator;
+        if (exists<PendingTransactionFee>(@supra_framework)) {
+            let pending_fee_by_validator = &mut borrow_global_mut<PendingTransactionFee>(@supra_framework).pending_fee_by_validator;
             assert!(pending_fee_by_validator.is_empty(), error::internal(ETRANSACTION_FEE_NOT_FULLY_DISTRIBUTED));
             validator_set.active_validators.for_each_ref(|v| pending_fee_by_validator.add(v.config.validator_index, aggregator_v2::create_unbounded_aggregator<u64>()));
         };
@@ -1654,8 +1654,8 @@ module supra_framework::stake {
         let fee_pending_inactive = 0;
         let fee_active = 0;
 
-        if (exists<PendingTransactionFee>(@aptos_framework)) {
-            let pending_fee_by_validator = &mut borrow_global_mut<PendingTransactionFee>(@aptos_framework).pending_fee_by_validator;
+        if (exists<PendingTransactionFee>(@supra_framework)) {
+            let pending_fee_by_validator = &mut borrow_global_mut<PendingTransactionFee>(@supra_framework).pending_fee_by_validator;
             if (pending_fee_by_validator.contains(&validator_index)) {
                 let fee_octa = pending_fee_by_validator.remove(&validator_index).read();
                 let stake_active = (coin::value(&stake_pool.active) as u128);
@@ -3242,32 +3242,32 @@ module supra_framework::stake {
         assert!(get_validator_state(validator_to_remove) == VALIDATOR_STATUS_PENDING_INACTIVE, 1);
     }
 
-    #[test(vm = @0x0, aptos_framework = @0x1, validator_0 = @0x123, validator_1 = @0x234)]
+    #[test(vm = @0x0, supra_framework = @0x1, validator_0 = @0x123, validator_1 = @0x234)]
     public entry fun test_transaction_fee(
         vm: &signer,
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_0: &signer,
         validator_1: &signer,
     ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        initialize_pending_transaction_fee(aptos_framework);
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_distribute_transaction_fee_feature()], vector[]);
+        initialize_for_test(supra_framework);
+        initialize_pending_transaction_fee(supra_framework);
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_distribute_transaction_fee_feature()], vector[]);
         let address_0 = signer::address_of(validator_0);
         let address_1 = signer::address_of(validator_1);
         let (_sk_0, pk_0) = generate_identity();
         let (_sk_1, pk_1) = generate_identity();
         initialize_test_validator(&pk_0, validator_0, 100, true, false);
         initialize_test_validator(&pk_1, validator_1, 100, true, true);
-        assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 2, 0);
+        assert!(vector::length(&borrow_global<ValidatorSet>(@supra_framework).active_validators) == 2, 0);
 
         let validator_to_remove = signer::address_of(validator_0);
-        remove_validators(aptos_framework, &vector[validator_to_remove]);
-        assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 1, 0);
+        remove_validators(supra_framework, &vector[validator_to_remove]);
+        assert!(vector::length(&borrow_global<ValidatorSet>(@supra_framework).active_validators) == 1, 0);
 
         // validator 0 is pending inactive, validator 1 is active, both should get fee.
 
         {
-            let fee_table = &borrow_global<PendingTransactionFee>(@aptos_framework).pending_fee_by_validator;
+            let fee_table = &borrow_global<PendingTransactionFee>(@supra_framework).pending_fee_by_validator;
             assert!(fee_table.contains(&0), 0);
             assert!(fee_table.contains(&1), 0);
         };
@@ -3278,7 +3278,7 @@ module supra_framework::stake {
         record_fee(vm, vector[get_validator_index(address_0), get_validator_index(address_1)], vector[10, 220]);
 
         {
-            let fee_table = &borrow_global<PendingTransactionFee>(@aptos_framework).pending_fee_by_validator;
+            let fee_table = &borrow_global<PendingTransactionFee>(@supra_framework).pending_fee_by_validator;
             assert!(fee_table.borrow(&get_validator_index(address_0)).read() == 11, 0);
             assert!(fee_table.borrow(&get_validator_index(address_1)).read() == 222, 0);
             end_epoch();
@@ -3287,7 +3287,7 @@ module supra_framework::stake {
             assert!(event::was_event_emitted(&DistributeTransactionFee { pool_address: address_1, fee_amount: 222 }), 0);
         };
 
-        let fee_table = &borrow_global<PendingTransactionFee>(@aptos_framework).pending_fee_by_validator;
+        let fee_table = &borrow_global<PendingTransactionFee>(@supra_framework).pending_fee_by_validator;
         // validator 1 is at index 0 now.
         assert!(fee_table.contains(&0), 0);
         assert!(!fee_table.contains(&1), 0);
@@ -3298,26 +3298,26 @@ module supra_framework::stake {
         assert!(event::emitted_events<DistributeTransactionFee>().length() == 2, 0);
     }
 
-    #[test(vm = @0x0, aptos_framework = @0x1, validator_0 = @0x123, validator_1 = @0x234)]
+    #[test(vm = @0x0, supra_framework = @0x1, validator_0 = @0x123, validator_1 = @0x234)]
     #[expected_failure(abort_code = 0x10002, location = 0x1::big_ordered_map)]
     public entry fun test_transaction_fee_non_validator(
         vm: &signer,
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_0: &signer,
         validator_1: &signer,
     ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
-        initialize_for_test(aptos_framework);
-        initialize_pending_transaction_fee(aptos_framework);
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_distribute_transaction_fee_feature()], vector[]);
+        initialize_for_test(supra_framework);
+        initialize_pending_transaction_fee(supra_framework);
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_distribute_transaction_fee_feature()], vector[]);
         let (_sk_0, pk_0) = generate_identity();
         let (_sk_1, pk_1) = generate_identity();
         initialize_test_validator(&pk_0, validator_0, 100, true, false);
         initialize_test_validator(&pk_1, validator_1, 100, true, true);
-        assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 2, 0);
+        assert!(vector::length(&borrow_global<ValidatorSet>(@supra_framework).active_validators) == 2, 0);
 
         let validator_to_remove = signer::address_of(validator_0);
-        remove_validators(aptos_framework, &vector[validator_to_remove]);
-        assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 1, 0);
+        remove_validators(supra_framework, &vector[validator_to_remove]);
+        assert!(vector::length(&borrow_global<ValidatorSet>(@supra_framework).active_validators) == 1, 0);
 
         // validator 0 is pending inactive, validator 1 is active.
 

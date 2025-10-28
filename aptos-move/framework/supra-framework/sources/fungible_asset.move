@@ -413,7 +413,7 @@ module supra_framework::fungible_asset {
         // Verify that caller type matches callee type so wrongly typed function cannot be registered.
         option::for_each_ref(&dispatch_function, |supply_function| {
             let function_info = function_info::new_function_info_from_address(
-                @aptos_framework,
+                @supra_framework,
                 string::utf8(b"dispatchable_fungible_asset"),
                 string::utf8(b"dispatchable_derived_supply"),
             );
@@ -1491,7 +1491,7 @@ module supra_framework::fungible_asset {
     }
 
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
 
     #[test(creator = @0xcafe)]
     fun test_metadata_basic_flow(creator: &signer) acquires Metadata, Supply, ConcurrentSupply {
@@ -1902,8 +1902,8 @@ module supra_framework::fungible_asset {
         creator: &signer,
         aaron: &signer,
     ) acquires FungibleStore, Supply, ConcurrentSupply, DispatchFunctionStore, ConcurrentFungibleBalance {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (mint_ref, _, _, _, test_token) = create_fungible_asset(creator);
         let metadata = mint_ref.metadata;
@@ -1947,8 +1947,8 @@ module supra_framework::fungible_asset {
         creator: &signer,
         aaron: &signer,
     ) acquires FungibleStore, Supply, ConcurrentSupply, DispatchFunctionStore, ConcurrentFungibleBalance {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (mint_ref, _, _, _, test_token) = create_fungible_asset(creator);
         let metadata = mint_ref.metadata;
