@@ -28,7 +28,7 @@ module supra_framework::stake {
     use aptos_std::big_ordered_map::{Self, BigOrderedMap};
     use aptos_std::table::Table;
     use supra_framework::aggregator_v2::{Self, Aggregator};
-    use supra_framework::aptos_coin::AptosCoin;
+    use supra_framework::supra_coin::SupraCoin;
     use supra_framework::account;
     use supra_framework::coin::{Self, Coin, MintCapability};
     use supra_framework::event::{Self, EventHandle};
@@ -576,7 +576,7 @@ module supra_framework::stake {
     }
 
     public fun initialize_pending_transaction_fee(framework: &signer) {
-        system_addresses::assert_aptos_framework(framework);
+        system_addresses::assert_supra_framework(framework);
 
         if (!exists<PendingTransactionFee>(@aptos_framework)) {
             move_to(framework, PendingTransactionFee {
@@ -1333,7 +1333,7 @@ module supra_framework::stake {
     /// 4. The validator's voting power in the validator set is updated to be the corresponding staking pool's voting
     /// power.
     public(friend) fun on_new_epoch(
-    ) acquires AptosCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
+    ) acquires SupraCoinCapabilities, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         let validator_set = borrow_global_mut<ValidatorSet>(@supra_framework);
         let config = staking_config::get();
         let validator_perf = borrow_global_mut<ValidatorPerformance>(@supra_framework);
@@ -1691,7 +1691,7 @@ module supra_framework::stake {
         };
 
         if (std::features::is_distribute_transaction_fee_enabled()) {
-            let mint_cap = &borrow_global<AptosCoinCapabilities>(@aptos_framework).mint_cap;
+            let mint_cap = &borrow_global<SupraCoinCapabilities>(@supra_framework).mint_cap;
             if (fee_active > 0) {
                 coin::merge(&mut stake_pool.active, coin::mint(fee_active, mint_cap));
             };
@@ -1973,7 +1973,7 @@ module supra_framework::stake {
         };
 
         // In the test environment, the periodical_reward_rate_decrease feature is initially turned off.
-        features::change_feature_flags_for_testing(aptos_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
+        features::change_feature_flags_for_testing(supra_framework, vector[], vector[features::get_periodical_reward_rate_decrease_feature()]);
     }
 
     // This function assumes the stake module already the capability to mint aptos coins.
@@ -3248,16 +3248,16 @@ module supra_framework::stake {
         aptos_framework: &signer,
         validator_0: &signer,
         validator_1: &signer,
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(aptos_framework);
         initialize_pending_transaction_fee(aptos_framework);
         features::change_feature_flags_for_testing(aptos_framework, vector[features::get_distribute_transaction_fee_feature()], vector[]);
         let address_0 = signer::address_of(validator_0);
         let address_1 = signer::address_of(validator_1);
-        let (_sk_0, pk_0, pop_0) = generate_identity();
-        let (_sk_1, pk_1, pop_1) = generate_identity();
-        initialize_test_validator(&pk_0, &pop_0, validator_0, 100, true, false);
-        initialize_test_validator(&pk_1, &pop_1, validator_1, 100, true, true);
+        let (_sk_0, pk_0) = generate_identity();
+        let (_sk_1, pk_1) = generate_identity();
+        initialize_test_validator(&pk_0, validator_0, 100, true, false);
+        initialize_test_validator(&pk_1, validator_1, 100, true, true);
         assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 2, 0);
 
         let validator_to_remove = signer::address_of(validator_0);
@@ -3305,14 +3305,14 @@ module supra_framework::stake {
         aptos_framework: &signer,
         validator_0: &signer,
         validator_1: &signer,
-    ) acquires AllowedValidators, AptosCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
+    ) acquires AllowedValidators, SupraCoinCapabilities, OwnerCapability, PendingTransactionFee, StakePool, ValidatorConfig, ValidatorPerformance, ValidatorSet {
         initialize_for_test(aptos_framework);
         initialize_pending_transaction_fee(aptos_framework);
         features::change_feature_flags_for_testing(aptos_framework, vector[features::get_distribute_transaction_fee_feature()], vector[]);
-        let (_sk_0, pk_0, pop_0) = generate_identity();
-        let (_sk_1, pk_1, pop_1) = generate_identity();
-        initialize_test_validator(&pk_0, &pop_0, validator_0, 100, true, false);
-        initialize_test_validator(&pk_1, &pop_1, validator_1, 100, true, true);
+        let (_sk_0, pk_0) = generate_identity();
+        let (_sk_1, pk_1) = generate_identity();
+        initialize_test_validator(&pk_0, validator_0, 100, true, false);
+        initialize_test_validator(&pk_1, validator_1, 100, true, true);
         assert!(vector::length(&borrow_global<ValidatorSet>(@aptos_framework).active_validators) == 2, 0);
 
         let validator_to_remove = signer::address_of(validator_0);
