@@ -579,15 +579,14 @@ module supra_framework::coin {
     // Total supply config
     //
 
-    /// This should be called by on-chain governance to update the config and allow
-    /// or disallow upgradability of total supply.
-
     /// Publishes supply configuration. Initially, upgrading is not allowed.
     public(friend) fun initialize_supply_config(supra_framework: &signer) {
         system_addresses::assert_supra_framework(supra_framework);
         move_to(supra_framework, SupplyConfig { allow_upgrades: false });
     }
-
+    
+    /// This should be called by on-chain governance to update the config and allow
+    /// or disallow upgradability of total supply.
     public fun allow_supply_upgrades(supra_framework: &signer, allowed: bool) acquires SupplyConfig {
         system_addresses::assert_supra_framework(supra_framework);
         let allow_upgrades = &mut borrow_global_mut<SupplyConfig>(@supra_framework).allow_upgrades;
