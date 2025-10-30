@@ -1858,6 +1858,7 @@ module supra_framework::multisig_account {
             2,
             vector[],
             vector[],
+            MINIMAL_TIMEOUT_DURATION,
         );
         assert_multisig_account_exists(multisig_address);
         assert!(owners(multisig_address) == expected_owners, 0);
@@ -1916,6 +1917,7 @@ module supra_framework::multisig_account {
             2,
             vector[],
             vector[],
+            MINIMAL_TIMEOUT_DURATION,
         );
         assert_multisig_account_exists(multisig_address);
         assert!(owners(multisig_address) == expected_owners, 0);

@@ -1212,8 +1212,9 @@ module supra_framework::coin {
         monitor_supply: bool,
         parallelizable: bool,
         limit: u128,
-    ): (BurnCapability<CoinType>, FreezeCapability<CoinType>, MintCapability<CoinType>) {
+    ): (BurnCapability<CoinType>, FreezeCapability<CoinType>, MintCapability<CoinType>) acquires CoinInfo, CoinConversionMap {
         let account_addr = signer::address_of(account);
+        assert_signer_has_permission<CoinType>(account);
 
         assert!(
             coin_address<CoinType>() == account_addr,
@@ -1227,6 +1228,7 @@ module supra_framework::coin {
 
         assert!(string::length(&name) <= MAX_COIN_NAME_LENGTH, error::invalid_argument(ECOIN_NAME_TOO_LONG));
         assert!(string::length(&symbol) <= MAX_COIN_SYMBOL_LENGTH, error::invalid_argument(ECOIN_SYMBOL_TOO_LONG));
+        assert!(decimals <= MAX_DECIMALS, error::invalid_argument(ECOIN_DECIMALS_TOO_LARGE));
 
         let coin_info = CoinInfo<CoinType> {
             name,
@@ -1420,9 +1422,6 @@ module supra_framework::coin {
         };
         amount
     }
-
-    #[test_only]
-    use supra_framework::aggregator;
 
     #[test_only]
     struct FakeMoney {}
@@ -1943,7 +1942,7 @@ module supra_framework::coin {
 
     #[test(framework = @supra_framework)]
     #[expected_failure(abort_code = 0x5000B, location = supra_framework::coin)]
-    fun test_supply_upgrade_fails(framework: signer) acquires CoinInfo, SupplyConfig {
+    fun test_supply_upgrade_fails(framework: signer) acquires CoinInfo, SupplyConfig, CoinConversionMap {
         initialize_supply_config(&framework);
         aggregator_factory::initialize_aggregator_factory_for_test(&framework);
         initialize_with_integer(&framework);
@@ -1963,7 +1962,7 @@ module supra_framework::coin {
     }
 
     #[test(framework = @supra_framework)]
-    fun test_supply_upgrade(framework: signer) acquires CoinInfo, SupplyConfig {
+    fun test_supply_upgrade(framework: signer) acquires CoinInfo, SupplyConfig, CoinConversionMap {
         initialize_supply_config(&framework);
         aggregator_factory::initialize_aggregator_factory_for_test(&framework);
         initialize_with_integer(&framework);

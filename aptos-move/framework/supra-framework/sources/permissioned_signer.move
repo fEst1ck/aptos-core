@@ -20,7 +20,7 @@ module supra_framework::permissioned_signer {
     use std::vector;
     use std::option::{Option, Self};
     use aptos_std::copyable_any::{Self, Any};
-    use supra_framework::big_ordered_map::{Self, BigOrderedMap};
+    use aptos_std::big_ordered_map::{Self, BigOrderedMap};
     use supra_framework::create_signer::create_signer;
     use supra_framework::transaction_context::generate_auid_address;
     use supra_framework::timestamp;

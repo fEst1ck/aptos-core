@@ -14,9 +14,12 @@ module supra_framework::create_signer {
     friend supra_framework::coin;
     friend supra_framework::fungible_asset;
     friend supra_framework::genesis;
+    friend supra_framework::account_abstraction;
     friend supra_framework::multisig_account;
     friend supra_framework::object;
+    friend supra_framework::permissioned_signer;
     friend supra_framework::automation_registry;
+    friend supra_framework::transaction_validation;
 
     public(friend) native fun create_signer(addr: address): signer;
 }
