@@ -455,7 +455,7 @@ module supra_framework::fungible_asset {
         // Cannot register hook for SUPRA.
         assert!(
             object::address_from_constructor_ref(constructor_ref) != @supra_fungible_asset,
-            error::permission_denied(EAPT_NOT_DISPATCHABLE)
+            error::permission_denied(ESUP_NOT_DISPATCHABLE)
         );
         assert!(
             !object::can_generate_delete_ref(constructor_ref),

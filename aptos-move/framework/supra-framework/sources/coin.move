@@ -604,7 +604,7 @@ module supra_framework::coin {
         AggregatableCoin<CoinType> {
             value: aggregator,
         }
-    }    
+    }
 
     /// Returns true if the value of aggregatable coin is zero.
     public(friend) fun is_aggregatable_coin_zero<CoinType>(coin: &AggregatableCoin<CoinType>): bool {
@@ -1990,7 +1990,7 @@ module supra_framework::coin {
         let AggregatableCoin { value } = aggregatable_coin;
         aggregator::destroy(value);
     }
-    
+
     #[test(framework = @supra_framework)]
     public entry fun test_collect_from_and_drain(
         framework: signer,

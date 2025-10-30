@@ -119,20 +119,18 @@ spec supra_framework::stake {
     // Function specifications
     // -----------------------
 
-    spec initialize_validator_fees(supra_framework: &signer) {
-        let aptos_addr = signer::address_of(supra_framework);
-        aborts_if !system_addresses::is_supra_framework_address(aptos_addr);
-        aborts_if exists<ValidatorFees>(aptos_addr);
-        ensures exists<ValidatorFees>(aptos_addr);
-    }
-
     spec initialize_validator(
         account: &signer,
         consensus_pubkey: vector<u8>,
         network_addresses: vector<u8>,
         fullnode_addresses: vector<u8>,
     ){
-        let pubkey_from_pop = bls12381::spec_public_key_from_bytes_with_pop(
+        pragma verify = false;
+
+        include AbortsIfSignerPermissionStake {
+            s: account
+        };
+        let is_public_key_validated = ed25519::spec_public_key_validate_internal(
             consensus_pubkey,
         );
         aborts_if !is_public_key_validated;
@@ -439,15 +437,6 @@ spec supra_framework::stake {
         ensures validator_info.consensus_pubkey == new_consensus_pubkey;
     }
 
-    spec rotate_consensus_key_internal(
-        operator: &signer,
-        pool_address: address,
-        new_consensus_pubkey: vector<u8>,
-        genesis: bool,
-    ) {
-        modifies global<ValidatorConfig>(pool_address);
-    }
-
     spec set_delegated_voter_with_cap(owner_cap: &OwnerCapability, new_voter: address) {
         let pool_address = owner_cap.pool_address;
         let post post_stake_pool = global<StakePool>(pool_address);
@@ -459,8 +448,7 @@ spec supra_framework::stake {
 
     spec on_new_epoch {
         pragma verify = false; // TODO: set because of timeout (property proved).
-        // TODO: Why we need to disable invariants in body? (SUPRA)
-        // pragma disable_invariants_in_body;
+        pragma disable_invariants_in_body;
         // The following resource requirement cannot be discharged by the global
         // invariants because this function is called during genesis.
         include ResourceRequirement;
@@ -524,8 +512,6 @@ spec supra_framework::stake {
         let post post_stake_pool = global<StakePool>(pool_address);
         let post post_active_value = post_stake_pool.active.value;
         let post post_pending_inactive_value = post_stake_pool.pending_inactive.value;
-        let fees_table = global<ValidatorFees>(@supra_framework).fees_table;
-        let post post_fees_table = global<ValidatorFees>(@supra_framework).fees_table;
         let post post_inactive_value = post_stake_pool.inactive.value;
         ensures post_stake_pool.pending_active.value == 0;
         // the amount stored in the stake pool should not changed after the update
@@ -557,7 +543,6 @@ spec supra_framework::stake {
         aborts_if global<ValidatorConfig>(pool_address).validator_index >= len(validator_perf.validators);
 
         let aptos_addr = type_info::type_of<SupraCoin>().account_address;
-        aborts_if !exists<ValidatorFees>(aptos_addr);
 
         let stake_pool = global<StakePool>(pool_address);
 
@@ -769,20 +754,6 @@ spec supra_framework::stake {
             active == initial_stake_amount;
     }
 
-    spec add_transaction_fee(validator_addr: address, fee: Coin<SupraCoin>) {
-        aborts_if !exists<ValidatorFees>(@supra_framework);
-        let fees_table = global<ValidatorFees>(@supra_framework).fees_table;
-        let post post_fees_table = global<ValidatorFees>(@supra_framework).fees_table;
-        let collected_fee = table::spec_get(fees_table, validator_addr);
-        let post post_collected_fee = table::spec_get(post_fees_table, validator_addr);
-        ensures if (table::spec_contains(fees_table, validator_addr)) {
-            post_collected_fee.value == collected_fee.value + fee.value
-        } else {
-            table::spec_contains(post_fees_table, validator_addr) &&
-            table::spec_get(post_fees_table, validator_addr) == fee
-        };
-    }
-
     spec update_voting_power_increase(increase_amount: u64) {
         requires !reconfiguration_state::spec_is_in_progress();
         aborts_if !exists<ValidatorSet>(@supra_framework);
@@ -808,9 +779,9 @@ spec supra_framework::stake {
     }
 
     spec configure_allowed_validators(supra_framework: &signer, accounts: vector<address>) {
-        let supra_framework_address = signer::address_of(supra_framework);
-        aborts_if !system_addresses::is_supra_framework_address(supra_framework_address);
-        let post allowed = global<AllowedValidators>(supra_framework_address);
+        let aptos_framework_address = signer::address_of(supra_framework);
+        aborts_if !system_addresses::is_supra_framework_address(aptos_framework_address);
+        let post allowed = global<AllowedValidators>(aptos_framework_address);
         // Make sure that the accounts of AllowedValidators are always the passed parameter.
         ensures allowed.accounts == accounts;
     }
@@ -963,7 +934,6 @@ spec supra_framework::stake {
         requires exists<StakingConfig>(@supra_framework);
         requires exists<StakingRewardsConfig>(@supra_framework) || !features::spec_periodical_reward_rate_decrease_enabled();
         requires exists<timestamp::CurrentTimeMicroseconds>(@supra_framework);
-        requires exists<ValidatorFees>(@supra_framework);
     }
 
     // Adding helper function in staking_config leads to an unexpected error

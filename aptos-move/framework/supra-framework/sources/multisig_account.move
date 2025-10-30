@@ -546,6 +546,7 @@ module supra_framework::multisig_account {
         num_signatures_required: u64,
         metadata_keys: vector<String>,
         metadata_values: vector<vector<u8>>,
+        timeout_duration: u64,
     ) acquires MultisigAccount {
         create_with_owners_internal(
             multisig_account,
@@ -554,6 +555,7 @@ module supra_framework::multisig_account {
             option::none<SignerCapability>(),
             metadata_keys,
             metadata_values,
+            timeout_duration,
         );
     }
 
@@ -622,6 +624,7 @@ module supra_framework::multisig_account {
         num_signatures_required: u64,
         metadata_keys: vector<String>,
         metadata_values:vector<vector<u8>>,
+        timeout_duration: u64,
     ) acquires MultisigAccount {
         create_with_owners_internal(
             multisig_account,
@@ -630,6 +633,7 @@ module supra_framework::multisig_account {
             option::none<SignerCapability>(),
             metadata_keys,
             metadata_values,
+            timeout_duration
         );
 
         // Rotate the account's auth key to 0x0, which effectively revokes control via auth key.

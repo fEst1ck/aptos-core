@@ -194,17 +194,6 @@ spec supra_framework::transaction_validation {
         // };
     }
 
-    spec automated_transaction_prologue(
-        sender: signer,
-        task_index: u64,
-        txn_gas_price: u64,
-        txn_max_gas_units: u64,
-        txn_expiration_time: u64,
-        chain_id: u8,
-    ) {
-        pragma verify = false;
-    }
-
     /// Aborts if length of public key hashed vector
     /// not equal the number of singers.
     spec multi_agent_script_prologue_extended(
@@ -316,26 +305,6 @@ spec supra_framework::transaction_validation {
         // TODO(fa_migration)
         pragma verify = false;
         include EpilogueGasPayerAbortsIf { gas_payer: signer::address_of(account) };
-    }
-
-    spec automated_transaction_epilogue(
-        account: signer,
-        storage_fee_refunded: u64,
-        txn_gas_price: u64,
-        txn_max_gas_units: u64,
-        gas_units_remaining: u64
-    ) {
-        pragma verify = false;
-    }
-
-    spec epilogue_gas_payer_only(
-        gas_payer: address,
-        storage_fee_refunded: u64,
-        txn_gas_price: u64,
-        txn_max_gas_units: u64,
-        gas_units_remaining: u64
-    ) {
-        pragma verify = false;
     }
 
     spec epilogue(
@@ -539,8 +508,8 @@ spec supra_framework::transaction_validation {
         aborts_if amount_to_mint > 0 && total_supply + amount_to_mint > MAX_U128;
         ensures amount_to_mint > 0 ==> post_total_supply == total_supply + amount_to_mint;
 
-        let aptos_addr = type_info::type_of<SupraCoin>().account_address;
-        aborts_if (amount_to_mint != 0) && !exists<coin::CoinInfo<SupraCoin>>(aptos_addr);
+        let supra_addr = type_info::type_of<SupraCoin>().account_address;
+        aborts_if (amount_to_mint != 0) && !exists<coin::CoinInfo<SupraCoin>>(supra_addr);
         include coin::CoinAddAbortsIf<SupraCoin> { amount: amount_to_mint };
     }
 }
