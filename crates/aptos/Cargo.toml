@@ -69,7 +69,7 @@ move-binary-format = { workspace = true }
 move-bytecode-source-map = { workspace = true }
 move-cli = { workspace = true }
 move-command-line-common = { workspace = true }
-move-compiler = { workspace = true }
+legacy-move-compiler = { workspace = true }
 move-core-types = { workspace = true }
 move-coverage = { workspace = true }
 move-disassembler = { workspace = true }

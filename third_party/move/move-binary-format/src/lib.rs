@@ -14,10 +14,7 @@ pub mod compatibility;
 pub mod compatibility_legacy;
 #[macro_use]
 pub mod errors;
-<<<<<<< HEAD
-=======
 pub mod builders;
->>>>>>> tags/aptos-framework-v1.34.0
 pub mod check_complexity;
 pub mod constant;
 pub mod control_flow_graph;

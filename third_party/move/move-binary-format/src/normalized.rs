@@ -3,15 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #![allow(deprecated)]
-<<<<<<< HEAD
-=======
 //! Defines normalized representations of Move types, fields, kinds, structs, functions, and
 //! modules. These representations are useful in situations that require require comparing
 //! functions, resources, and types across modules. This arises in linking, compatibility checks
 //! (e.g., "is it safe to deploy this new module without updating its dependents and/or restarting
 //! genesis?"), defining schemas for resources stored on-chain, and (possibly in the future)
 //! allowing module updates transactions.
->>>>>>> tags/aptos-framework-v1.34.0
 
 use crate::{
     access::ModuleAccess,

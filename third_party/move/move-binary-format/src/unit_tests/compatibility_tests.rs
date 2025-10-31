@@ -6,11 +6,7 @@ use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use std::convert::TryFrom;
 
 #[allow(deprecated)]
-<<<<<<< HEAD
-fn mk_module(vis: u8) -> normalized::Module {
-=======
 fn mk_module(vis: u8) -> CompiledModule {
->>>>>>> tags/aptos-framework-v1.34.0
     let (visibility, is_entry) = if vis == Visibility::DEPRECATED_SCRIPT {
         (Visibility::Public, true)
     } else {
