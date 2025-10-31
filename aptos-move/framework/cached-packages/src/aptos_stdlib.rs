@@ -1,23 +1,23 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #![allow(unused_imports)]
 
 pub use crate::{
-    aptos_framework_sdk_builder::*, aptos_token_objects_sdk_builder as aptos_token_objects_stdlib,
-    aptos_token_sdk_builder as aptos_token_stdlib,
+    supra_framework_sdk_builder::*, supra_token_objects_sdk_builder as supra_token_objects_stdlib,
+    supra_token_sdk_builder as supra_token_stdlib,
 };
-use aptos_framework::{BuildOptions, BuiltPackage};
-use aptos_package_builder::PackageBuilder;
-use aptos_types::{
+use supra_framework::{BuildOptions, BuiltPackage};
+use supra_package_builder::PackageBuilder;
+use supra_types::{
     account_address::AccountAddress,
     transaction::{EntryFunction, TransactionPayload},
-    AptosCoinType, CoinType,
+    SupraCoinType, CoinType,
 };
 use move_core_types::{ident_str, language_storage::ModuleId};
 
-pub fn aptos_coin_transfer(to: AccountAddress, amount: u64) -> TransactionPayload {
-    coin_transfer(AptosCoinType::type_tag(), to, amount)
+pub fn supra_coin_transfer(to: AccountAddress, amount: u64) -> TransactionPayload {
+    coin_transfer(SupraCoinType::type_tag(), to, amount)
 }
 
 pub fn publish_module_source(module_name: &str, module_src: &str) -> TransactionPayload {

@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
     zip_metadata, zip_metadata_str,
 };
 use anyhow::bail;
-use aptos_types::{
+use supra_types::{
     account_address::AccountAddress,
     transaction::EntryABI,
     vm::module_metadata::{
@@ -55,12 +55,12 @@ pub const METADATA_FILE_NAME: &str = "package-metadata.bcs";
 pub const UPGRADE_POLICY_CUSTOM_FIELD: &str = "upgrade_policy";
 
 pub const APTOS_PACKAGES: [&str; 6] = [
-    "AptosFramework",
+    "SupraFramework",
     "MoveStdlib",
-    "AptosStdlib",
-    "AptosToken",
-    "AptosTokenObjects",
-    "AptosExperimental",
+    "SupraStdlib",
+    "SupraToken",
+    "SupraTokenObjects",
+    "SupraExperimental",
 ];
 
 /// Represents a set of options for building artifacts from Move.

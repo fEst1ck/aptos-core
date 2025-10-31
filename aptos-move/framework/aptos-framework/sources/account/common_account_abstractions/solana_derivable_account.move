@@ -5,9 +5,9 @@
 /// <domain> wants you to sign in with your Solana account:
 /// <base58_public_key>
 ///
-/// Please confirm you explicitly initiated this request from <domain>. You are approving to execute transaction <entry_function_name> on Aptos blockchain (<network_name>).
+/// Please confirm you explicitly initiated this request from <domain>. You are approving to execute transaction <entry_function_name> on Supra blockchain (<network_name>).
 ///
-/// Nonce: <aptos_txn_digest>
+/// Nonce: <supra_txn_digest>
 ///
 /// 2. The abstract public key is a BCS serialized `SIWSAbstractPublicKey`.
 /// 3. The abstract signature is a BCS serialized `SIWSAbstractSignature`.
@@ -16,9 +16,9 @@
 /// - Solflare
 /// - Backpack
 /// - OKX
-module aptos_framework::solana_derivable_account {
-    use aptos_framework::auth_data::AbstractionAuthData;
-    use aptos_framework::common_account_abstractions_utils::{network_name, entry_function_name};
+module supra_framework::solana_derivable_account {
+    use supra_framework::auth_data::AbstractionAuthData;
+    use supra_framework::common_account_abstractions_utils::{network_name, entry_function_name};
     use aptos_std::ed25519::{
         Self,
         new_signature_from_bytes,
@@ -96,7 +96,7 @@ module aptos_framework::solana_derivable_account {
         message.append(b".");
         message.append(b" You are approving to execute transaction ");
         message.append(*entry_function_name);
-        message.append(b" on Aptos blockchain");
+        message.append(b" on Supra blockchain");
         let network_name = network_name();
         message.append(b" (");
         message.append(network_name);
@@ -212,7 +212,7 @@ module aptos_framework::solana_derivable_account {
     #[test_only]
     use std::string::{String, utf8};
     #[test_only]
-    use aptos_framework::auth_data::{create_derivable_auth_data};
+    use supra_framework::auth_data::{create_derivable_auth_data};
     #[test_only]
     use std::chain_id;
 
@@ -240,7 +240,7 @@ module aptos_framework::solana_derivable_account {
     #[test]
     fun test_deserialize_abstract_public_key() {
         let base58_public_key = b"G56zT1K6AQab7FzwHdQ8hiHXusR14Rmddw6Vz5MFbbmV";
-        let domain = b"aptos-labs.github.io";
+        let domain = b"supra-labs.github.io";
         let abstract_public_key = create_abstract_public_key(utf8(base58_public_key), utf8(domain));
         let (public_key, domain) = deserialize_abstract_public_key(&abstract_public_key);
         assert!(public_key == base58_public_key);
@@ -267,7 +267,7 @@ module aptos_framework::solana_derivable_account {
         let entry_function_name = b"0x1::coin::transfer";
         let digest_utf8 = b"0x9509edc861070b2848d8161c9453159139f867745dc87d32864a71e796c7d279";
         let message = construct_message(&base58_public_key, &domain, &entry_function_name, &digest_utf8);
-        assert!(message == b"localhost:3000 wants you to sign in with your Solana account:\nG56zT1K6AQab7FzwHdQ8hiHXusR14Rmddw6Vz5MFbbmV\n\nPlease confirm you explicitly initiated this request from localhost:3000. You are approving to execute transaction 0x1::coin::transfer on Aptos blockchain (testnet).\n\nNonce: 0x9509edc861070b2848d8161c9453159139f867745dc87d32864a71e796c7d279");
+        assert!(message == b"localhost:3000 wants you to sign in with your Solana account:\nG56zT1K6AQab7FzwHdQ8hiHXusR14Rmddw6Vz5MFbbmV\n\nPlease confirm you explicitly initiated this request from localhost:3000. You are approving to execute transaction 0x1::coin::transfer on Supra blockchain (testnet).\n\nNonce: 0x9509edc861070b2848d8161c9453159139f867745dc87d32864a71e796c7d279");
     }
 
     #[test]
@@ -291,7 +291,7 @@ module aptos_framework::solana_derivable_account {
         let domain = b"localhost:3001";
         let abstract_public_key = create_abstract_public_key(utf8(base58_public_key), utf8(domain));
         let auth_data = create_derivable_auth_data(digest, abstract_signature, abstract_public_key);
-        let entry_function_name = b"0x1::aptos_account::transfer";
+        let entry_function_name = b"0x1::supra_account::transfer";
         authenticate_auth_data(auth_data, &entry_function_name);
     }
 
@@ -307,7 +307,7 @@ module aptos_framework::solana_derivable_account {
         let domain = b"localhost:3001";
         let abstract_public_key = create_abstract_public_key(utf8(base58_public_key), utf8(domain));
         let auth_data = create_derivable_auth_data(digest, abstract_signature, abstract_public_key);
-        let entry_function_name = b"0x1::aptos_account::transfer";
+        let entry_function_name = b"0x1::supra_account::transfer";
         authenticate_auth_data(auth_data, &entry_function_name);
     }
 }

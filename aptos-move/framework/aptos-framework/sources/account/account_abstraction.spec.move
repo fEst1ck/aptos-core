@@ -1,4 +1,4 @@
-spec aptos_framework::account_abstraction {
+spec supra_framework::account_abstraction {
     spec module {
         pragma verify = false;
     }

@@ -1,18 +1,18 @@
 /// This module provides the foundation for Tokens.
-/// Checkout our developer doc on our token standard https://aptos.dev/standards
-module aptos_token::token {
+/// Checkout our developer doc on our token standard https://supra.dev/standards
+module supra_token::token {
     use std::error;
     use std::option::{Self, Option};
     use std::signer;
     use std::string::{Self, String};
     use std::vector;
 
-    use aptos_framework::account;
-    use aptos_framework::event::{Self, EventHandle};
-    use aptos_framework::timestamp;
+    use supra_framework::account;
+    use supra_framework::event::{Self, EventHandle};
+    use supra_framework::timestamp;
     use aptos_std::table::{Self, Table};
-    use aptos_token::property_map::{Self, PropertyMap, PropertyValue};
-    use aptos_token::token_event_store;
+    use supra_token::property_map::{Self, PropertyMap, PropertyValue};
+    use supra_token::token_event_store;
 
     //
     // Constants
@@ -177,7 +177,7 @@ module aptos_token::token {
     struct TokenDataId has copy, drop, store {
         /// The address of the creator, eg: 0xcafe
         creator: address,
-        /// The name of collection; this is unique under the same account, eg: "Aptos Animal Collection"
+        /// The name of collection; this is unique under the same account, eg: "Supra Animal Collection"
         collection: String,
         /// The name of the token; this is the same as the name field of TokenData
         name: String,
@@ -195,7 +195,7 @@ module aptos_token::token {
         uri: String,
         /// The denominator and numerator for calculating the royalty fee; it also contains payee account address for depositing the Royalty
         royalty: Royalty,
-        /// The name of the token, which should be unique within the collection; the length of name should be smaller than 128, characters, eg: "Aptos Animal #1234"
+        /// The name of the token, which should be unique within the collection; the length of name should be smaller than 128, characters, eg: "Supra Animal #1234"
         name: String,
         /// Describes this Token
         description: String,
@@ -260,7 +260,7 @@ module aptos_token::token {
 
     /// Represent the collection metadata
     struct CollectionData has store {
-        /// A description for the token collection Eg: "Aptos Toad Overload"
+        /// A description for the token collection Eg: "Supra Toad Overload"
         description: String,
         /// The collection name, which should be unique among all collections by the creator; the name should also be smaller than 128 characters, eg: "Animal Collection"
         name: String,
@@ -269,7 +269,7 @@ module aptos_token::token {
         /// The number of different TokenData entries in this collection
         supply: u64,
         /// If maximal is a non-zero value, the number of created TokenData entries should be smaller or equal to this maximum
-        /// If maximal is 0, Aptos doesn't track the supply of this collection, and there is no limit
+        /// If maximal is 0, Supra doesn't track the supply of this collection, and there is no limit
         maximum: u64,
         /// control which collectionData field is mutable
         mutability_config: CollectionMutabilityConfig,
@@ -1948,7 +1948,7 @@ module aptos_token::token {
             string::utf8(b"Hello, Token"),
             100,
             2,
-            string::utf8(b"https://aptos.dev"),
+            string::utf8(b"https://supra.dev"),
             signer::address_of(&creator),
             100,
             0,
@@ -2016,7 +2016,7 @@ module aptos_token::token {
             creator,
             get_collection_name(),
             string::utf8(b"Collection: Hello, World"),
-            string::utf8(b"https://aptos.dev"),
+            string::utf8(b"https://supra.dev"),
             collection_max,
             mutate_setting
         );
@@ -2032,7 +2032,7 @@ module aptos_token::token {
             string::utf8(b"Hello, Token"),
             amount,
             token_max,
-            string::utf8(b"https://aptos.dev"),
+            string::utf8(b"https://supra.dev"),
             signer::address_of(creator),
             100,
             0,

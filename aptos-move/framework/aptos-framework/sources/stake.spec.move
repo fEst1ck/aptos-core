@@ -1,4 +1,4 @@
-spec aptos_framework::stake {
+spec supra_framework::stake {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: The validator set resource stores consensus information for each validator. The consensus scheme
@@ -21,7 +21,7 @@ spec aptos_framework::stake {
     /// Requirement: The total staked value in the stake pool should remain constant, excluding operations related to
     /// adding and withdrawing.
     /// Criticality: Low
-    /// Implementation: The total staked value (AptosCoin) of a stake pool is grouped by: active, inactive,
+    /// Implementation: The total staked value (SupraCoin) of a stake pool is grouped by: active, inactive,
     /// pending_active, and pending_inactive. The stake value remains constant except during the execution of the
     /// add_stake_with_cap or withdraw_with_cap functions or on_new_epoch (which distributes the reward).
     /// Enforcement: Formally specified in the schema [high-level-req-3](StakedValueNoChange).
@@ -44,11 +44,11 @@ spec aptos_framework::stake {
         pragma verify = true;
         pragma aborts_if_is_partial;
         // The validator set should satisfy its desired invariant.
-        invariant [suspendable] exists<ValidatorSet>(@aptos_framework) ==> validator_set_is_valid();
-        // After genesis, `AptosCoinCapabilities`, `ValidatorPerformance` and `ValidatorSet` exist.
-        invariant [suspendable] chain_status::is_operating() ==> exists<AptosCoinCapabilities>(@aptos_framework);
-        invariant [suspendable] chain_status::is_operating() ==> exists<ValidatorPerformance>(@aptos_framework);
-        invariant [suspendable] chain_status::is_operating() ==> exists<ValidatorSet>(@aptos_framework);
+        invariant [suspendable] exists<ValidatorSet>(@supra_framework) ==> validator_set_is_valid();
+        // After genesis, `SupraCoinCapabilities`, `ValidatorPerformance` and `ValidatorSet` exist.
+        invariant [suspendable] chain_status::is_operating() ==> exists<SupraCoinCapabilities>(@supra_framework);
+        invariant [suspendable] chain_status::is_operating() ==> exists<ValidatorPerformance>(@supra_framework);
+        invariant [suspendable] chain_status::is_operating() ==> exists<ValidatorSet>(@supra_framework);
 
         // property 2: The owner of a validator remains immutable.
         apply ValidatorOwnerNoChange to *;
@@ -71,8 +71,8 @@ spec aptos_framework::stake {
     }
 
     spec schema ValidatorNotChangeDuringReconfig {
-        ensures (reconfiguration_state::spec_is_in_progress() && old(exists<ValidatorSet>(@aptos_framework))) ==>
-            old(global<ValidatorSet>(@aptos_framework)) == global<ValidatorSet>(@aptos_framework);
+        ensures (reconfiguration_state::spec_is_in_progress() && old(exists<ValidatorSet>(@supra_framework))) ==>
+            old(global<ValidatorSet>(@supra_framework)) == global<ValidatorSet>(@supra_framework);
     }
 
     spec schema StakePoolNotChangeDuringReconfig {
@@ -101,7 +101,7 @@ spec aptos_framework::stake {
 
     // A desired invariant for the validator set.
     spec fun validator_set_is_valid(): bool {
-        let validator_set = global<ValidatorSet>(@aptos_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
         validator_set_is_valid_impl(validator_set)
     }
 
@@ -138,9 +138,9 @@ spec aptos_framework::stake {
         aborts_if !option::spec_is_some(pubkey_from_pop);
         let addr = signer::address_of(account);
         let post_addr = signer::address_of(account);
-        let allowed = global<AllowedValidators>(@aptos_framework);
+        let allowed = global<AllowedValidators>(@supra_framework);
         aborts_if exists<ValidatorConfig>(addr);
-        aborts_if exists<AllowedValidators>(@aptos_framework) && !vector::spec_contains(allowed.accounts, addr);
+        aborts_if exists<AllowedValidators>(@supra_framework) && !vector::spec_contains(allowed.accounts, addr);
         aborts_if stake_pool_exists(addr);
         aborts_if exists<OwnerCapability>(addr);
         aborts_if !exists<account::Account>(addr);
@@ -157,15 +157,15 @@ spec aptos_framework::stake {
     }
 
     // `Validator` is initialized once.
-    spec initialize(aptos_framework: &signer) {
+    spec initialize(supra_framework: &signer) {
         pragma disable_invariants_in_body;
-        let aptos_addr = signer::address_of(aptos_framework);
-        aborts_if !system_addresses::is_aptos_framework_address(aptos_addr);
-        aborts_if exists<ValidatorSet>(aptos_addr);
-        aborts_if exists<ValidatorPerformance>(aptos_addr);
-        ensures exists<ValidatorSet>(aptos_addr);
-        ensures global<ValidatorSet>(aptos_addr).consensus_scheme == 0;
-        ensures exists<ValidatorPerformance>(aptos_addr);
+        let supra_addr = signer::address_of(supra_framework);
+        aborts_if !system_addresses::is_supra_framework_address(supra_addr);
+        aborts_if exists<ValidatorSet>(supra_addr);
+        aborts_if exists<ValidatorPerformance>(supra_addr);
+        ensures exists<ValidatorSet>(supra_addr);
+        ensures global<ValidatorSet>(supra_addr).consensus_scheme == 0;
+        ensures exists<ValidatorPerformance>(supra_addr);
     }
 
     spec join_validator_set(
@@ -182,13 +182,13 @@ spec aptos_framework::stake {
         aborts_if !staking_config::get_allow_validator_set_change(staking_config::get());
         aborts_if !exists<StakePool>(pool_address);
         aborts_if !exists<ValidatorConfig>(pool_address);
-        aborts_if !exists<StakingConfig>(@aptos_framework);
-        aborts_if !exists<ValidatorSet>(@aptos_framework);
+        aborts_if !exists<StakingConfig>(@supra_framework);
+        aborts_if !exists<ValidatorSet>(@supra_framework);
         aborts_if reconfiguration_state::spec_is_in_progress();
 
         let stake_pool = global<StakePool>(pool_address);
-        let validator_set = global<ValidatorSet>(@aptos_framework);
-        let post p_validator_set = global<ValidatorSet>(@aptos_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
+        let post p_validator_set = global<ValidatorSet>(@supra_framework);
         aborts_if signer::address_of(operator) != stake_pool.operator_address;
         aborts_if option::spec_is_some(spec_find_validator(validator_set.active_validators, pool_address)) ||
                     option::spec_is_some(spec_find_validator(validator_set.pending_inactive, pool_address)) ||
@@ -242,29 +242,29 @@ spec aptos_framework::stake {
         let stake_pool = global<StakePool>(pool_address);
         aborts_if !exists<OwnerCapability>(addr);
         aborts_if !exists<StakePool>(pool_address);
-        aborts_if !exists<ValidatorSet>(@aptos_framework);
+        aborts_if !exists<ValidatorSet>(@supra_framework);
 
-        let validator_set = global<ValidatorSet>(@aptos_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
         let bool_find_validator = !option::spec_is_some(spec_find_validator(validator_set.active_validators, pool_address)) &&
                     !option::spec_is_some(spec_find_validator(validator_set.pending_inactive, pool_address)) &&
                         !option::spec_is_some(spec_find_validator(validator_set.pending_active, pool_address));
-        aborts_if bool_find_validator && !exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework);
+        aborts_if bool_find_validator && !exists<timestamp::CurrentTimeMicroseconds>(@supra_framework);
         let new_withdraw_amount_1 = min(withdraw_amount, stake_pool.inactive.value + stake_pool.pending_inactive.value);
         let new_withdraw_amount_2 = min(withdraw_amount, stake_pool.inactive.value);
         aborts_if bool_find_validator && timestamp::now_seconds() > stake_pool.locked_until_secs &&
                     new_withdraw_amount_1 > 0 && stake_pool.inactive.value + stake_pool.pending_inactive.value < new_withdraw_amount_1;
-        aborts_if !(bool_find_validator && exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework)) &&
+        aborts_if !(bool_find_validator && exists<timestamp::CurrentTimeMicroseconds>(@supra_framework)) &&
                     new_withdraw_amount_2 > 0 && stake_pool.inactive.value < new_withdraw_amount_2;
-        aborts_if !exists<coin::CoinStore<AptosCoin>>(addr);
-        include coin::DepositAbortsIf<AptosCoin>{account_addr: addr};
+        aborts_if !exists<coin::CoinStore<SupraCoin>>(addr);
+        include coin::DepositAbortsIf<SupraCoin>{account_addr: addr};
 
-        let coin_store = global<coin::CoinStore<AptosCoin>>(addr);
-        let post p_coin_store = global<coin::CoinStore<AptosCoin>>(addr);
+        let coin_store = global<coin::CoinStore<SupraCoin>>(addr);
+        let post p_coin_store = global<coin::CoinStore<SupraCoin>>(addr);
         ensures bool_find_validator && timestamp::now_seconds() > stake_pool.locked_until_secs
-                    && exists<account::Account>(addr) && exists<coin::CoinStore<AptosCoin>>(addr) ==>
+                    && exists<account::Account>(addr) && exists<coin::CoinStore<SupraCoin>>(addr) ==>
                         coin_store.coin.value + new_withdraw_amount_1 == p_coin_store.coin.value;
-        ensures !(bool_find_validator && exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework))
-                    && exists<account::Account>(addr) && exists<coin::CoinStore<AptosCoin>>(addr) ==>
+        ensures !(bool_find_validator && exists<timestamp::CurrentTimeMicroseconds>(@supra_framework))
+                    && exists<account::Account>(addr) && exists<coin::CoinStore<SupraCoin>>(addr) ==>
                         coin_store.coin.value + new_withdraw_amount_2 == p_coin_store.coin.value;
     }
 
@@ -281,17 +281,17 @@ spec aptos_framework::stake {
         let config = staking_config::get();
         aborts_if !staking_config::get_allow_validator_set_change(config);
         aborts_if !exists<StakePool>(pool_address);
-        aborts_if !exists<ValidatorSet>(@aptos_framework);
-        aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
+        aborts_if !exists<ValidatorSet>(@supra_framework);
+        aborts_if !exists<staking_config::StakingConfig>(@supra_framework);
         let stake_pool = global<StakePool>(pool_address);
         aborts_if signer::address_of(operator) != stake_pool.operator_address;
 
-        let validator_set = global<ValidatorSet>(@aptos_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
         let validator_find_bool = option::spec_is_some(spec_find_validator(validator_set.pending_active, pool_address));
         let active_validators = validator_set.active_validators;
         let pending_active = validator_set.pending_active;
 
-        let post post_validator_set = global<ValidatorSet>(@aptos_framework);
+        let post post_validator_set = global<ValidatorSet>(@supra_framework);
         let post post_active_validators = post_validator_set.active_validators;
         let pending_inactive_validators = validator_set.pending_inactive;
         let post post_pending_inactive_validators = post_validator_set.pending_inactive;
@@ -302,7 +302,7 @@ spec aptos_framework::stake {
         aborts_if !validator_find_bool && vector::length(validator_set.active_validators) <= option::spec_borrow(spec_find_validator(active_validators, pool_address));
         aborts_if !validator_find_bool && vector::length(validator_set.active_validators) < 2;
         aborts_if validator_find_bool && vector::length(validator_set.pending_active) <= option::spec_borrow(spec_find_validator(pending_active, pool_address));
-        let post p_validator_set = global<ValidatorSet>(@aptos_framework);
+        let post p_validator_set = global<ValidatorSet>(@supra_framework);
         let validator_stake = (get_next_epoch_voting_power(stake_pool) as u128);
         ensures validator_find_bool && validator_set.total_joining_power > validator_stake ==>
                     p_validator_set.total_joining_power == validator_set.total_joining_power - validator_stake;
@@ -348,7 +348,7 @@ spec aptos_framework::stake {
 
     // Only active validator can update locked_until_secs.
     spec increase_lockup_with_cap(owner_cap: &OwnerCapability) {
-        let config = global<staking_config::StakingConfig>(@aptos_framework);
+        let config = global<staking_config::StakingConfig>(@supra_framework);
         let pool_address = owner_cap.pool_address;
         let pre_stake_pool = global<StakePool>(pool_address);
         let post stake_pool = global<StakePool>(pool_address);
@@ -360,8 +360,8 @@ spec aptos_framework::stake {
         aborts_if !exists<StakePool>(pool_address);
         aborts_if pre_stake_pool.locked_until_secs >= lockup + now_seconds;
         aborts_if lockup + now_seconds > MAX_U64;
-        aborts_if !exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework);
-        aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
+        aborts_if !exists<timestamp::CurrentTimeMicroseconds>(@supra_framework);
+        aborts_if !exists<staking_config::StakingConfig>(@supra_framework);
 
         ensures stake_pool.locked_until_secs == lockup + now_seconds;
     }
@@ -458,7 +458,7 @@ spec aptos_framework::stake {
         include ResourceRequirement;
         include GetReconfigStartTimeRequirement;
         include staking_config::StakingRewardsConfigRequirement;
-        include aptos_framework::aptos_coin::ExistsAptosCoin;
+        include supra_framework::supra_coin::ExistsSupraCoin;
         // This function should never abort.
         /// [high-level-req-4]
         aborts_if false;
@@ -470,8 +470,8 @@ spec aptos_framework::stake {
         // This function should never abort.
         aborts_if false;
 
-        let validator_perf = global<ValidatorPerformance>(@aptos_framework);
-        let post post_validator_perf = global<ValidatorPerformance>(@aptos_framework);
+        let validator_perf = global<ValidatorPerformance>(@supra_framework);
+        let post post_validator_perf = global<ValidatorPerformance>(@supra_framework);
         let validator_len = len(validator_perf.validators);
         ensures (option::spec_is_some(ghost_proposer_idx) && option::spec_borrow(ghost_proposer_idx) < validator_len) ==>
             (post_validator_perf.validators[option::spec_borrow(ghost_proposer_idx)].successful_proposals ==
@@ -530,7 +530,7 @@ spec aptos_framework::stake {
     }
 
     spec schema AbortsIfSignerPermissionStake {
-        use aptos_framework::permissioned_signer;
+        use supra_framework::permissioned_signer;
         s: signer;
         let perm = StakeManagementPermission {};
         aborts_if !permissioned_signer::spec_check_permission_exists(s, perm);
@@ -546,7 +546,7 @@ spec aptos_framework::stake {
         aborts_if !exists<ValidatorConfig>(pool_address);
         aborts_if global<ValidatorConfig>(pool_address).validator_index >= len(validator_perf.validators);
 
-        let aptos_addr = type_info::type_of<AptosCoin>().account_address;
+        let supra_addr = type_info::type_of<SupraCoin>().account_address;
 
         let stake_pool = global<StakePool>(pool_address);
 
@@ -585,7 +585,7 @@ spec aptos_framework::stake {
     spec schema DistributeRewardsAbortsIf {
         use aptos_std::type_info;
 
-        stake: Coin<AptosCoin>;
+        stake: Coin<SupraCoin>;
         num_successful_proposals: num;
         num_total_proposals: num;
         rewards_rate: num;
@@ -598,10 +598,10 @@ spec aptos_framework::stake {
             0
         };
         let amount = rewards_amount;
-        let addr = type_info::type_of<AptosCoin>().account_address;
-        aborts_if (rewards_amount > 0) && !exists<coin::CoinInfo<AptosCoin>>(addr);
-        modifies global<coin::CoinInfo<AptosCoin>>(addr);
-        include (rewards_amount > 0) ==> coin::CoinAddAbortsIf<AptosCoin> { amount: amount };
+        let addr = type_info::type_of<SupraCoin>().account_address;
+        aborts_if (rewards_amount > 0) && !exists<coin::CoinInfo<SupraCoin>>(addr);
+        modifies global<coin::CoinInfo<SupraCoin>>(addr);
+        include (rewards_amount > 0) ==> coin::CoinAddAbortsIf<SupraCoin> { amount: amount };
     }
 
     spec get_reconfig_start_time_secs(): u64 {
@@ -609,12 +609,12 @@ spec aptos_framework::stake {
     }
 
     spec schema GetReconfigStartTimeRequirement {
-        requires exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework);
+        requires exists<timestamp::CurrentTimeMicroseconds>(@supra_framework);
         include reconfiguration_state::StartTimeSecsRequirement;
     }
 
     spec fun spec_get_reconfig_start_time_secs(): u64 {
-        if (exists<reconfiguration_state::State>(@aptos_framework)) {
+        if (exists<reconfiguration_state::State>(@supra_framework)) {
             reconfiguration_state::spec_start_time_secs()
         } else {
             timestamp::spec_now_seconds()
@@ -674,8 +674,8 @@ spec aptos_framework::stake {
 
     spec remove_validators {
         requires chain_status::is_operating();
-        let validator_set = global<ValidatorSet>(@aptos_framework);
-        let post post_validator_set = global<ValidatorSet>(@aptos_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
+        let post post_validator_set = global<ValidatorSet>(@supra_framework);
         let active_validators = validator_set.active_validators;
         let post post_active_validators = post_validator_set.active_validators;
         let pending_inactive_validators = validator_set.pending_inactive;
@@ -693,8 +693,8 @@ spec aptos_framework::stake {
     }
 
     spec get_validator_state {
-        aborts_if !exists<ValidatorSet>(@aptos_framework);
-        let validator_set = global<ValidatorSet>(@aptos_framework);
+        aborts_if !exists<ValidatorSet>(@supra_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
         ensures result == VALIDATOR_STATUS_PENDING_ACTIVE ==> spec_contains(validator_set.pending_active, pool_address);
         ensures result == VALIDATOR_STATUS_ACTIVE ==> spec_contains(validator_set.active_validators, pool_address);
         ensures result == VALIDATOR_STATUS_PENDING_INACTIVE ==> spec_contains(validator_set.pending_inactive, pool_address);
@@ -760,13 +760,13 @@ spec aptos_framework::stake {
 
     spec update_voting_power_increase(increase_amount: u64) {
         requires !reconfiguration_state::spec_is_in_progress();
-        aborts_if !exists<ValidatorSet>(@aptos_framework);
-        aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
+        aborts_if !exists<ValidatorSet>(@supra_framework);
+        aborts_if !exists<staking_config::StakingConfig>(@supra_framework);
 
-        let aptos = @aptos_framework;
-        let pre_validator_set = global<ValidatorSet>(aptos);
-        let post validator_set = global<ValidatorSet>(aptos);
-        let staking_config = global<staking_config::StakingConfig>(aptos);
+        let supra = @supra_framework;
+        let pre_validator_set = global<ValidatorSet>(supra);
+        let post validator_set = global<ValidatorSet>(supra);
+        let staking_config = global<staking_config::StakingConfig>(supra);
         let voting_power_increase_limit = staking_config.voting_power_increase_limit;
         aborts_if pre_validator_set.total_joining_power + increase_amount > MAX_U128;
         aborts_if pre_validator_set.total_voting_power > 0 && pre_validator_set.total_voting_power * voting_power_increase_limit > MAX_U128;
@@ -782,10 +782,10 @@ spec aptos_framework::stake {
         aborts_if !stake_pool_exists(pool_address);
     }
 
-    spec configure_allowed_validators(aptos_framework: &signer, accounts: vector<address>) {
-        let aptos_framework_address = signer::address_of(aptos_framework);
-        aborts_if !system_addresses::is_aptos_framework_address(aptos_framework_address);
-        let post allowed = global<AllowedValidators>(aptos_framework_address);
+    spec configure_allowed_validators(supra_framework: &signer, accounts: vector<address>) {
+        let supra_framework_address = signer::address_of(supra_framework);
+        aborts_if !system_addresses::is_supra_framework_address(supra_framework_address);
+        let post allowed = global<AllowedValidators>(supra_framework_address);
         // Make sure that the accounts of AllowedValidators are always the passed parameter.
         ensures allowed.accounts == accounts;
     }
@@ -814,10 +814,10 @@ spec aptos_framework::stake {
         let pool_address = owner_cap.pool_address;
         aborts_if !exists<StakePool>(pool_address);
 
-        let config = global<staking_config::StakingConfig>(@aptos_framework);
-        let validator_set = global<ValidatorSet>(@aptos_framework);
+        let config = global<staking_config::StakingConfig>(@supra_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
         let voting_power_increase_limit = config.voting_power_increase_limit;
-        let post post_validator_set = global<ValidatorSet>(@aptos_framework);
+        let post post_validator_set = global<ValidatorSet>(@supra_framework);
         let update_voting_power_increase = amount != 0 && (spec_contains(validator_set.active_validators, pool_address)
                                                            || spec_contains(validator_set.pending_active, pool_address));
         aborts_if update_voting_power_increase && validator_set.total_joining_power + amount > MAX_U128;
@@ -852,10 +852,10 @@ spec aptos_framework::stake {
     }
 
     spec fun spec_is_allowed(account: address): bool {
-        if (!exists<AllowedValidators>(@aptos_framework)) {
+        if (!exists<AllowedValidators>(@supra_framework)) {
             true
         } else {
-            let allowed = global<AllowedValidators>(@aptos_framework);
+            let allowed = global<AllowedValidators>(@supra_framework);
             contains(allowed.accounts, account)
         }
     }
@@ -898,7 +898,7 @@ spec aptos_framework::stake {
 
     // The upper bound of validator indices.
     spec fun spec_validator_index_upper_bound(): u64 {
-        len(global<ValidatorPerformance>(@aptos_framework).validators)
+        len(global<ValidatorPerformance>(@supra_framework).validators)
     }
 
     spec fun spec_has_stake_pool(a: address): bool {
@@ -923,7 +923,7 @@ spec aptos_framework::stake {
     }
 
     spec fun spec_is_current_epoch_validator(pool_address: address): bool {
-        let validator_set = global<ValidatorSet>(@aptos_framework);
+        let validator_set = global<ValidatorSet>(@supra_framework);
         !spec_contains(validator_set.pending_active, pool_address)
             && (spec_contains(validator_set.active_validators, pool_address)
             || spec_contains(validator_set.pending_inactive, pool_address))
@@ -932,19 +932,19 @@ spec aptos_framework::stake {
     // These resources are required to successfully execute `on_new_epoch`, which cannot
     // be discharged by the global invariants because `on_new_epoch` is called in genesis.
     spec schema ResourceRequirement {
-        requires exists<AptosCoinCapabilities>(@aptos_framework);
-        requires exists<ValidatorPerformance>(@aptos_framework);
-        requires exists<ValidatorSet>(@aptos_framework);
-        requires exists<StakingConfig>(@aptos_framework);
-        requires exists<StakingRewardsConfig>(@aptos_framework) || !features::spec_periodical_reward_rate_decrease_enabled();
-        requires exists<timestamp::CurrentTimeMicroseconds>(@aptos_framework);
+        requires exists<SupraCoinCapabilities>(@supra_framework);
+        requires exists<ValidatorPerformance>(@supra_framework);
+        requires exists<ValidatorSet>(@supra_framework);
+        requires exists<StakingConfig>(@supra_framework);
+        requires exists<StakingRewardsConfig>(@supra_framework) || !features::spec_periodical_reward_rate_decrease_enabled();
+        requires exists<timestamp::CurrentTimeMicroseconds>(@supra_framework);
     }
 
     // Adding helper function in staking_config leads to an unexpected error
     // So we write two helper functions here to model function staking_config::get_reward_rate().
     spec fun spec_get_reward_rate_1(config: StakingConfig): num {
         if (features::spec_periodical_reward_rate_decrease_enabled()) {
-            let epoch_rewards_rate = global<staking_config::StakingRewardsConfig>(@aptos_framework).rewards_rate;
+            let epoch_rewards_rate = global<staking_config::StakingRewardsConfig>(@supra_framework).rewards_rate;
             if (epoch_rewards_rate.value == 0) {
                 0
             } else {
@@ -964,7 +964,7 @@ spec aptos_framework::stake {
 
     spec fun spec_get_reward_rate_2(config: StakingConfig): num {
         if (features::spec_periodical_reward_rate_decrease_enabled()) {
-            let epoch_rewards_rate = global<staking_config::StakingRewardsConfig>(@aptos_framework).rewards_rate;
+            let epoch_rewards_rate = global<staking_config::StakingRewardsConfig>(@supra_framework).rewards_rate;
             if (epoch_rewards_rate.value == 0) {
                 1
             } else {

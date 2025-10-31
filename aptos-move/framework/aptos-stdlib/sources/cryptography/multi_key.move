@@ -27,7 +27,7 @@ module aptos_std::multi_key {
     // Constants
     //
 
-    /// The identifier of the MultiEd25519 signature scheme, which is used when deriving Aptos authentication keys by hashing
+    /// The identifier of the MultiEd25519 signature scheme, which is used when deriving Supra authentication keys by hashing
     /// it together with an MultiEd25519 public key.
     const SIGNATURE_SCHEME_ID: u8 = 3;
 

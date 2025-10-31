@@ -1,11 +1,11 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::natives::aggregator_natives::aggregator_v2::{
     EUNSUPPORTED_AGGREGATOR_SNAPSHOT_TYPE, EUNSUPPORTED_AGGREGATOR_TYPE,
 };
-use aptos_aggregator::resolver::DelayedFieldResolver;
-use aptos_native_interface::{safely_get_struct_field_as, SafeNativeError, SafeNativeResult};
+use supra_aggregator::resolver::DelayedFieldResolver;
+use supra_native_interface::{safely_get_struct_field_as, SafeNativeError, SafeNativeResult};
 use move_binary_format::errors::PartialVMError;
 use move_vm_types::{
     delayed_values::{delayed_field_id::DelayedFieldID, derived_string_snapshot::string_to_bytes},

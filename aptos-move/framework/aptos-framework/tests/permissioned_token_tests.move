@@ -1,9 +1,9 @@
 #[test_only]
 module 0xcafe::permissioned_token_tests {
-    use aptos_framework::fungible_asset::{Self, Metadata, TestToken};
-    use aptos_framework::dispatchable_fungible_asset;
+    use supra_framework::fungible_asset::{Self, Metadata, TestToken};
+    use supra_framework::dispatchable_fungible_asset;
     use 0xcafe::permissioned_token;
-    use aptos_framework::object;
+    use supra_framework::object;
     use std::option;
 
     #[test(creator = @0xcafe, aaron = @0xface)]

@@ -16,19 +16,19 @@
 ///   require adding the field original_name.
 /// * Consider supporting changing the aspects of supply with the MutatorRef.
 /// * Add aggregator support when added to framework
-module aptos_token_objects::collection {
+module supra_token_objects::collection {
     use std::error;
     use std::features;
     use std::option::{Self, Option};
     use std::signer;
     use std::string::{Self, String};
-    use aptos_framework::aggregator_v2::{Self, Aggregator, AggregatorSnapshot};
-    use aptos_framework::event;
-    use aptos_framework::object::{Self, ConstructorRef, ExtendRef, Object};
+    use supra_framework::aggregator_v2::{Self, Aggregator, AggregatorSnapshot};
+    use supra_framework::event;
+    use supra_framework::object::{Self, ConstructorRef, ExtendRef, Object};
 
-    use aptos_token_objects::royalty::{Self, Royalty};
+    use supra_token_objects::royalty::{Self, Royalty};
 
-    friend aptos_token_objects::token;
+    friend supra_token_objects::token;
 
     /// The collection does not exist
     const ECOLLECTION_DOES_NOT_EXIST: u64 = 1;
@@ -59,7 +59,7 @@ module aptos_token_objects::collection {
 
     const MAX_U64: u64 = 18446744073709551615;
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Represents the common fields for a collection.
     struct Collection has key {
         /// The creator of this collection.
@@ -96,7 +96,7 @@ module aptos_token_objects::collection {
         new_value: String,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Fixed supply tracker, this is useful for ensuring that a limited number of tokens are minted.
     /// and adding events and supply tracking to a collection.
     struct FixedSupply has key {
@@ -110,7 +110,7 @@ module aptos_token_objects::collection {
         mint_events: event::EventHandle<MintEvent>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Unlimited supply tracker, this is useful for adding events and supply tracking to a collection.
     struct UnlimitedSupply has key {
         current_supply: u64,
@@ -121,7 +121,7 @@ module aptos_token_objects::collection {
         mint_events: event::EventHandle<MintEvent>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Supply tracker, useful for tracking amount of issued tokens.
     /// If max_value is not set to U64_MAX, this ensures that a limited number of tokens are minted.
     struct ConcurrentSupply has key {
@@ -183,7 +183,7 @@ module aptos_token_objects::collection {
     /// Creates a fixed-sized collection, or a collection that supports a fixed amount of tokens.
     /// This is useful to create a guaranteed, limited supply on-chain digital asset. For example,
     /// a collection 1111 vicious vipers. Note, creating restrictions such as upward limits results
-    /// in data structures that prevent Aptos from parallelizing mints of this collection type.
+    /// in data structures that prevent Supra from parallelizing mints of this collection type.
     /// Beyond that, it adds supply tracking with events.
     public fun create_fixed_collection(
         creator: &signer,
@@ -290,7 +290,7 @@ module aptos_token_objects::collection {
     }
 
     /// Creates an untracked collection, or a collection that supports an arbitrary amount of
-    /// tokens. This is useful for mass airdrops that fully leverage Aptos parallelization.
+    /// tokens. This is useful for mass airdrops that fully leverage Supra parallelization.
     /// TODO: Hide this until we bring back meaningful way to enforce burns
     fun create_untracked_collection(
         creator: &signer,
@@ -833,7 +833,7 @@ module aptos_token_objects::collection {
     }
 
     #[test(creator = @0x123, trader = @0x456)]
-    #[expected_failure(abort_code = 0x50003, location = aptos_framework::object)]
+    #[expected_failure(abort_code = 0x50003, location = supra_framework::object)]
     entry fun test_create_and_transfer(creator: &signer, trader: &signer) {
         let creator_address = signer::address_of(creator);
         let trader_address = signer::address_of(trader);
@@ -847,9 +847,9 @@ module aptos_token_objects::collection {
         object::transfer(creator, collection, trader_address);
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    entry fun test_create_and_transfer_as_owner(creator: &signer, trader: &signer, aptos_framework: &signer) {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    entry fun test_create_and_transfer_as_owner(creator: &signer, trader: &signer, supra_framework: &signer) {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let creator_address = signer::address_of(creator);
         let trader_address = signer::address_of(trader);
         let collection_name = string::utf8(b"collection name");
@@ -865,7 +865,7 @@ module aptos_token_objects::collection {
     }
 
     #[test(creator = @0x123)]
-    #[expected_failure(abort_code = 0x80001, location = aptos_framework::object)]
+    #[expected_failure(abort_code = 0x80001, location = supra_framework::object)]
     entry fun test_duplicate_collection(creator: &signer) {
         let collection_name = string::utf8(b"collection name");
         create_collection_helper(creator, collection_name);
@@ -971,7 +971,7 @@ module aptos_token_objects::collection {
     }
 
     #[test(creator = @0x123)]
-    #[expected_failure(abort_code = 0x1000A, location = aptos_token_objects::collection)]
+    #[expected_failure(abort_code = 0x1000A, location = supra_token_objects::collection)]
     entry fun test_set_max_supply_none(creator: &signer) acquires ConcurrentSupply, FixedSupply {
         let collection_name = string::utf8(b"collection name");
         let constructor_ref = create_collection_helper(creator, collection_name);
@@ -980,7 +980,7 @@ module aptos_token_objects::collection {
     }
 
     #[test(creator = @0x123)]
-    #[expected_failure(abort_code = 0x20009, location = aptos_token_objects::collection)]
+    #[expected_failure(abort_code = 0x20009, location = supra_token_objects::collection)]
     entry fun test_set_max_supply_too_low_fixed_supply(creator: &signer) acquires ConcurrentSupply, FixedSupply, UnlimitedSupply {
         let max_supply = 3;
         let collection_name = string::utf8(b"Low Supply Collection");
@@ -1000,7 +1000,7 @@ module aptos_token_objects::collection {
     }
 
     #[test(creator = @0x123)]
-    #[expected_failure(abort_code = 0x20009, location = aptos_token_objects::collection)]
+    #[expected_failure(abort_code = 0x20009, location = supra_token_objects::collection)]
     entry fun test_set_max_supply_too_low_concurrent_supply(creator: &signer) acquires ConcurrentSupply, FixedSupply, UnlimitedSupply {
         let collection_name = string::utf8(b"Low Supply Collection");
         let max_supply = 3;

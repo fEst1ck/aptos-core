@@ -1,7 +1,7 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_types::vm::module_metadata::{
+use supra_types::vm::module_metadata::{
     KnownAttribute, RandomnessAnnotation, ResourceGroupScope, RuntimeModuleMetadataV1,
 };
 use legacy_move_compiler::shared::known_attributes;
@@ -247,7 +247,7 @@ impl ExtendedChecker<'_> {
     }
 
     /// Note: this should be kept up in sync with `is_valid_txn_arg` in
-    /// aptos-move/aptos-vm/src/verifier/transaction_arg_validation.rs
+    /// supra-move/supra-vm/src/verifier/transaction_arg_validation.rs
     fn check_transaction_input_type(&self, loc: &Loc, ty: &Type) {
         use Type::*;
         match ty {
@@ -281,7 +281,7 @@ impl ExtendedChecker<'_> {
 
     fn is_allowed_input_struct(&self, qid: QualifiedId<StructId>) -> bool {
         let name = self.env.get_struct(qid).get_full_name_with_address();
-        // TODO(gerben) find a nice way to keep this in sync with allowed_structs in aptos-vm
+        // TODO(gerben) find a nice way to keep this in sync with allowed_structs in supra-vm
         matches!(
             name.as_str(),
             "0x1::string::String"

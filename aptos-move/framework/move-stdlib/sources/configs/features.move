@@ -1,5 +1,5 @@
-/// Defines feature flags for Aptos. Those are used in Aptos specific implementations of features in
-/// the Move stdlib, the Aptos stdlib, and the Aptos framework.
+/// Defines feature flags for Supra. Those are used in Supra specific implementations of features in
+/// the Move stdlib, the Supra stdlib, and the Supra framework.
 ///
 /// ============================================================================================
 /// Feature Flag Definitions
@@ -192,7 +192,7 @@ module std::features {
         is_enabled(PERIODICAL_REWARD_RATE_DECREASE)
     }
 
-    /// Whether enable paritial governance voting on aptos_governance.
+    /// Whether enable paritial governance voting on supra_governance.
     /// Lifetime: transient
     const PARTIAL_GOVERNANCE_VOTING: u64 = 17;
 
@@ -363,7 +363,7 @@ module std::features {
         is_enabled(BN254_STRUCTURES)
     }
 
-    /// Deprecated by `aptos_framework::randomness_config::RandomnessConfig`.
+    /// Deprecated by `supra_framework::randomness_config::RandomnessConfig`.
     const RECONFIGURE_WITH_DKG: u64 = 45;
 
     public fun get_reconfigure_with_dkg_feature(): u64 { RECONFIGURE_WITH_DKG }
@@ -394,7 +394,7 @@ module std::features {
         is_enabled(KEYLESS_BUT_ZKLESS_ACCOUNTS)
     }
 
-    /// Deprecated by `aptos_framework::jwk_consensus_config::JWKConsensusConfig`.
+    /// Deprecated by `supra_framework::jwk_consensus_config::JWKConsensusConfig`.
     const JWK_CONSENSUS: u64 = 49;
 
     public fun get_jwk_consensus_feature(): u64 { JWK_CONSENSUS }
@@ -462,7 +462,7 @@ module std::features {
         is_enabled(DELEGATION_POOL_ALLOWLISTING)
     }
 
-    /// Whether aptos_framwork enables the behavior of module event migration.
+    /// Whether supra_framwork enables the behavior of module event migration.
     ///
     /// Lifetime: transient
     const MODULE_EVENT_MIGRATION: u64 = 57;

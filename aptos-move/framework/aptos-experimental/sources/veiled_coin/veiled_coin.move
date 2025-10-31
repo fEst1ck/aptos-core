@@ -6,7 +6,7 @@
 ///
 /// ## How to use veiled coins
 ///
-/// This module allows users to "register" a veiled account for any pre-existing `aptos_framework::Coin` type `T` via
+/// This module allows users to "register" a veiled account for any pre-existing `supra_framework::Coin` type `T` via
 /// the `register` entry function. For this, an encryption public key will need to be given as input, under which
 /// the registered user's veiled balance will be encrypted.
 ///
@@ -20,7 +20,7 @@
 ///
 /// Now Alice can use `fully_veiled_transfer` to send to Bob a secret amount `v` of coins from her veiled balance.
 /// This will, for the first time, properly hide both Alice's and Bob's veiled balance.
-/// The only information that an attacker (e.g., an Aptos validator) learns, is that Alice transferred an unknown amount
+/// The only information that an attacker (e.g., an Supra validator) learns, is that Alice transferred an unknown amount
 /// `v` to Bob (including $v=0$), and as a result Alice's veiled balance is in a range [a-v, a] and Bob's veiled balance
 /// is in [b, b+v]`.
 ///
@@ -59,7 +59,7 @@
 /// ## Veiled coin amounts as truncated `u32`'s
 ///
 /// Veiled coin amounts must be specified as `u32`'s rather than `u64`'s as would be typical for normal coins in the
-/// Aptos framework. This is because coin amounts must be encrypted with an *efficient*, additively-homomorphic encryption
+/// Supra framework. This is because coin amounts must be encrypted with an *efficient*, additively-homomorphic encryption
 /// scheme. Currently, our best candidate is ElGamal encryption in the exponent, which can only decrypt values around
 /// 32 bits or slightly larger.
 ///
@@ -82,8 +82,8 @@
 /// [ 31 - 0 ]
 /// ```
 ///
-/// Recall that: A coin has a *decimal precision* $d$ (e.g., for `AptosCoin`, $d = 8$; see `initialize` in
-/// `aptos_coin.move`). This precision $d$ is used when displaying a `u64` amount, by dividing the amount by $10^d$.
+/// Recall that: A coin has a *decimal precision* $d$ (e.g., for `SupraCoin`, $d = 8$; see `initialize` in
+/// `supra_coin.move`). This precision $d$ is used when displaying a `u64` amount, by dividing the amount by $10^d$.
 /// For example, if the precision $d = 2$, then a `u64` amount of 505 coins displays as 5.05 coins.
 ///
 /// For veiled coins, we can easily display a `u32` `Coin<T>` amount $v$ by:
@@ -104,7 +104,7 @@
 ///
 /// [BAZB20] Zether: Towards Privacy in a Smart Contract World; by Bunz, Benedikt and Agrawal, Shashank and Zamani,
 /// Mahdi and Boneh, Dan; in Financial Cryptography and Data Security; 2020
-module aptos_experimental::veiled_coin {
+module supra_experimental::veiled_coin {
     use std::error;
     use std::option::Option;
     use std::signer;
@@ -118,12 +118,12 @@ module aptos_experimental::veiled_coin {
     #[test_only]
     use aptos_std::ristretto255::Scalar;
 
-    use aptos_framework::account;
-    use aptos_framework::coin::{Self, Coin};
-    use aptos_framework::event;
+    use supra_framework::account;
+    use supra_framework::coin::{Self, Coin};
+    use supra_framework::event;
 
-    use aptos_experimental::helpers;
-    use aptos_experimental::sigma_protos;
+    use supra_experimental::helpers;
+    use supra_experimental::sigma_protos;
 
     //
     // Errors
@@ -175,7 +175,7 @@ module aptos_experimental::veiled_coin {
     const NUM_MOST_SIGNIFICANT_BITS_REMOVED: u8 = 16;
 
     /// The domain separation tag (DST) used for the Bulletproofs prover.
-    const VEILED_COIN_BULLETPROOFS_DST: vector<u8> = b"AptosVeiledCoin/BulletproofRangeProof";
+    const VEILED_COIN_BULLETPROOFS_DST: vector<u8> = b"SupraVeiledCoin/BulletproofRangeProof";
 
     //
     // Structs
@@ -506,7 +506,7 @@ module aptos_experimental::veiled_coin {
     }
 
     /// Returns the maximum # of bits used to represent a veiled coin amount. Might differ than the 64 bits used to
-    /// represent normal `aptos_framework::coin::Coin` values.
+    /// represent normal `supra_framework::coin::Coin` values.
     public fun get_max_bits_in_veiled_coin_value(): u64 {
         MAX_BITS_IN_VEILED_COIN_VALUE
     }
@@ -758,7 +758,7 @@ module aptos_experimental::veiled_coin {
     /// Returns a signer for the resource account storing all the normal coins that have been veiled.
     fun get_resource_account_signer(): signer acquires VeiledCoinMinter {
         account::create_signer_with_capability(
-            &borrow_global<VeiledCoinMinter>(@aptos_experimental).signer_cap
+            &borrow_global<VeiledCoinMinter>(@supra_experimental).signer_cap
         )
     }
 

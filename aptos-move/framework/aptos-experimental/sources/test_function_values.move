@@ -1,4 +1,4 @@
-module aptos_experimental::test_function_values {
+module supra_experimental::test_function_values {
     struct Funcs {
         f: |u64| u64 has drop + copy,
     }

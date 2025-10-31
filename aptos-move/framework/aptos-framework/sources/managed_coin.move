@@ -1,12 +1,12 @@
 /// ManagedCoin is built to make a simple walkthrough of the Coins module.
 /// It contains scripts you will need to initialize, mint, burn, transfer coins.
 /// By utilizing this current module, a developer can create his own coin and care less about mint and burn capabilities,
-module aptos_framework::managed_coin {
+module supra_framework::managed_coin {
     use std::string;
     use std::error;
     use std::signer;
 
-    use aptos_framework::coin::{Self, BurnCapability, FreezeCapability, MintCapability, destroy_burn_cap,
+    use supra_framework::coin::{Self, BurnCapability, FreezeCapability, MintCapability, destroy_burn_cap,
         destroy_freeze_cap, destroy_mint_cap
     };
 
@@ -51,7 +51,7 @@ module aptos_framework::managed_coin {
         coin::burn(to_burn, &capabilities.burn_cap);
     }
 
-    /// Initialize new coin `CoinType` in Aptos Blockchain.
+    /// Initialize new coin `CoinType` in Supra Blockchain.
     /// Mint and Burn Capabilities will be stored under `account` in `Capabilities` resource.
     public entry fun initialize<CoinType>(
         account: &signer,
@@ -133,12 +133,12 @@ module aptos_framework::managed_coin {
     use std::option;
 
     #[test_only]
-    use aptos_framework::aggregator_factory;
+    use supra_framework::aggregator_factory;
 
     #[test_only]
     struct FakeMoney {}
 
-    #[test(framework = @aptos_framework, source = @0xa11ce, destination = @0xb0b, mod_account = @0x1)]
+    #[test(framework = @supra_framework, source = @0xa11ce, destination = @0xb0b, mod_account = @0x1)]
     public entry fun test_end_to_end(
         framework: signer,
         source: signer,
@@ -147,11 +147,11 @@ module aptos_framework::managed_coin {
     ) acquires Capabilities {
         let source_addr = signer::address_of(&source);
         let destination_addr = signer::address_of(&destination);
-        aptos_framework::account::create_account_for_test(source_addr);
-        aptos_framework::account::create_account_for_test(destination_addr);
-        aptos_framework::account::create_account_for_test(signer::address_of(&mod_account));
+        supra_framework::account::create_account_for_test(source_addr);
+        supra_framework::account::create_account_for_test(destination_addr);
+        supra_framework::account::create_account_for_test(signer::address_of(&mod_account));
         aggregator_factory::initialize_aggregator_factory_for_test(&mod_account);
-        aptos_framework::coin::create_coin_conversion_map(&framework);
+        supra_framework::coin::create_coin_conversion_map(&framework);
 
         initialize<FakeMoney>(
             &mod_account,
@@ -200,9 +200,9 @@ module aptos_framework::managed_coin {
     ) acquires Capabilities {
         let source_addr = signer::address_of(&source);
         let destination_addr = signer::address_of(&destination);
-        aptos_framework::account::create_account_for_test(source_addr);
-        aptos_framework::account::create_account_for_test(destination_addr);
-        aptos_framework::account::create_account_for_test(signer::address_of(&mod_account));
+        supra_framework::account::create_account_for_test(source_addr);
+        supra_framework::account::create_account_for_test(destination_addr);
+        supra_framework::account::create_account_for_test(signer::address_of(&mod_account));
         aggregator_factory::initialize_aggregator_factory_for_test(&mod_account);
 
         initialize<FakeMoney>(
@@ -222,7 +222,7 @@ module aptos_framework::managed_coin {
         coin::destroy_burn_cap(burn_cap);
     }
 
-    #[test(framework = @aptos_framework, source = @0xa11ce, destination = @0xb0b, mod_account = @0x1)]
+    #[test(framework = @supra_framework, source = @0xa11ce, destination = @0xb0b, mod_account = @0x1)]
     #[expected_failure(abort_code = 0x60001, location = Self)]
     public entry fun fail_mint(
         framework: signer,
@@ -232,11 +232,11 @@ module aptos_framework::managed_coin {
     ) acquires Capabilities {
         let source_addr = signer::address_of(&source);
 
-        aptos_framework::account::create_account_for_test(source_addr);
-        aptos_framework::account::create_account_for_test(signer::address_of(&destination));
-        aptos_framework::account::create_account_for_test(signer::address_of(&mod_account));
+        supra_framework::account::create_account_for_test(source_addr);
+        supra_framework::account::create_account_for_test(signer::address_of(&destination));
+        supra_framework::account::create_account_for_test(signer::address_of(&mod_account));
         aggregator_factory::initialize_aggregator_factory_for_test(&mod_account);
-        aptos_framework::coin::create_coin_conversion_map(&framework);
+        supra_framework::coin::create_coin_conversion_map(&framework);
 
 
         initialize<FakeMoney>(&mod_account, b"Fake money", b"FMD", 1, true);
@@ -247,7 +247,7 @@ module aptos_framework::managed_coin {
         mint<FakeMoney>(&destination, source_addr, 100);
     }
 
-    #[test(framework = @aptos_framework, source = @0xa11ce, destination = @0xb0b, mod_account = @0x1)]
+    #[test(framework = @supra_framework, source = @0xa11ce, destination = @0xb0b, mod_account = @0x1)]
     #[expected_failure(abort_code = 0x60001, location = Self)]
     public entry fun fail_burn(
         framework: signer,
@@ -257,11 +257,11 @@ module aptos_framework::managed_coin {
     ) acquires Capabilities {
         let source_addr = signer::address_of(&source);
 
-        aptos_framework::account::create_account_for_test(source_addr);
-        aptos_framework::account::create_account_for_test(signer::address_of(&destination));
-        aptos_framework::account::create_account_for_test(signer::address_of(&mod_account));
+        supra_framework::account::create_account_for_test(source_addr);
+        supra_framework::account::create_account_for_test(signer::address_of(&destination));
+        supra_framework::account::create_account_for_test(signer::address_of(&mod_account));
         aggregator_factory::initialize_aggregator_factory_for_test(&mod_account);
-        aptos_framework::coin::create_coin_conversion_map(&framework);
+        supra_framework::coin::create_coin_conversion_map(&framework);
 
 
         initialize<FakeMoney>(&mod_account, b"Fake money", b"FMD", 1, true);

@@ -1,12 +1,12 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
-use aptos_gas_schedule::gas_params::natives::{
-    aptos_framework::{
+use supra_gas_schedule::gas_params::natives::{
+    supra_framework::{
         IS_PERMISSIONED_SIGNER_BASE, PERMISSION_ADDRESS_BASE, SIGNER_FROM_PERMISSIONED_HANDLE_BASE,
     },
     move_stdlib::SIGNER_BORROW_ADDRESS_BASE,
 };
-use aptos_native_interface::{
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
@@ -37,7 +37,7 @@ fn native_is_permissioned_signer_impl(
 
     if !context
         .get_feature_flags()
-        .is_enabled(aptos_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
+        .is_enabled(supra_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
     {
         return SafeNativeResult::Err(SafeNativeError::Abort {
             abort_code: EPERMISSION_SIGNER_DISABLED,
@@ -68,7 +68,7 @@ fn native_permission_address(
 
     if !context
         .get_feature_flags()
-        .is_enabled(aptos_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
+        .is_enabled(supra_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
     {
         return SafeNativeResult::Err(SafeNativeError::Abort {
             abort_code: EPERMISSION_SIGNER_DISABLED,
@@ -101,7 +101,7 @@ fn native_signer_from_permissioned(
 
     if !context
         .get_feature_flags()
-        .is_enabled(aptos_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
+        .is_enabled(supra_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
     {
         return SafeNativeResult::Err(SafeNativeError::Abort {
             abort_code: EPERMISSION_SIGNER_DISABLED,
@@ -137,7 +137,7 @@ fn native_borrow_address(
 
     if !context
         .get_feature_flags()
-        .is_enabled(aptos_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
+        .is_enabled(supra_types::on_chain_config::FeatureFlag::PERMISSIONED_SIGNER)
         && signer_reference.is_permissioned()?
     {
         return SafeNativeResult::Err(SafeNativeError::Abort {

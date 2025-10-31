@@ -1,12 +1,12 @@
 /// This defines the fungible asset module that can issue fungible asset of any `Metadata` object. The
 /// metadata object can be any object that equipped with `Metadata` resource.
-module aptos_framework::fungible_asset {
-    use aptos_framework::aggregator_v2::{Self, Aggregator};
-    use aptos_framework::create_signer;
-    use aptos_framework::event;
-    use aptos_framework::function_info::{Self, FunctionInfo};
-    use aptos_framework::object::{Self, Object, ConstructorRef, DeleteRef, ExtendRef};
-    use aptos_framework::permissioned_signer;
+module supra_framework::fungible_asset {
+    use supra_framework::aggregator_v2::{Self, Aggregator};
+    use supra_framework::create_signer;
+    use supra_framework::event;
+    use supra_framework::function_info::{Self, FunctionInfo};
+    use supra_framework::object::{Self, Object, ConstructorRef, DeleteRef, ExtendRef};
+    use supra_framework::permissioned_signer;
     use std::string;
     use std::features;
 
@@ -15,11 +15,11 @@ module aptos_framework::fungible_asset {
     use std::signer;
     use std::string::String;
 
-    friend aptos_framework::coin;
-    friend aptos_framework::primary_fungible_store;
-    friend aptos_framework::aptos_account;
+    friend supra_framework::coin;
+    friend supra_framework::primary_fungible_store;
+    friend supra_framework::supra_account;
 
-    friend aptos_framework::dispatchable_fungible_asset;
+    friend supra_framework::dispatchable_fungible_asset;
 
     /// Amount cannot be zero.
     const EAMOUNT_CANNOT_BE_ZERO: u64 = 1;
@@ -107,19 +107,19 @@ module aptos_framework::fungible_asset {
     /// Maximum possible coin supply.
     const MAX_U128: u128 = 340282366920938463463374607431768211455;
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct Supply has key {
         current: u128,
         // option::none() means unlimited supply.
         maximum: Option<u128>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct ConcurrentSupply has key {
         current: Aggregator<u128>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Metadata of a Fungible asset
     struct Metadata has key, copy, drop {
         /// Name of the fungible metadata, i.e., "USDT".
@@ -138,12 +138,12 @@ module aptos_framework::fungible_asset {
         project_uri: String,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Defines a `FungibleAsset`, such that all `FungibleStore`s stores are untransferable at
     /// the object layer.
     struct Untransferable has key {}
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// The store object that holds fungible assets of a specific type associated with an account.
     struct FungibleStore has key {
         /// The address of the base metadata object.
@@ -154,19 +154,19 @@ module aptos_framework::fungible_asset {
         frozen: bool,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct DispatchFunctionStore has key {
 		withdraw_function: Option<FunctionInfo>,
 		deposit_function: Option<FunctionInfo>,
         derived_balance_function: Option<FunctionInfo>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct DeriveSupply has key {
         dispatch_function: Option<FunctionInfo>
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// The store object that holds concurrent fungible asset balance.
     struct ConcurrentFungibleBalance has key {
         /// The balance of the fungible metadata.
@@ -333,7 +333,7 @@ module aptos_framework::fungible_asset {
         // Verify that caller type matches callee type so wrongly typed function cannot be registered.
         option::for_each_ref(&withdraw_function, |withdraw_function| {
             let dispatcher_withdraw_function_info = function_info::new_function_info_from_address(
-                @aptos_framework,
+                @supra_framework,
                 string::utf8(b"dispatchable_fungible_asset"),
                 string::utf8(b"dispatchable_withdraw"),
             );
@@ -351,7 +351,7 @@ module aptos_framework::fungible_asset {
 
         option::for_each_ref(&deposit_function, |deposit_function| {
             let dispatcher_deposit_function_info = function_info::new_function_info_from_address(
-                @aptos_framework,
+                @supra_framework,
                 string::utf8(b"dispatchable_fungible_asset"),
                 string::utf8(b"dispatchable_deposit"),
             );
@@ -369,7 +369,7 @@ module aptos_framework::fungible_asset {
 
         option::for_each_ref(&derived_balance_function, |balance_function| {
             let dispatcher_derived_balance_function_info = function_info::new_function_info_from_address(
-                @aptos_framework,
+                @supra_framework,
                 string::utf8(b"dispatchable_fungible_asset"),
                 string::utf8(b"dispatchable_derived_balance"),
             );
@@ -413,7 +413,7 @@ module aptos_framework::fungible_asset {
         // Verify that caller type matches callee type so wrongly typed function cannot be registered.
         option::for_each_ref(&dispatch_function, |supply_function| {
             let function_info = function_info::new_function_info_from_address(
-                @aptos_framework,
+                @supra_framework,
                 string::utf8(b"dispatchable_fungible_asset"),
                 string::utf8(b"dispatchable_derived_supply"),
             );
@@ -454,7 +454,7 @@ module aptos_framework::fungible_asset {
     )  {
         // Cannot register hook for APT.
         assert!(
-            object::address_from_constructor_ref(constructor_ref) != @aptos_fungible_asset,
+            object::address_from_constructor_ref(constructor_ref) != @supra_fungible_asset,
             error::permission_denied(EAPT_NOT_DISPATCHABLE)
         );
         assert!(
@@ -712,7 +712,7 @@ module aptos_framework::fungible_asset {
     fun has_deposit_dispatch_function(metadata: Object<Metadata>): bool acquires DispatchFunctionStore {
         let metadata_addr = object::object_address(&metadata);
         // Short circuit on APT for better perf
-        if(metadata_addr != @aptos_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
+        if(metadata_addr != @supra_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
             option::is_some(&borrow_global<DispatchFunctionStore>(metadata_addr).deposit_function)
         } else {
             false
@@ -732,7 +732,7 @@ module aptos_framework::fungible_asset {
     fun has_withdraw_dispatch_function(metadata: Object<Metadata>): bool acquires DispatchFunctionStore {
         let metadata_addr = object::object_address(&metadata);
         // Short circuit on APT for better perf
-        if (metadata_addr != @aptos_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
+        if (metadata_addr != @supra_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
             option::is_some(&borrow_global<DispatchFunctionStore>(metadata_addr).withdraw_function)
         } else {
             false
@@ -742,7 +742,7 @@ module aptos_framework::fungible_asset {
     fun has_balance_dispatch_function(metadata: Object<Metadata>): bool acquires DispatchFunctionStore {
         let metadata_addr = object::object_address(&metadata);
         // Short circuit on APT for better perf
-        if (metadata_addr != @aptos_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
+        if (metadata_addr != @supra_fungible_asset && exists<DispatchFunctionStore>(metadata_addr)) {
             option::is_some(&borrow_global<DispatchFunctionStore>(metadata_addr).derived_balance_function)
         } else {
             false
@@ -751,7 +751,7 @@ module aptos_framework::fungible_asset {
 
     fun has_supply_dispatch_function(metadata_addr: address): bool {
         // Short circuit on APT for better perf
-        if (metadata_addr != @aptos_fungible_asset) {
+        if (metadata_addr != @supra_fungible_asset) {
             exists<DeriveSupply>(metadata_addr)
         } else {
             false
@@ -1436,10 +1436,10 @@ module aptos_framework::fungible_asset {
     }
 
     #[test_only]
-    use aptos_framework::account;
+    use supra_framework::account;
 
     #[test_only]
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
 
     struct TestToken has key {}
 
@@ -1491,7 +1491,7 @@ module aptos_framework::fungible_asset {
     }
 
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
 
     #[test(creator = @0xcafe)]
     fun test_metadata_basic_flow(creator: &signer) acquires Metadata, Supply, ConcurrentSupply {
@@ -1608,7 +1608,7 @@ module aptos_framework::fungible_asset {
     }
 
     #[test(creator = @0xcafe)]
-    #[expected_failure(abort_code = 0x50003, location = aptos_framework::object)]
+    #[expected_failure(abort_code = 0x50003, location = supra_framework::object)]
     fun test_untransferable(
         creator: &signer
     ) {
@@ -1824,7 +1824,7 @@ module aptos_framework::fungible_asset {
         } = base;
     }
 
-    #[test(fx = @aptos_framework, creator = @0xcafe)]
+    #[test(fx = @supra_framework, creator = @0xcafe)]
     fun test_fungible_asset_upgrade(fx: &signer, creator: &signer) acquires Supply, ConcurrentSupply, FungibleStore, ConcurrentFungibleBalance {
         let supply_feature = features::get_concurrent_fungible_assets_feature();
         let balance_feature = features::get_concurrent_fungible_balance_feature();
@@ -1869,7 +1869,7 @@ module aptos_framework::fungible_asset {
         deposit_with_ref(&transfer_ref, creator_store, fb);
     }
 
-    #[test(fx = @aptos_framework, creator = @0xcafe)]
+    #[test(fx = @supra_framework, creator = @0xcafe)]
     fun test_fungible_asset_default_concurrent(fx: &signer, creator: &signer) acquires Supply, ConcurrentSupply, FungibleStore, ConcurrentFungibleBalance {
         let supply_feature = features::get_concurrent_fungible_assets_feature();
         let balance_feature = features::get_concurrent_fungible_balance_feature();
@@ -1902,8 +1902,8 @@ module aptos_framework::fungible_asset {
         creator: &signer,
         aaron: &signer,
     ) acquires FungibleStore, Supply, ConcurrentSupply, DispatchFunctionStore, ConcurrentFungibleBalance {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (mint_ref, _, _, _, test_token) = create_fungible_asset(creator);
         let metadata = mint_ref.metadata;
@@ -1947,8 +1947,8 @@ module aptos_framework::fungible_asset {
         creator: &signer,
         aaron: &signer,
     ) acquires FungibleStore, Supply, ConcurrentSupply, DispatchFunctionStore, ConcurrentFungibleBalance {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (mint_ref, _, _, _, test_token) = create_fungible_asset(creator);
         let metadata = mint_ref.metadata;
@@ -1981,7 +1981,7 @@ module aptos_framework::fungible_asset {
     }
 
     #[deprecated]
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct FungibleAssetEvents has key {
         deposit_events: event::EventHandle<DepositEvent>,
         withdraw_events: event::EventHandle<WithdrawEvent>,

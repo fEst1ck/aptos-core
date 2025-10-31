@@ -12,13 +12,13 @@
 ///
 /// This implementation leverages the homomorphic properties of Twisted ElGamal encryption to allow arithmetic operations
 /// directly on encrypted data.
-module aptos_experimental::confidential_balance {
+module supra_experimental::confidential_balance {
     use std::error;
     use std::option::{Self, Option};
     use std::vector;
     use aptos_std::ristretto255::{Self, RistrettoPoint, Scalar};
 
-    use aptos_experimental::ristretto255_twisted_elgamal as twisted_elgamal;
+    use supra_experimental::ristretto255_twisted_elgamal as twisted_elgamal;
 
     //
     // Errors

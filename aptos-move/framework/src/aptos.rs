@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #![forbid(unsafe_code)]
@@ -59,23 +59,23 @@ impl ReleaseTarget {
     pub fn packages(self) -> Vec<(&'static str, Option<&'static str>, bool)> {
         let result = vec![
             ("move-stdlib", None, false),
-            ("aptos-stdlib", None, false),
+            ("supra-stdlib", None, false),
             (
-                "aptos-framework",
-                Some("cached-packages/src/aptos_framework_sdk_builder.rs"),
+                "supra-framework",
+                Some("cached-packages/src/supra_framework_sdk_builder.rs"),
                 false,
             ),
             (
-                "aptos-token",
-                Some("cached-packages/src/aptos_token_sdk_builder.rs"),
+                "supra-token",
+                Some("cached-packages/src/supra_token_sdk_builder.rs"),
                 false,
             ),
             (
-                "aptos-token-objects",
-                Some("cached-packages/src/aptos_token_objects_sdk_builder.rs"),
+                "supra-token-objects",
+                Some("cached-packages/src/supra_token_objects_sdk_builder.rs"),
                 false,
             ),
-            ("aptos-experimental", None, true),
+            ("supra-experimental", None, true),
         ];
         // Currently we don't have experimental packages only included in particular targets.
         result
@@ -193,11 +193,11 @@ static NAMED_ADDRESSES: Lazy<BTreeMap<String, NumericalAddress>> = Lazy::new(|| 
     let resources = NumericalAddress::parse_str("0xA550C18").unwrap();
     result.insert("std".to_owned(), one);
     result.insert("aptos_std".to_owned(), one);
-    result.insert("aptos_framework".to_owned(), one);
-    result.insert("aptos_token".to_owned(), three);
-    result.insert("aptos_token_objects".to_owned(), four);
-    result.insert("aptos_experimental".to_owned(), seven);
-    result.insert("aptos_fungible_asset".to_owned(), ten);
+    result.insert("supra_framework".to_owned(), one);
+    result.insert("supra_token".to_owned(), three);
+    result.insert("supra_token_objects".to_owned(), four);
+    result.insert("supra_experimental".to_owned(), seven);
+    result.insert("supra_fungible_asset".to_owned(), ten);
     result.insert("core_resources".to_owned(), resources);
     result.insert("vm".to_owned(), zero);
     result.insert("vm_reserved".to_owned(), zero);

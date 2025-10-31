@@ -25,7 +25,7 @@ module aptos_std::single_key {
     // Constants
     //
 
-    /// The identifier of the Single Key signature scheme, which is used when deriving Aptos authentication keys by hashing
+    /// The identifier of the Single Key signature scheme, which is used when deriving Supra authentication keys by hashing
     /// it together with an Single Key public key.
     const SIGNATURE_SCHEME_ID: u8 = 2;
 

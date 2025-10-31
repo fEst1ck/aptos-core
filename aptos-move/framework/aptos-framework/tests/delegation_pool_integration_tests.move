@@ -1,5 +1,5 @@
 #[test_only]
-module aptos_framework::delegation_pool_integration_tests {
+module supra_framework::delegation_pool_integration_tests {
     use std::features;
     use std::signer;
 
@@ -7,12 +7,12 @@ module aptos_framework::delegation_pool_integration_tests {
     use aptos_std::stake;
     use aptos_std::vector;
 
-    use aptos_framework::account;
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::coin;
-    use aptos_framework::reconfiguration;
-    use aptos_framework::delegation_pool as dp;
-    use aptos_framework::timestamp;
+    use supra_framework::account;
+    use supra_framework::supra_coin::SupraCoin;
+    use supra_framework::coin;
+    use supra_framework::reconfiguration;
+    use supra_framework::delegation_pool as dp;
+    use supra_framework::timestamp;
 
     #[test_only]
     const EPOCH_DURATION: u64 = 60;
@@ -36,9 +36,9 @@ module aptos_framework::delegation_pool_integration_tests {
     const MODULE_EVENT: u64 = 26;
 
     #[test_only]
-    public fun initialize_for_test(aptos_framework: &signer) {
+    public fun initialize_for_test(supra_framework: &signer) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             100 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -58,7 +58,7 @@ module aptos_framework::delegation_pool_integration_tests {
     // Convenient function for setting up all required stake initializations.
     #[test_only]
     public fun initialize_for_test_custom(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         minimum_stake: u64,
         maximum_stake: u64,
         recurring_lockup_secs: u64,
@@ -67,9 +67,9 @@ module aptos_framework::delegation_pool_integration_tests {
         rewards_rate_denominator: u64,
         voting_power_increase_limit: u64,
     ) {
-        account::create_account_for_test(signer::address_of(aptos_framework));
+        account::create_account_for_test(signer::address_of(supra_framework));
         stake::initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             minimum_stake,
             maximum_stake,
             recurring_lockup_secs,
@@ -78,8 +78,8 @@ module aptos_framework::delegation_pool_integration_tests {
             rewards_rate_denominator,
             voting_power_increase_limit
         );
-        reconfiguration::initialize_for_test(aptos_framework);
-        features::change_feature_flags_for_testing(aptos_framework, vector[DELEGATION_POOLS, MODULE_EVENT], vector[]);
+        reconfiguration::initialize_for_test(supra_framework);
+        features::change_feature_flags_for_testing(supra_framework, vector[DELEGATION_POOLS, MODULE_EVENT], vector[]);
     }
 
     #[test_only]
@@ -130,13 +130,13 @@ module aptos_framework::delegation_pool_integration_tests {
         (sk, unvalidated_pk, pop)
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x10007, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x10007, location = supra_framework::stake)]
     public entry fun test_inactive_validator_can_add_stake_if_exceeding_max_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, false, false);
 
@@ -144,15 +144,15 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator, 9900 * ONE_APT + 1);
     }
 
-    #[test(aptos_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234)]
-    #[expected_failure(abort_code = 0x10007, location = aptos_framework::stake)]
+    #[test(supra_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234)]
+    #[expected_failure(abort_code = 0x10007, location = supra_framework::stake)]
     public entry fun test_pending_active_validator_cannot_add_stake_if_exceeding_max_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -173,13 +173,13 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator_2, 9900 * ONE_APT + 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x10007, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x10007, location = supra_framework::stake)]
     public entry fun test_active_validator_cannot_add_stake_if_exceeding_max_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         // Validator joins validator set and waits for epoch end so it's in the validator set.
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
@@ -188,13 +188,13 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator, 9900 * ONE_APT + 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x10007, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x10007, location = supra_framework::stake)]
     public entry fun test_active_validator_with_pending_inactive_stake_cannot_add_stake_if_exceeding_max_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         // Validator joins validator set and waits for epoch end so it's in the validator set.
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
@@ -208,14 +208,14 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator, 9900 * ONE_APT + 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator_1 = @0x123, validator_2 = @0x234)]
-    #[expected_failure(abort_code = 0x10007, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator_1 = @0x123, validator_2 = @0x234)]
+    #[expected_failure(abort_code = 0x10007, location = supra_framework::stake)]
     public entry fun test_pending_inactive_cannot_add_stake_if_exceeding_max_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk_1, pk_1, pop_1) = generate_identity();
         let (_sk_2, pk_2, pop_2) = generate_identity();
         initialize_test_validator(&pk_1, &pop_1, validator_1, 100 * ONE_APT, true, false);
@@ -228,12 +228,12 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator_1, 9900 * ONE_APT + 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_end_to_end(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
 
@@ -246,7 +246,7 @@ module aptos_framework::delegation_pool_integration_tests {
         // The added stake should go to pending_active to wait for activation when next epoch starts.
         stake::mint(validator, 900 * ONE_APT);
         dp::add_stake(validator, pool_address, 100 * ONE_APT);
-        assert!(coin::balance<AptosCoin>(validator_address) == 800 * ONE_APT, 2);
+        assert!(coin::balance<SupraCoin>(validator_address) == 800 * ONE_APT, 2);
         stake::assert_validator_state(pool_address, 100 * ONE_APT, 0, 100 * ONE_APT, 0, 0);
 
         // Pending_active stake is activated in the new epoch.
@@ -273,10 +273,10 @@ module aptos_framework::delegation_pool_integration_tests {
 
         // Validator withdraws from inactive stake multiple times.
         dp::withdraw(validator, pool_address, 50 * ONE_APT);
-        assert!(coin::balance<AptosCoin>(validator_address) == 84999999999, 6);
+        assert!(coin::balance<SupraCoin>(validator_address) == 84999999999, 6);
         stake::assert_validator_state(pool_address, 10201000001, 5099999999, 0, 0, 0);
         dp::withdraw(validator, pool_address, 51 * ONE_APT);
-        assert!(coin::balance<AptosCoin>(validator_address) == 90099999998, 7);
+        assert!(coin::balance<SupraCoin>(validator_address) == 90099999998, 7);
         stake::assert_validator_state(pool_address, 10201000001, 0, 0, 0, 0);
 
         // Enough time has passed again and the validator's lockup is renewed once more. Validator is still active.
@@ -287,16 +287,16 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_remaining_lockup_secs(pool_address) == LOCKUP_CYCLE_SECONDS, 9);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator_1 = @0x123, validator_2 = @0x234)]
-    #[expected_failure(abort_code = 0x1000D, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator_1 = @0x123, validator_2 = @0x234)]
+    #[expected_failure(abort_code = 0x1000D, location = supra_framework::stake)]
     public entry fun test_inactive_validator_cannot_join_if_exceed_increase_limit(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -319,14 +319,14 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::join_validator_set(validator_2, dp::get_owned_pool_address(signer::address_of(validator_2)));
     }
 
-    #[test(aptos_framework = @aptos_framework, validator_1 = @0x123, validator_2 = @0x234)]
+    #[test(supra_framework = @supra_framework, validator_1 = @0x123, validator_2 = @0x234)]
     public entry fun test_pending_active_validator_can_add_more_stake(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -349,16 +349,16 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::assert_validator_state(validator_2_address, 200 * ONE_APT, 0, 0, 0, 0);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator_1 = @0x123, validator_2 = @0x234)]
-    #[expected_failure(abort_code = 0x1000D, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator_1 = @0x123, validator_2 = @0x234)]
+    #[expected_failure(abort_code = 0x1000D, location = supra_framework::stake)]
     public entry fun test_pending_active_validator_cannot_add_more_stake_than_limit(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
         // 100% voting power increase is allowed in each epoch.
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -380,12 +380,12 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator_2, ONE_APT);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_pending_active_validator_leaves_validator_set(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         // Validator joins but epoch hasn't ended, so the validator is still pending_active.
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, false);
@@ -397,15 +397,15 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_validator_state(validator_address) == VALIDATOR_STATUS_INACTIVE, 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x1000D, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x1000D, location = supra_framework::stake)]
     public entry fun test_active_validator_cannot_add_more_stake_than_limit_in_multiple_epochs(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -428,15 +428,15 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator, 99 * ONE_APT);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x1000D, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x1000D, location = supra_framework::stake)]
     public entry fun test_active_validator_cannot_add_more_stake_than_limit(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -452,14 +452,14 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator, 50 * ONE_APT + 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_active_validator_unlock_partial_stake(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         // Reward rate = 10%.
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -487,12 +487,12 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_remaining_lockup_secs(validator_address) == LOCKUP_CYCLE_SECONDS, 3);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_active_validator_can_withdraw_all_stake_and_rewards_at_once(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
         let validator_address = dp::get_owned_pool_address(signer::address_of(validator));
@@ -524,13 +524,13 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_validator_state(validator_address) == VALIDATOR_STATUS_INACTIVE, 4);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x10006, location = aptos_framework::delegation_pool)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x10006, location = supra_framework::delegation_pool)]
     public entry fun test_active_validator_unlocking_more_than_available_stake_should_cap(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, false, false);
 
@@ -539,12 +539,12 @@ module aptos_framework::delegation_pool_integration_tests {
         dp::unlock(validator, validator_address, 200 * ONE_APT);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_active_validator_withdraw_should_cap_by_inactive_stake(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         // Initial balance = 900 (idle) + 100 (staked) = 1000.
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
@@ -561,16 +561,16 @@ module aptos_framework::delegation_pool_integration_tests {
         dp::withdraw(validator, validator_address, 200 * ONE_APT);
 
         // Receive back all coins with an extra 1 for rewards.
-        assert!(coin::balance<AptosCoin>(signer::address_of(validator)) == 100100000000, 2);
+        assert!(coin::balance<SupraCoin>(signer::address_of(validator)) == 100100000000, 2);
         stake::assert_validator_state(validator_address, 0, 0, 0, 0, 0);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_active_validator_can_reactivate_pending_inactive_stake(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
 
@@ -584,12 +584,12 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::assert_validator_state(validator_address, 100 * ONE_APT, 0, 0, 0, 0);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_active_validator_reactivate_more_than_available_pending_inactive_stake_should_cap(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
 
@@ -601,12 +601,12 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::assert_validator_state(validator_address, 100 * ONE_APT, 0, 0, 0, 0);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_active_validator_having_insufficient_remaining_stake_after_withdrawal_gets_kicked(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
 
@@ -628,13 +628,13 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_remaining_lockup_secs(validator_address) == 0, 3);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123, validator_2 = @0x234)]
+    #[test(supra_framework = @supra_framework, validator = @0x123, validator_2 = @0x234)]
     public entry fun test_active_validator_leaves_staking_but_still_has_a_lockup(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
         validator_2: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk_1, pk_1, pop_1) = generate_identity();
         let (_sk_2, pk_2, pop_2) = generate_identity();
         initialize_test_validator(&pk_1, &pop_1, validator, 100 * ONE_APT, true, false);
@@ -680,13 +680,13 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::assert_validator_state(validator_address, 5100000001, 0, 0, 0, 1);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123, validator_2 = @0x234)]
+    #[test(supra_framework = @supra_framework, validator = @0x123, validator_2 = @0x234)]
     public entry fun test_active_validator_leaves_staking_and_rejoins_with_expired_lockup_should_be_renewed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
         validator_2: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk_1, pk_1, pop_1) = generate_identity();
         let (_sk_2, pk_2, pop_2) = generate_identity();
         initialize_test_validator(&pk_1, &pop_1, validator, 100 * ONE_APT, true, false);
@@ -711,15 +711,15 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_remaining_lockup_secs(validator_address) == LOCKUP_CYCLE_SECONDS, 2);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator_1 = @0x123, validator_2 = @0x234)]
+    #[test(supra_framework = @supra_framework, validator_1 = @0x123, validator_2 = @0x234)]
     public entry fun test_pending_inactive_validator_does_not_count_in_increase_limit(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
         // Only 50% voting power increase is allowed in each epoch.
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -740,15 +740,15 @@ module aptos_framework::delegation_pool_integration_tests {
         mint_and_add_stake(validator_1, 51 * ONE_APT);
     }
 
-    #[test(aptos_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234, validator_3 = @0x345)]
+    #[test(supra_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234, validator_3 = @0x345)]
     public entry fun test_multiple_validators_join_and_leave(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
         validator_3: &signer
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             100 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -810,13 +810,13 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_validator_state(validator_1_address) == VALIDATOR_STATUS_INACTIVE, 11);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_delegated_staking_with_owner_cap(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             100 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -847,7 +847,7 @@ module aptos_framework::delegation_pool_integration_tests {
         // Withdraw stake + rewards.
         stake::assert_validator_state(pool_address, 0, 101 * ONE_APT, 0, 0, 0);
         dp::withdraw(validator, pool_address, 101 * ONE_APT);
-        assert!(coin::balance<AptosCoin>(signer::address_of(validator)) == 101 * ONE_APT, 1);
+        assert!(coin::balance<SupraCoin>(signer::address_of(validator)) == 101 * ONE_APT, 1);
         stake::assert_validator_state(pool_address, 0, 0, 0, 0, 0);
 
         // Operator can separately rotate consensus key.
@@ -865,14 +865,14 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(fullnode_addresses == b"2", 4);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x1000A, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x1000A, location = supra_framework::stake)]
     public entry fun test_validator_cannot_join_post_genesis(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             100 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -887,26 +887,26 @@ module aptos_framework::delegation_pool_integration_tests {
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x1000E, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x1000E, location = supra_framework::stake)]
     public entry fun test_invalid_pool_address(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk, pk, pop) = generate_identity();
         initialize_test_validator(&pk, &pop, validator, 100 * ONE_APT, true, true);
         stake::join_validator_set(validator, @0x234);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x1000A, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x1000A, location = supra_framework::stake)]
     public entry fun test_validator_cannot_leave_post_genesis(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             100 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -928,22 +928,22 @@ module aptos_framework::delegation_pool_integration_tests {
     }
 
     #[test(
-        aptos_framework = @aptos_framework,
-        validator_1 = @aptos_framework,
+        supra_framework = @supra_framework,
+        validator_1 = @supra_framework,
         validator_2 = @0x2,
         validator_3 = @0x3,
         validator_4 = @0x4,
         validator_5 = @0x5
     )]
     public entry fun test_staking_validator_index(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
         validator_3: &signer,
         validator_4: &signer,
         validator_5: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
 
         let (_sk_1, pk_1, pop_1) = generate_identity();
         let (_sk_2, pk_2, pop_2) = generate_identity();
@@ -1000,14 +1000,14 @@ module aptos_framework::delegation_pool_integration_tests {
         assert!(stake::get_validator_index(v2_addr) == 2, 17);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
-    #[expected_failure(abort_code = 0x1000B, location = aptos_framework::stake)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
+    #[expected_failure(abort_code = 0x1000B, location = supra_framework::stake)]
     public entry fun test_invalid_config(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -1029,13 +1029,13 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::join_validator_set(validator, validator_address);
     }
 
-    #[test(aptos_framework = @aptos_framework, validator = @0x123)]
+    #[test(supra_framework = @supra_framework, validator = @0x123)]
     public entry fun test_valid_config(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator: &signer,
     ) {
         initialize_for_test_custom(
-            aptos_framework,
+            supra_framework,
             50 * ONE_APT,
             10000 * ONE_APT,
             LOCKUP_CYCLE_SECONDS,
@@ -1062,13 +1062,13 @@ module aptos_framework::delegation_pool_integration_tests {
         stake::join_validator_set(validator, validator_address);
     }
 
-    #[test(aptos_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234)]
+    #[test(supra_framework = @0x1, validator_1 = @0x123, validator_2 = @0x234)]
     public entry fun test_removing_validator_from_active_set(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         validator_1: &signer,
         validator_2: &signer,
     ) {
-        initialize_for_test(aptos_framework);
+        initialize_for_test(supra_framework);
         let (_sk_1, pk_1, pop_1) = generate_identity();
         let (_sk_2, pk_2, pop_2) = generate_identity();
         initialize_test_validator(&pk_1, &pop_1, validator_1, 100 * ONE_APT, true, false);
@@ -1076,7 +1076,7 @@ module aptos_framework::delegation_pool_integration_tests {
 
         // Remove validator 1 from the active validator set. Only validator 2 remains.
         let validator_to_remove = dp::get_owned_pool_address(signer::address_of(validator_1));
-        stake::remove_validators(aptos_framework, &vector[validator_to_remove]);
+        stake::remove_validators(supra_framework, &vector[validator_to_remove]);
         assert!(stake::get_validator_state(validator_to_remove) == VALIDATOR_STATUS_PENDING_INACTIVE, 1);
     }
 }

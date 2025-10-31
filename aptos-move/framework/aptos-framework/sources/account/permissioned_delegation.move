@@ -1,4 +1,4 @@
-module aptos_framework::permissioned_delegation {
+module supra_framework::permissioned_delegation {
     use std::error;
     use std::option::Option;
     use std::signer;
@@ -9,11 +9,11 @@ module aptos_framework::permissioned_delegation {
         UnvalidatedPublicKey
     };
     use aptos_std::big_ordered_map::{Self, BigOrderedMap};
-    use aptos_framework::auth_data::{Self, AbstractionAuthData};
-    use aptos_framework::bcs_stream::{Self, deserialize_u8};
-    use aptos_framework::permissioned_signer::{Self, is_permissioned_signer, StorablePermissionedHandle};
-    use aptos_framework::rate_limiter;
-    use aptos_framework::rate_limiter::RateLimiter;
+    use supra_framework::auth_data::{Self, AbstractionAuthData};
+    use supra_framework::bcs_stream::{Self, deserialize_u8};
+    use supra_framework::permissioned_signer::{Self, is_permissioned_signer, StorablePermissionedHandle};
+    use supra_framework::rate_limiter;
+    use supra_framework::rate_limiter::RateLimiter;
     #[test_only]
     use std::bcs;
     #[test_only]
@@ -157,9 +157,9 @@ module aptos_framework::permissioned_delegation {
         public_key_into_unvalidated
     };
     #[test_only]
-    use aptos_framework::account::create_signer_for_test;
+    use supra_framework::account::create_signer_for_test;
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
 
     #[test_only]
     struct SignatureBundle has drop {
@@ -169,8 +169,8 @@ module aptos_framework::permissioned_delegation {
 
     #[test(account = @0xcafe, account_copy = @0xcafe)]
     fun test_basics(account: signer, account_copy: signer) acquires RegisteredDelegations {
-        let aptos_framework = create_signer_for_test(@aptos_framework);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = create_signer_for_test(@supra_framework);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
         let (sk, vpk) = generate_keys();
         let signature = sign_arbitrary_bytes(&sk, vector[1, 2, 3]);
         let pubkey_bytes = validated_public_key_to_bytes(&vpk);
@@ -190,8 +190,8 @@ module aptos_framework::permissioned_delegation {
     #[test(account = @0xcafe, account_copy = @0xcafe, account_copy_2 = @0xcafe)]
     #[expected_failure(abort_code = 0x50006, location = Self)]
     fun test_rate_limit(account: signer, account_copy: signer, account_copy_2: signer) acquires RegisteredDelegations {
-        let aptos_framework = create_signer_for_test(@aptos_framework);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = create_signer_for_test(@supra_framework);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
         let (sk, vpk) = generate_keys();
         let signature = sign_arbitrary_bytes(&sk, vector[1, 2, 3]);
         let pubkey_bytes = validated_public_key_to_bytes(&vpk);

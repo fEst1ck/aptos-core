@@ -1,10 +1,10 @@
-module aptos_experimental::market_types {
+module supra_experimental::market_types {
     use std::option::Option;
     use std::string::String;
 
-    use aptos_experimental::order_book_types::OrderIdType;
+    use supra_experimental::order_book_types::OrderIdType;
 
-    friend aptos_experimental::market;
+    friend supra_experimental::market;
 
     const EINVALID_ADDRESS: u64 = 1;
     const EINVALID_SETTLE_RESULT: u64 = 2;

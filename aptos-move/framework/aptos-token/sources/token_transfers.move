@@ -1,12 +1,12 @@
 /// This module provides the foundation for transferring of Tokens
-module aptos_token::token_transfers {
+module supra_token::token_transfers {
     use std::signer;
     use std::string::String;
     use std::error;
     use aptos_std::table::{Self, Table};
-    use aptos_token::token::{Self, Token, TokenId};
-    use aptos_framework::account;
-    use aptos_framework::event::{Self, EventHandle};
+    use supra_token::token::{Self, Token, TokenId};
+    use supra_framework::account;
+    use supra_framework::event::{Self, EventHandle};
 
     //
     // Errors.
@@ -249,7 +249,7 @@ module aptos_token::token_transfers {
 
         let creator_addr = signer::address_of(&creator);
         let owner_addr = signer::address_of(&owner);
-        aptos_framework::account::create_account_for_test(owner_addr);
+        supra_framework::account::create_account_for_test(owner_addr);
         offer(&creator, owner_addr, token_id, 1);
         claim(&owner, creator_addr, token_id);
 
@@ -268,9 +268,9 @@ module aptos_token::token_transfers {
 
         let creator_addr = signer::address_of(&creator);
         let owner0_addr = signer::address_of(&owner0);
-        aptos_framework::account::create_account_for_test(owner0_addr);
+        supra_framework::account::create_account_for_test(owner0_addr);
         let owner1_addr = signer::address_of(&owner1);
-        aptos_framework::account::create_account_for_test(owner1_addr);
+        supra_framework::account::create_account_for_test(owner1_addr);
 
         offer(&creator, owner0_addr, token_id, 1);
         offer(&creator, owner1_addr, token_id, 1);
@@ -295,13 +295,13 @@ module aptos_token::token_transfers {
 
         let collection_name = string::utf8(b"Hello, World");
         let collection_mutation_setting = vector<bool>[false, false, false];
-        aptos_framework::account::create_account_for_test(signer::address_of(creator));
+        supra_framework::account::create_account_for_test(signer::address_of(creator));
 
         token::create_collection(
             creator,
             collection_name,
             string::utf8(b"Collection: Hello, World"),
-            string::utf8(b"https://aptos.dev"),
+            string::utf8(b"https://supra.dev"),
             1,
             collection_mutation_setting,
         );
@@ -317,7 +317,7 @@ module aptos_token::token_transfers {
             string::utf8(b"Hello, Token"),
             amount,
             amount,
-            string::utf8(b"https://aptos.dev"),
+            string::utf8(b"https://supra.dev"),
             signer::address_of(creator),
             100,
             0,

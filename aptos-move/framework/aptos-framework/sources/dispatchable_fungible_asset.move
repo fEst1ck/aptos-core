@@ -14,10 +14,10 @@
 ///
 /// See AIP-73 for further discussion
 ///
-module aptos_framework::dispatchable_fungible_asset {
-    use aptos_framework::fungible_asset::{Self, FungibleAsset, TransferRef};
-    use aptos_framework::function_info::{Self, FunctionInfo};
-    use aptos_framework::object::{Self, ConstructorRef, Object};
+module supra_framework::dispatchable_fungible_asset {
+    use supra_framework::fungible_asset::{Self, FungibleAsset, TransferRef};
+    use supra_framework::function_info::{Self, FunctionInfo};
+    use supra_framework::object::{Self, ConstructorRef, Object};
 
     use std::error;
     use std::features;
@@ -32,7 +32,7 @@ module aptos_framework::dispatchable_fungible_asset {
     /// Dispatch target is not loaded.
     const ENOT_LOADED: u64 = 4;
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct TransferRefStore has key {
         transfer_ref: TransferRef
     }

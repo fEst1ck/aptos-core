@@ -1,6 +1,6 @@
 /// This module implements the Confidential Asset (CA) Standard, a privacy-focused protocol for managing fungible assets (FA).
 /// It enables private transfers by obfuscating token amounts while keeping sender and recipient addresses visible.
-module aptos_experimental::confidential_asset {
+module supra_experimental::confidential_asset {
     use std::bcs;
     use std::error;
     use std::option::Option;
@@ -9,24 +9,24 @@ module aptos_experimental::confidential_asset {
     use aptos_std::ristretto255::Self;
     use aptos_std::ristretto255_bulletproofs::Self as bulletproofs;
     use aptos_std::string_utils;
-    use aptos_framework::chain_id;
-    use aptos_framework::coin;
-    use aptos_framework::event;
-    use aptos_framework::dispatchable_fungible_asset;
-    use aptos_framework::fungible_asset::{Metadata};
-    use aptos_framework::object::{Self, ExtendRef, Object};
-    use aptos_framework::primary_fungible_store;
-    use aptos_framework::system_addresses;
+    use supra_framework::chain_id;
+    use supra_framework::coin;
+    use supra_framework::event;
+    use supra_framework::dispatchable_fungible_asset;
+    use supra_framework::fungible_asset::{Metadata};
+    use supra_framework::object::{Self, ExtendRef, Object};
+    use supra_framework::primary_fungible_store;
+    use supra_framework::system_addresses;
 
-    use aptos_experimental::confidential_balance;
-    use aptos_experimental::confidential_proof::{
+    use supra_experimental::confidential_balance;
+    use supra_experimental::confidential_proof::{
         Self,
         NormalizationProof,
         RotationProof,
         TransferProof,
         WithdrawalProof
     };
-    use aptos_experimental::ristretto255_twisted_elgamal as twisted_elgamal;
+    use supra_experimental::ristretto255_twisted_elgamal as twisted_elgamal;
 
     #[test_only]
     use aptos_std::ristretto255::Scalar;
@@ -479,10 +479,10 @@ module aptos_experimental::confidential_asset {
     //
 
     /// Enables the allow list, restricting confidential transfers to tokens on the allow list.
-    public fun enable_allow_list(aptos_framework: &signer) acquires FAController {
-        system_addresses::assert_aptos_framework(aptos_framework);
+    public fun enable_allow_list(supra_framework: &signer) acquires FAController {
+        system_addresses::assert_supra_framework(supra_framework);
 
-        let fa_controller = borrow_global_mut<FAController>(@aptos_experimental);
+        let fa_controller = borrow_global_mut<FAController>(@supra_experimental);
 
         assert!(
             !fa_controller.allow_list_enabled,
@@ -493,10 +493,10 @@ module aptos_experimental::confidential_asset {
     }
 
     /// Disables the allow list, allowing confidential transfers for all tokens.
-    public fun disable_allow_list(aptos_framework: &signer) acquires FAController {
-        system_addresses::assert_aptos_framework(aptos_framework);
+    public fun disable_allow_list(supra_framework: &signer) acquires FAController {
+        system_addresses::assert_supra_framework(supra_framework);
 
-        let fa_controller = borrow_global_mut<FAController>(@aptos_experimental);
+        let fa_controller = borrow_global_mut<FAController>(@supra_experimental);
 
         assert!(
             fa_controller.allow_list_enabled,
@@ -508,9 +508,9 @@ module aptos_experimental::confidential_asset {
 
     /// Enables confidential transfers for the specified token.
     public fun enable_token(
-        aptos_framework: &signer, token: Object<Metadata>
+        supra_framework: &signer, token: Object<Metadata>
     ) acquires FAConfig, FAController {
-        system_addresses::assert_aptos_framework(aptos_framework);
+        system_addresses::assert_supra_framework(supra_framework);
 
         let fa_config = borrow_global_mut<FAConfig>(ensure_fa_config_exists(token));
 
@@ -521,9 +521,9 @@ module aptos_experimental::confidential_asset {
 
     /// Disables confidential transfers for the specified token.
     public fun disable_token(
-        aptos_framework: &signer, token: Object<Metadata>
+        supra_framework: &signer, token: Object<Metadata>
     ) acquires FAConfig, FAController {
-        system_addresses::assert_aptos_framework(aptos_framework);
+        system_addresses::assert_supra_framework(supra_framework);
 
         let fa_config = borrow_global_mut<FAConfig>(ensure_fa_config_exists(token));
 
@@ -534,9 +534,9 @@ module aptos_experimental::confidential_asset {
 
     /// Sets the auditor's public key for the specified token.
     public fun set_auditor(
-        aptos_framework: &signer, token: Object<Metadata>, new_auditor_ek: vector<u8>
+        supra_framework: &signer, token: Object<Metadata>, new_auditor_ek: vector<u8>
     ) acquires FAConfig, FAController {
-        system_addresses::assert_aptos_framework(aptos_framework);
+        system_addresses::assert_supra_framework(supra_framework);
 
         let fa_config = borrow_global_mut<FAConfig>(ensure_fa_config_exists(token));
 
@@ -569,7 +569,7 @@ module aptos_experimental::confidential_asset {
     #[view]
     /// Checks if the confidential asset controller is installed.
     public fun confidential_asset_controller_exists(): bool {
-        exists<FAController>(@aptos_experimental)
+        exists<FAController>(@supra_experimental)
     }
 
     #[view]
@@ -597,7 +597,7 @@ module aptos_experimental::confidential_asset {
             confidential_asset_controller_exists(),
             error::invalid_state(EFA_CONTROLLER_NOT_INSTALLED)
         );
-        borrow_global<FAController>(@aptos_experimental).allow_list_enabled
+        borrow_global<FAController>(@supra_experimental).allow_list_enabled
     }
 
     #[view]
@@ -1063,14 +1063,14 @@ module aptos_experimental::confidential_asset {
     /// Returns an object for handling all the FA primary stores, and returns a signer for it.
     fun get_fa_store_signer(): signer acquires FAController {
         object::generate_signer_for_extending(
-            &borrow_global<FAController>(@aptos_experimental).extend_ref
+            &borrow_global<FAController>(@supra_experimental).extend_ref
         )
     }
 
     /// Returns the address that handles all the FA primary stores.
     fun get_fa_store_address(): address acquires FAController {
         object::address_from_extend_ref(
-            &borrow_global<FAController>(@aptos_experimental).extend_ref
+            &borrow_global<FAController>(@supra_experimental).extend_ref
         )
     }
 
@@ -1088,7 +1088,7 @@ module aptos_experimental::confidential_asset {
 
     /// Returns an object for handling the `FAConfig`, and returns a signer for it.
     fun get_fa_config_signer(token: Object<Metadata>): signer acquires FAController {
-        let fa_ext = &borrow_global<FAController>(@aptos_experimental).extend_ref;
+        let fa_ext = &borrow_global<FAController>(@supra_experimental).extend_ref;
         let fa_ext_signer = object::generate_signer_for_extending(fa_ext);
 
         let fa_ctor =
@@ -1099,7 +1099,7 @@ module aptos_experimental::confidential_asset {
 
     /// Returns the address that handles primary FA store and `FAConfig` objects for the specified token.
     fun get_fa_config_address(token: Object<Metadata>): address acquires FAController {
-        let fa_ext = &borrow_global<FAController>(@aptos_experimental).extend_ref;
+        let fa_ext = &borrow_global<FAController>(@supra_experimental).extend_ref;
         let fa_ext_address = object::address_from_extend_ref(fa_ext);
 
         object::create_object_address(&fa_ext_address, construct_fa_seed(token))
@@ -1111,7 +1111,7 @@ module aptos_experimental::confidential_asset {
         bcs::to_bytes(
             &string_utils::format2(
                 &b"confidential_asset::{}::token::{}::user",
-                @aptos_experimental,
+                @supra_experimental,
                 object::object_address(&token)
             )
         )
@@ -1123,7 +1123,7 @@ module aptos_experimental::confidential_asset {
         bcs::to_bytes(
             &string_utils::format2(
                 &b"confidential_asset::{}::token::{}::fa",
-                @aptos_experimental,
+                @supra_experimental,
                 object::object_address(&token)
             )
         )
@@ -1250,7 +1250,7 @@ module aptos_experimental::confidential_asset {
 
     entry fun init_module_for_genesis(deployer: &signer) {
         assert!(
-            signer::address_of(deployer) == @aptos_experimental,
+            signer::address_of(deployer) == @supra_experimental,
             error::invalid_argument(EINIT_MODULE_FAILED)
         );
         assert!(

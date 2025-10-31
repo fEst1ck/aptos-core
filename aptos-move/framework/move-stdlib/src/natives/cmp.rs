@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 // Copyright (c) The Diem Core Contributors
@@ -7,10 +7,10 @@
 
 //! Implementation of native functions for value comparison.
 
-use aptos_gas_schedule::gas_params::natives::move_stdlib::{
+use supra_gas_schedule::gas_params::natives::move_stdlib::{
     CMP_COMPARE_BASE, CMP_COMPARE_PER_ABS_VAL_UNIT,
 };
-use aptos_native_interface::{
+use supra_native_interface::{
     RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError, SafeNativeResult,
 };
 use move_core_types::vm_status::StatusCode;

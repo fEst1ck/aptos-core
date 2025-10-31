@@ -1,12 +1,12 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_gas_schedule::gas_params::natives::move_stdlib::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::move_stdlib::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeResult,
 };
 use move_core_types::gas_algebra::NumBytes;

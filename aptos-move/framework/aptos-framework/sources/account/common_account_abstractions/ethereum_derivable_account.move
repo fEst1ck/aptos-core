@@ -5,7 +5,7 @@
 /// <domain> wants you to sign in with your Ethereum account:
 /// <ethereum_address>
 ///
-/// Please confirm you explicitly initiated this request from <domain>. You are approving to execute transaction <entry_function_name> on Aptos blockchain (<network_name>).
+/// Please confirm you explicitly initiated this request from <domain>. You are approving to execute transaction <entry_function_name> on Supra blockchain (<network_name>).
 ///
 /// URI: <scheme>://<domain>
 /// Version: 1
@@ -23,13 +23,13 @@
 /// - Exodus
 /// - Backpack
 
-module aptos_framework::ethereum_derivable_account {
-    use aptos_framework::auth_data::AbstractionAuthData;
-    use aptos_framework::common_account_abstractions_utils::{network_name, entry_function_name};
-    use aptos_framework::base16::base16_utf8_to_vec_u8;
+module supra_framework::ethereum_derivable_account {
+    use supra_framework::auth_data::AbstractionAuthData;
+    use supra_framework::common_account_abstractions_utils::{network_name, entry_function_name};
+    use supra_framework::base16::base16_utf8_to_vec_u8;
     use aptos_std::secp256k1;
     use aptos_std::option;
-    use aptos_std::aptos_hash;
+    use aptos_std::supra_hash;
     use std::bcs_stream::{Self, deserialize_u8};
     use std::chain_id;
     use std::string_utils;
@@ -120,7 +120,7 @@ module aptos_framework::ethereum_derivable_account {
         message.append(b".");
         message.append(b" You are approving to execute transaction ");
         message.append(*entry_function_name);
-        message.append(b" on Aptos blockchain");
+        message.append(b" on Supra blockchain");
         let network_name = network_name();
         message.append(b" (");
         message.append(network_name);
@@ -190,13 +190,13 @@ module aptos_framework::ethereum_derivable_account {
         let issued_at = abstract_signature.issued_at.bytes();
         let scheme = abstract_signature.scheme.bytes();
         let message = construct_message(&abstract_public_key.ethereum_address, &abstract_public_key.domain, entry_function_name, digest_utf8, issued_at, scheme);
-        let hashed_message = aptos_hash::keccak256(message);
+        let hashed_message = supra_hash::keccak256(message);
         let public_key_bytes = recover_public_key(&abstract_signature.signature, &hashed_message);
 
         // 1. Skip the 0x04 prefix (take the bytes after the first byte)
         let public_key_without_prefix = vector::slice(&public_key_bytes, 1, vector::length(&public_key_bytes));
         // 2. Run Keccak256 on the public key (without the 0x04 prefix)
-        let kexHash = aptos_hash::keccak256(public_key_without_prefix);
+        let kexHash = supra_hash::keccak256(public_key_without_prefix);
         // 3. Slice the last 20 bytes (this is the Ethereum address)
         let recovered_addr = vector::slice(&kexHash, 12, 32);
         // 4. Remove the 0x prefix from the utf8 account address
@@ -225,7 +225,7 @@ module aptos_framework::ethereum_derivable_account {
     #[test_only]
     use std::string::utf8;
     #[test_only]
-    use aptos_framework::auth_data::{create_derivable_auth_data};
+    use supra_framework::auth_data::{create_derivable_auth_data};
     #[test_only]
     fun create_abstract_public_key(ethereum_address: vector<u8>, domain: vector<u8>): vector<u8> {
         let abstract_public_key = SIWEAbstractPublicKey {
@@ -307,12 +307,12 @@ module aptos_framework::ethereum_derivable_account {
 
         let ethereum_address = b"0xC7B576Ead6aFb962E2DEcB35814FB29723AEC98a";
         let domain = b"localhost:3001";
-        let entry_function_name = b"0x1::aptos_account::transfer";
+        let entry_function_name = b"0x1::supra_account::transfer";
         let digest_utf8 = b"0x2a2f07c32382a94aa90ddfdb97076b77d779656bb9730c4f3e4d22a30df298dd";
         let issued_at = b"2025-01-01T00:00:00.000Z";
         let scheme = b"https";
         let message = construct_message(&ethereum_address, &domain, &entry_function_name, &digest_utf8, &issued_at, &scheme);
-        let expected_message = b"\x19Ethereum Signed Message:\n442localhost:3001 wants you to sign in with your Ethereum account:\n0xC7B576Ead6aFb962E2DEcB35814FB29723AEC98a\n\nPlease confirm you explicitly initiated this request from localhost:3001. You are approving to execute transaction 0x1::aptos_account::transfer on Aptos blockchain (local).\n\nURI: https://localhost:3001\nVersion: 1\nChain ID: 4\nNonce: 0x2a2f07c32382a94aa90ddfdb97076b77d779656bb9730c4f3e4d22a30df298dd\nIssued At: 2025-01-01T00:00:00.000Z";
+        let expected_message = b"\x19Ethereum Signed Message:\n442localhost:3001 wants you to sign in with your Ethereum account:\n0xC7B576Ead6aFb962E2DEcB35814FB29723AEC98a\n\nPlease confirm you explicitly initiated this request from localhost:3001. You are approving to execute transaction 0x1::supra_account::transfer on Supra blockchain (local).\n\nURI: https://localhost:3001\nVersion: 1\nChain ID: 4\nNonce: 0x2a2f07c32382a94aa90ddfdb97076b77d779656bb9730c4f3e4d22a30df298dd\nIssued At: 2025-01-01T00:00:00.000Z";
         assert!(message == expected_message);
     }
 
@@ -321,12 +321,12 @@ module aptos_framework::ethereum_derivable_account {
         chain_id::initialize_for_test(framework, 4);
         let ethereum_address = b"0xC7B576Ead6aFb962E2DEcB35814FB29723AEC98a";
         let domain = b"localhost:3001";
-        let entry_function_name = b"0x1::aptos_account::transfer";
+        let entry_function_name = b"0x1::supra_account::transfer";
         let digest = b"0x705f1f57dd8399bf134e649981af43b5c42e59f985c4e4335ab70ce3f96bcd27";
         let issued_at = b"2025-05-02T16:17:10.714Z";
         let scheme = b"https";
         let message = construct_message(&ethereum_address, &domain, &entry_function_name, &digest, &issued_at, &scheme);
-        let hashed_message = aptos_hash::keccak256(message);
+        let hashed_message = supra_hash::keccak256(message);
         let signature_bytes = vector[
             162, 57, 230, 98, 9, 139, 202, 15, 110, 61, 237, 54, 252, 234, 202, 13,
             181, 196, 174, 19, 226, 50, 151, 63, 137, 229, 144, 15, 4, 56, 1, 122,
@@ -359,7 +359,7 @@ module aptos_framework::ethereum_derivable_account {
         let domain = b"localhost:3001";
         let abstract_public_key = create_abstract_public_key(ethereum_address, domain);
         let auth_data = create_derivable_auth_data(digest, abstract_signature, abstract_public_key);
-        let entry_function_name = b"0x1::aptos_account::transfer";
+        let entry_function_name = b"0x1::supra_account::transfer";
         authenticate_auth_data(auth_data, &entry_function_name);
     }
 
@@ -381,7 +381,7 @@ module aptos_framework::ethereum_derivable_account {
         let domain = b"localhost:3001";
         let abstract_public_key = create_abstract_public_key(ethereum_address, domain);
         let auth_data = create_derivable_auth_data(digest, abstract_signature, abstract_public_key);
-        let entry_function_name = b"0x1::aptos_account::transfer";
+        let entry_function_name = b"0x1::supra_account::transfer";
         authenticate_auth_data(auth_data, &entry_function_name);
     }
 }

@@ -1,4 +1,4 @@
-/// Enhanced multisig account standard on Aptos. This is different from the native multisig scheme support enforced via
+/// Enhanced multisig account standard on Supra. This is different from the native multisig scheme support enforced via
 /// the account's auth key.
 ///
 /// This module allows creating a flexible and powerful multisig account with seamless support for updating owners
@@ -9,7 +9,7 @@
 /// the special multisig transaction flow. However, owners can create a transaction to change the auth key to match a
 /// private key off chain if so desired.
 ///
-/// Transactions need to be executed in order of creation, similar to transactions for a normal Aptos account (enforced
+/// Transactions need to be executed in order of creation, similar to transactions for a normal Supra account (enforced
 /// with account nonce).
 ///
 /// The flow is like below:
@@ -35,14 +35,14 @@
 /// are, the more expensive voting on transactions will become. If a large number of owners is designed, such as in a
 /// flat governance structure, clients are encouraged to write their own modules on top of this multisig account module
 /// and implement the governance voting logic on top.
-module aptos_framework::multisig_account {
-    use aptos_framework::account::{Self, SignerCapability, new_event_handle, create_resource_address};
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::chain_id;
-    use aptos_framework::create_signer::create_signer;
-    use aptos_framework::coin;
-    use aptos_framework::event::{EventHandle, emit_event, emit};
-    use aptos_framework::timestamp::now_seconds;
+module supra_framework::multisig_account {
+    use supra_framework::account::{Self, SignerCapability, new_event_handle, create_resource_address};
+    use supra_framework::supra_coin::SupraCoin;
+    use supra_framework::chain_id;
+    use supra_framework::create_signer::create_signer;
+    use supra_framework::coin;
+    use supra_framework::event::{EventHandle, emit_event, emit};
+    use supra_framework::timestamp::now_seconds;
     use aptos_std::simple_map::{Self, SimpleMap};
     use aptos_std::table::{Self, Table};
     use std::bcs::to_bytes;
@@ -56,7 +56,7 @@ module aptos_framework::multisig_account {
     /// The salt used to create a resource account during multisig account creation.
     /// This is used to avoid conflicts with other modules that also create resource accounts with the same owner
     /// account.
-    const DOMAIN_SEPARATOR: vector<u8> = b"aptos_framework::multisig_account";
+    const DOMAIN_SEPARATOR: vector<u8> = b"supra_framework::multisig_account";
 
     // Any error codes > 2000 can be thrown as part of transaction prologue.
     /// Owner list cannot contain the same address more than once.
@@ -1330,8 +1330,8 @@ module aptos_framework::multisig_account {
             account::create_resource_account(owner, create_multisig_account_seed(to_bytes(&owner_nonce)));
         // Register the account to receive APT as this is not done by default as part of the resource account creation
         // flow.
-        if (!coin::is_account_registered<AptosCoin>(address_of(&multisig_signer))) {
-            coin::register<AptosCoin>(&multisig_signer);
+        if (!coin::is_account_registered<SupraCoin>(address_of(&multisig_signer))) {
+            coin::register<SupraCoin>(&multisig_signer);
         };
 
         (multisig_signer, multisig_signer_cap)
@@ -1528,9 +1528,9 @@ module aptos_framework::multisig_account {
     ////////////////////////// Tests ///////////////////////////////
 
     #[test_only]
-    use aptos_framework::aptos_account::create_account;
+    use supra_framework::supra_account::create_account;
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
     #[test_only]
     use aptos_std::from_bcs;
     #[test_only]
@@ -1539,9 +1539,9 @@ module aptos_framework::multisig_account {
     use std::string::utf8;
     use std::features;
     #[test_only]
-    use aptos_framework::aptos_coin;
+    use supra_framework::supra_coin;
     #[test_only]
-    use aptos_framework::coin::{destroy_mint_cap, destroy_burn_cap};
+    use supra_framework::coin::{destroy_mint_cap, destroy_burn_cap};
 
     #[test_only]
     const PAYLOAD: vector<u8> = vector[1, 2, 3];
@@ -1568,7 +1568,7 @@ module aptos_framework::multisig_account {
             framework_signer, vector[features::get_multisig_accounts_feature(), features::get_multisig_v2_enhancement_feature(), features::get_abort_if_multisig_payload_mismatch_feature()], vector[]);
         timestamp::set_time_has_started_for_testing(framework_signer);
         chain_id::initialize_for_test(framework_signer, 1);
-        let (burn, mint) = aptos_coin::initialize_for_test(framework_signer);
+        let (burn, mint) = supra_coin::initialize_for_test(framework_signer);
         destroy_mint_cap(mint);
         destroy_burn_cap(burn);
     }
@@ -1580,7 +1580,7 @@ module aptos_framework::multisig_account {
             framework_signer, vector[], vector[features::get_multisig_accounts_feature()]);
         timestamp::set_time_has_started_for_testing(framework_signer);
         chain_id::initialize_for_test(framework_signer, 1);
-        let (burn, mint) = aptos_coin::initialize_for_test(framework_signer);
+        let (burn, mint) = supra_coin::initialize_for_test(framework_signer);
         destroy_mint_cap(mint);
         destroy_burn_cap(burn);
     }

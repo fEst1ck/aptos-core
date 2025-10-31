@@ -1,1 +1,1 @@
-spec aptos_experimental::confidential_balance {}
+spec supra_experimental::confidential_balance {}

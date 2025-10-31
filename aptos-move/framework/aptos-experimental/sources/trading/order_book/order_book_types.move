@@ -1,12 +1,12 @@
 /// (work in progress)
-module aptos_experimental::order_book_types {
+module supra_experimental::order_book_types {
     use std::option;
     use std::option::Option;
-    use aptos_framework::big_ordered_map::{Self, BigOrderedMap};
-    friend aptos_experimental::active_order_book;
-    friend aptos_experimental::order_book;
-    friend aptos_experimental::pending_order_book_index;
-    friend aptos_experimental::market;
+    use supra_framework::big_ordered_map::{Self, BigOrderedMap};
+    friend supra_experimental::active_order_book;
+    friend supra_experimental::order_book;
+    friend supra_experimental::pending_order_book_index;
+    friend supra_experimental::market;
 
     const U128_MAX: u128 = 0xffffffffffffffffffffffffffffffff;
 

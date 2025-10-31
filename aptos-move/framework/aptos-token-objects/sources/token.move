@@ -1,23 +1,23 @@
-/// This defines an object-based Token. The key differentiating features from the Aptos standard
+/// This defines an object-based Token. The key differentiating features from the Supra standard
 /// token are:
 /// * Decoupled token ownership from token data.
 /// * Explicit data model for token metadata via adjacent resources
 /// * Extensible framework for tokens
 ///
-module aptos_token_objects::token {
+module supra_token_objects::token {
     use std::error;
     use std::features;
     use std::option::{Self, Option};
     use std::string::{Self, String};
     use std::signer;
-    use aptos_framework::aggregator_v2::{Self, AggregatorSnapshot, DerivedStringSnapshot};
-    use aptos_framework::event;
-    use aptos_framework::object::{Self, ConstructorRef, Object};
-    use aptos_token_objects::collection::{Self, Collection};
-    use aptos_token_objects::royalty::{Self, Royalty};
+    use supra_framework::aggregator_v2::{Self, AggregatorSnapshot, DerivedStringSnapshot};
+    use supra_framework::event;
+    use supra_framework::object::{Self, ConstructorRef, Object};
+    use supra_token_objects::collection::{Self, Collection};
+    use supra_token_objects::royalty::{Self, Royalty};
 
     #[test_only]
-    use aptos_framework::object::ExtendRef;
+    use supra_framework::object::ExtendRef;
 
     /// The token does not exist
     const ETOKEN_DOES_NOT_EXIST: u64 = 1;
@@ -43,7 +43,7 @@ module aptos_token_objects::token {
     const MAX_URI_LENGTH: u64 = 512;
     const MAX_DESCRIPTION_LENGTH: u64 = 2048;
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Represents the common fields to all tokens.
     struct Token has key {
         /// The collection from which this token resides.
@@ -60,7 +60,7 @@ module aptos_token_objects::token {
         /// Was populated until concurrent_token_v2_enabled feature flag was enabled.
         ///
         /// The name of the token, which should be unique within the collection; the length of name
-        /// should be smaller than 128, characters, eg: "Aptos Animal #1234"
+        /// should be smaller than 128, characters, eg: "Supra Animal #1234"
         name: String,
         // DEPRECATED
         /// The Uniform Resource Identifier (uri) pointing to the JSON file stored in off-chain
@@ -70,20 +70,20 @@ module aptos_token_objects::token {
         mutation_events: event::EventHandle<MutationEvent>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// Represents first addition to the common fields for all tokens
     /// Started being populated once aggregator_v2_api_enabled was enabled.
     struct TokenIdentifiers has key {
         /// Unique identifier within the collection, optional, 0 means unassigned
         index: AggregatorSnapshot<u64>,
         /// The name of the token, which should be unique within the collection; the length of name
-        /// should be smaller than 128, characters, eg: "Aptos Animal #1234"
+        /// should be smaller than 128, characters, eg: "Supra Animal #1234"
         name: DerivedStringSnapshot,
     }
 
     // DEPRECATED, NEVER USED
     #[deprecated]
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct ConcurrentTokenIdentifiers has key {
         index: AggregatorSnapshot<u64>,
         name: AggregatorSnapshot<String>,
@@ -871,9 +871,9 @@ module aptos_token_objects::token {
         assert!(option::some(expected_royalty) == royalty(token), 2);
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    fun test_create_and_transfer_token_as_collection_owner(creator: &signer, trader: &signer, aptos_framework: &signer) acquires Token {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    fun test_create_and_transfer_token_as_collection_owner(creator: &signer, trader: &signer, supra_framework: &signer) acquires Token {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let collection_name = string::utf8(b"collection name");
         let token_name = string::utf8(b"token name");
 
@@ -893,7 +893,7 @@ module aptos_token_objects::token {
     }
 
     #[test(creator = @0x123, trader = @0x456)]
-    #[expected_failure(abort_code = 0x40002, location = aptos_token_objects::token)]
+    #[expected_failure(abort_code = 0x40002, location = supra_token_objects::token)]
     fun test_create_token_non_creator(creator: &signer, trader: &signer) {
         let constructor_ref = &create_fixed_collection(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
@@ -903,10 +903,10 @@ module aptos_token_objects::token {
         );
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 0x40008, location = aptos_token_objects::token)]
-    fun test_create_token_non_collection_owner(creator: &signer, trader: &signer, aptos_framework: &signer) {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    #[expected_failure(abort_code = 0x40008, location = supra_token_objects::token)]
+    fun test_create_token_non_collection_owner(creator: &signer, trader: &signer, supra_framework: &signer) {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let constructor_ref = &create_fixed_collection_as_collection_owner(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
         create_token_as_collection_owner(
@@ -916,24 +916,24 @@ module aptos_token_objects::token {
     }
 
     #[test(creator = @0x123, trader = @0x456)]
-    #[expected_failure(abort_code = 0x40002, location = aptos_token_objects::token)]
+    #[expected_failure(abort_code = 0x40002, location = supra_token_objects::token)]
     fun test_create_named_token_non_creator(creator: &signer, trader: &signer) {
         let constructor_ref = &create_fixed_collection(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
         create_token_with_collection_helper(trader, collection, string::utf8(b"token name"));
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 0x40008, location = aptos_token_objects::token)]
-    fun test_create_named_token_non_collection_owner(creator: &signer, trader: &signer, aptos_framework: &signer) {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    #[expected_failure(abort_code = 0x40008, location = supra_token_objects::token)]
+    fun test_create_named_token_non_collection_owner(creator: &signer, trader: &signer, supra_framework: &signer) {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let constructor_ref = &create_fixed_collection_as_collection_owner(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
         create_named_token_as_collection_owner_helper(trader, collection, string::utf8(b"token name"));
     }
 
     #[test(creator = @0x123, trader = @0x456)]
-    #[expected_failure(abort_code = 0x40002, location = aptos_token_objects::token)]
+    #[expected_failure(abort_code = 0x40002, location = supra_token_objects::token)]
     fun test_create_named_token_object_non_creator(creator: &signer, trader: &signer) {
         let constructor_ref = &create_fixed_collection(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
@@ -944,7 +944,7 @@ module aptos_token_objects::token {
     }
 
     #[test(creator = @0x123, trader = @0x456)]
-    #[expected_failure(abort_code = 0x40002, location = aptos_token_objects::token)]
+    #[expected_failure(abort_code = 0x40002, location = supra_token_objects::token)]
     fun test_create_named_token_from_seed_non_creator(creator: &signer, trader: &signer) {
         let constructor_ref = &create_fixed_collection(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
@@ -954,10 +954,10 @@ module aptos_token_objects::token {
         );
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 0x40008, location = aptos_token_objects::token)]
-    fun test_create_named_token_from_seed_non_collection_owner(creator: &signer, trader: &signer, aptos_framework: &signer) {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    #[expected_failure(abort_code = 0x40008, location = supra_token_objects::token)]
+    fun test_create_named_token_from_seed_non_collection_owner(creator: &signer, trader: &signer, supra_framework: &signer) {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let constructor_ref = &create_fixed_collection_as_collection_owner(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
         create_named_token_as_collection_owner(
@@ -988,10 +988,10 @@ module aptos_token_objects::token {
         assert!(option::some(expected_royalty) == royalty(token), 2);
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 0x40008, location = aptos_token_objects::token)]
-    fun test_create_token_after_transferring_collection(creator: &signer, trader: &signer, aptos_framework: &signer) {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    #[expected_failure(abort_code = 0x40008, location = supra_token_objects::token)]
+    fun test_create_token_after_transferring_collection(creator: &signer, trader: &signer, supra_framework: &signer) {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let constructor_ref = &create_fixed_collection_as_collection_owner(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
         create_token_as_collection_owner(
@@ -1008,9 +1008,9 @@ module aptos_token_objects::token {
         );
     }
 
-    #[test(creator = @0x123, trader = @0x456, aptos_framework = @aptos_framework)]
-    fun create_token_works_with_new_collection_owner(creator: &signer, trader: &signer, aptos_framework: &signer) {
-        features::change_feature_flags_for_testing(aptos_framework, vector[features::get_collection_owner_feature()], vector[]);
+    #[test(creator = @0x123, trader = @0x456, supra_framework = @supra_framework)]
+    fun create_token_works_with_new_collection_owner(creator: &signer, trader: &signer, supra_framework: &signer) {
+        features::change_feature_flags_for_testing(supra_framework, vector[features::get_collection_owner_feature()], vector[]);
         let constructor_ref = &create_fixed_collection_as_collection_owner(creator, string::utf8(b"collection name"), 5);
         let collection = get_collection_from_ref(&object::generate_extend_ref(constructor_ref));
         create_token_as_collection_owner(
@@ -1087,7 +1087,7 @@ module aptos_token_objects::token {
     }
 
     #[test(creator = @0x123)]
-    #[expected_failure(abort_code = 0x20002, location = aptos_token_objects::collection)]
+    #[expected_failure(abort_code = 0x20002, location = supra_token_objects::collection)]
     fun test_too_many_tokens(creator: &signer) {
         let collection_name = string::utf8(b"collection name");
         let token_name = string::utf8(b"token name");
@@ -1098,7 +1098,7 @@ module aptos_token_objects::token {
     }
 
     #[test(creator = @0x123)]
-    #[expected_failure(abort_code = 0x80001, location = aptos_framework::object)]
+    #[expected_failure(abort_code = 0x80001, location = supra_framework::object)]
     fun test_duplicate_tokens(creator: &signer) {
         let collection_name = string::utf8(b"collection name");
         let token_name = string::utf8(b"token name");
@@ -1208,7 +1208,7 @@ module aptos_token_objects::token {
 
     #[test(creator = @0x123)]
     fun test_create_from_account_burn_and_delete(creator: &signer) acquires Token, TokenIdentifiers {
-        use aptos_framework::account;
+        use supra_framework::account;
 
         let collection_name = string::utf8(b"collection name");
         let token_name = string::utf8(b"token name");
@@ -1233,7 +1233,7 @@ module aptos_token_objects::token {
 
     #[test(creator = @0x123)]
     fun test_create_burn_and_delete(creator: &signer) acquires Token, TokenIdentifiers {
-        use aptos_framework::account;
+        use supra_framework::account;
 
         let collection_name = string::utf8(b"collection name");
         let token_name = string::utf8(b"token name");

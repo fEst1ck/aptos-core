@@ -1,20 +1,20 @@
 // This module provides an interface to burn or collect and redistribute transaction fees.
-module aptos_framework::transaction_fee {
-    use aptos_framework::coin::{Self, AggregatableCoin, BurnCapability, MintCapability};
-    use aptos_framework::aptos_account;
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::fungible_asset::BurnRef;
-    use aptos_framework::system_addresses;
+module supra_framework::transaction_fee {
+    use supra_framework::coin::{Self, AggregatableCoin, BurnCapability, MintCapability};
+    use supra_framework::supra_account;
+    use supra_framework::supra_coin::SupraCoin;
+    use supra_framework::fungible_asset::BurnRef;
+    use supra_framework::system_addresses;
     use std::error;
     use std::features;
     use std::option::{Self, Option};
     use std::signer;
-    use aptos_framework::event;
+    use supra_framework::event;
 
-    friend aptos_framework::block;
-    friend aptos_framework::genesis;
-    friend aptos_framework::reconfiguration;
-    friend aptos_framework::transaction_validation;
+    friend supra_framework::block;
+    friend supra_framework::genesis;
+    friend supra_framework::reconfiguration;
+    friend supra_framework::transaction_validation;
 
     /// Gas fees are already being collected and the struct holding
     /// information about collected amounts is already published.
@@ -29,18 +29,18 @@ module aptos_framework::transaction_fee {
     const EFA_GAS_CHARGING_NOT_ENABLED: u64 = 5;
 
     /// Stores burn capability to burn the gas fees.
-    struct AptosCoinCapabilities has key {
-        burn_cap: BurnCapability<AptosCoin>,
+    struct SupraCoinCapabilities has key {
+        burn_cap: BurnCapability<SupraCoin>,
     }
 
     /// Stores burn capability to burn the gas fees.
-    struct AptosFABurnCapabilities has key {
+    struct SupraFABurnCapabilities has key {
         burn_ref: BurnRef,
     }
 
     /// Stores mint capability to mint the refunds.
-    struct AptosCoinMintCapability has key {
-        mint_cap: MintCapability<AptosCoin>,
+    struct SupraCoinMintCapability has key {
+        mint_cap: MintCapability<SupraCoin>,
     }
 
     #[event]
@@ -77,18 +77,18 @@ module aptos_framework::transaction_fee {
     }
 
     /// Burn transaction fees in epilogue.
-    public(friend) fun burn_fee(account: address, fee: u64) acquires AptosFABurnCapabilities, AptosCoinCapabilities {
-        if (exists<AptosFABurnCapabilities>(@aptos_framework)) {
-            let burn_ref = &borrow_global<AptosFABurnCapabilities>(@aptos_framework).burn_ref;
-            aptos_account::burn_from_fungible_store_for_gas(burn_ref, account, fee);
+    public(friend) fun burn_fee(account: address, fee: u64) acquires SupraFABurnCapabilities, SupraCoinCapabilities {
+        if (exists<SupraFABurnCapabilities>(@supra_framework)) {
+            let burn_ref = &borrow_global<SupraFABurnCapabilities>(@supra_framework).burn_ref;
+            supra_account::burn_from_fungible_store_for_gas(burn_ref, account, fee);
         } else {
-            let burn_cap = &borrow_global<AptosCoinCapabilities>(@aptos_framework).burn_cap;
+            let burn_cap = &borrow_global<SupraCoinCapabilities>(@supra_framework).burn_cap;
             if (features::operations_default_to_fa_apt_store_enabled()) {
                 let (burn_ref, burn_receipt) = coin::get_paired_burn_ref(burn_cap);
-                aptos_account::burn_from_fungible_store_for_gas(&burn_ref, account, fee);
+                supra_account::burn_from_fungible_store_for_gas(&burn_ref, account, fee);
                 coin::return_paired_burn_ref(burn_ref, burn_receipt);
             } else {
-                coin::burn_from_for_gas<AptosCoin>(
+                coin::burn_from_for_gas<SupraCoin>(
                     account,
                     fee,
                     burn_cap,
@@ -98,38 +98,38 @@ module aptos_framework::transaction_fee {
     }
 
     /// Mint refund in epilogue.
-    public(friend) fun mint_and_refund(account: address, refund: u64) acquires AptosCoinMintCapability {
-        let mint_cap = &borrow_global<AptosCoinMintCapability>(@aptos_framework).mint_cap;
+    public(friend) fun mint_and_refund(account: address, refund: u64) acquires SupraCoinMintCapability {
+        let mint_cap = &borrow_global<SupraCoinMintCapability>(@supra_framework).mint_cap;
         let refund_coin = coin::mint(refund, mint_cap);
         coin::deposit_for_gas_fee(account, refund_coin);
     }
 
     /// Only called during genesis.
-    public(friend) fun store_aptos_coin_burn_cap(aptos_framework: &signer, burn_cap: BurnCapability<AptosCoin>) {
-        system_addresses::assert_aptos_framework(aptos_framework);
+    public(friend) fun store_supra_coin_burn_cap(supra_framework: &signer, burn_cap: BurnCapability<SupraCoin>) {
+        system_addresses::assert_supra_framework(supra_framework);
 
         if (features::operations_default_to_fa_apt_store_enabled()) {
             let burn_ref = coin::convert_and_take_paired_burn_ref(burn_cap);
-            move_to(aptos_framework, AptosFABurnCapabilities { burn_ref });
+            move_to(supra_framework, SupraFABurnCapabilities { burn_ref });
         } else {
-            move_to(aptos_framework, AptosCoinCapabilities { burn_cap })
+            move_to(supra_framework, SupraCoinCapabilities { burn_cap })
         }
     }
 
-    public entry fun convert_to_aptos_fa_burn_ref(aptos_framework: &signer) acquires AptosCoinCapabilities {
+    public entry fun convert_to_supra_fa_burn_ref(supra_framework: &signer) acquires SupraCoinCapabilities {
         assert!(features::operations_default_to_fa_apt_store_enabled(), EFA_GAS_CHARGING_NOT_ENABLED);
-        system_addresses::assert_aptos_framework(aptos_framework);
-        let AptosCoinCapabilities {
+        system_addresses::assert_supra_framework(supra_framework);
+        let SupraCoinCapabilities {
             burn_cap,
-        } = move_from<AptosCoinCapabilities>(signer::address_of(aptos_framework));
+        } = move_from<SupraCoinCapabilities>(signer::address_of(supra_framework));
         let burn_ref = coin::convert_and_take_paired_burn_ref(burn_cap);
-        move_to(aptos_framework, AptosFABurnCapabilities { burn_ref });
+        move_to(supra_framework, SupraFABurnCapabilities { burn_ref });
     }
 
     /// Only called during genesis.
-    public(friend) fun store_aptos_coin_mint_cap(aptos_framework: &signer, mint_cap: MintCapability<AptosCoin>) {
-        system_addresses::assert_aptos_framework(aptos_framework);
-        move_to(aptos_framework, AptosCoinMintCapability { mint_cap })
+    public(friend) fun store_supra_coin_mint_cap(supra_framework: &signer, mint_cap: MintCapability<SupraCoin>) {
+        system_addresses::assert_supra_framework(supra_framework);
+        move_to(supra_framework, SupraCoinMintCapability { mint_cap })
     }
 
     // Called by the VM after epilogue.
@@ -143,21 +143,21 @@ module aptos_framework::transaction_fee {
     /// DEPRECATED: Stores information about the block proposer and the amount of fees
     /// collected when executing the block.
     struct CollectedFeesPerBlock has key {
-        amount: AggregatableCoin<AptosCoin>,
+        amount: AggregatableCoin<SupraCoin>,
         proposer: Option<address>,
         burn_percentage: u8,
     }
 
     #[deprecated]
     /// DEPRECATED
-    public fun initialize_fee_collection_and_distribution(_aptos_framework: &signer, _burn_percentage: u8) {
+    public fun initialize_fee_collection_and_distribution(_supra_framework: &signer, _burn_percentage: u8) {
         abort error::not_implemented(ENO_LONGER_SUPPORTED)
     }
 
     #[deprecated]
     /// DEPRECATED
     public fun upgrade_burn_percentage(
-        _aptos_framework: &signer,
+        _supra_framework: &signer,
         _new_burn_percentage: u8
     ) {
         abort error::not_implemented(ENO_LONGER_SUPPORTED)

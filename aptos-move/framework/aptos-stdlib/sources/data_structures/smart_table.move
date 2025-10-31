@@ -10,7 +10,7 @@
 module aptos_std::smart_table {
     use std::error;
     use std::vector;
-    use aptos_std::aptos_hash::sip_hash_from_value;
+    use aptos_std::supra_hash::sip_hash_from_value;
     use aptos_std::table_with_length::{Self, TableWithLength};
     use aptos_std::type_info::size_of_val;
     use aptos_std::math64::max;

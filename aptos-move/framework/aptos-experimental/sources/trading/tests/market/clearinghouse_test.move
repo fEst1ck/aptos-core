@@ -1,5 +1,5 @@
 #[test_only]
-module aptos_experimental::clearinghouse_test {
+module supra_experimental::clearinghouse_test {
     use std::error;
     use std::option;
     use std::signer;
@@ -7,8 +7,8 @@ module aptos_experimental::clearinghouse_test {
     use std::vector;
     use aptos_std::table;
     use aptos_std::table::Table;
-    use aptos_experimental::order_book_types::OrderIdType;
-    use aptos_experimental::market_types::{
+    use supra_experimental::order_book_types::OrderIdType;
+    use supra_experimental::market_types::{
         SettleTradeResult,
         new_settle_trade_result,
         MarketClearinghouseCallbacks,

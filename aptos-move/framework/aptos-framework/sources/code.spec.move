@@ -1,11 +1,11 @@
-spec aptos_framework::code {
+spec supra_framework::code {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: Updating a package should fail if the user is not the owner of it.
     /// Criticality: Critical
     /// Implementation: The publish_package function may only be able to update the package if the signer is the actual
     /// owner of the package.
-    /// Enforcement: The Aptos upgrade native functions have been manually audited.
+    /// Enforcement: The Supra upgrade native functions have been manually audited.
     ///
     /// No.: 2
     /// Requirement: The arbitrary upgrade policy should never be used.
@@ -73,16 +73,16 @@ spec aptos_framework::code {
     }
 
     spec schema AbortsIfPermissionedSigner {
-        use aptos_framework::permissioned_signer;
+        use supra_framework::permissioned_signer;
         s: signer;
         let perm = CodePublishingPermission {};
         aborts_if !permissioned_signer::spec_check_permission_exists(s, perm);
     }
 
-    spec initialize(aptos_framework: &signer, package_owner: &signer, metadata: PackageMetadata) {
-        let aptos_addr = signer::address_of(aptos_framework);
+    spec initialize(supra_framework: &signer, package_owner: &signer, metadata: PackageMetadata) {
+        let supra_addr = signer::address_of(supra_framework);
         let owner_addr = signer::address_of(package_owner);
-        aborts_if !system_addresses::is_aptos_framework_address(aptos_addr);
+        aborts_if !system_addresses::is_supra_framework_address(supra_addr);
 
         ensures exists<PackageRegistry>(owner_addr);
     }

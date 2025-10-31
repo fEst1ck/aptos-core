@@ -1,4 +1,4 @@
-spec aptos_framework::aptos_coin {
+spec supra_framework::supra_coin {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: The native token, APT, must be initialized during genesis.
@@ -10,11 +10,11 @@ spec aptos_framework::aptos_coin {
     /// Requirement: The APT coin may only be created exactly once.
     /// Criticality: Medium
     /// Implementation: The initialization function may only be called once.
-    /// Enforcement: Enforced through the [https://github.com/aptos-labs/aptos-core/blob/main/aptos-move/framework/aptos-framework/sources/coin.move](coin)
+    /// Enforcement: Enforced through the [https://github.com/supra-labs/supra-core/blob/main/supra-move/framework/supra-framework/sources/coin.move](coin)
     /// module, which has been audited.
     ///
     /// No.: 3
-    /// Requirement: The abilities to mint Aptos tokens should be transferable, duplicatable, and destroyable.
+    /// Requirement: The abilities to mint Supra tokens should be transferable, duplicatable, and destroyable.
     /// Criticality: High
     /// Implementation: The MintCapability struct has the copy and store abilities. This means that it can be duplicated
     /// and stored in different object wrappers (such as MintCapStore). This capability is tested against the
@@ -25,7 +25,7 @@ spec aptos_framework::aptos_coin {
     /// Requirement: Any type of operation on the APT coin should fail if the user has not registered for the coin.
     /// Criticality: Medium
     /// Implementation: Coin operations may succeed only on valid user coin registration.
-    /// Enforcement: Enforced through the [https://github.com/aptos-labs/aptos-core/blob/main/aptos-move/framework/aptos-framework/sources/coin.move](coin)
+    /// Enforcement: Enforced through the [https://github.com/supra-labs/supra-core/blob/main/supra-move/framework/supra-framework/sources/coin.move](coin)
     /// module, which has been audited.
     /// </high-level-req>
     ///
@@ -34,34 +34,34 @@ spec aptos_framework::aptos_coin {
         pragma aborts_if_is_partial;
     }
 
-    spec initialize(aptos_framework: &signer): (BurnCapability<AptosCoin>, MintCapability<AptosCoin>) {
-        use aptos_framework::aggregator_factory;
-        use aptos_framework::permissioned_signer;
+    spec initialize(supra_framework: &signer): (BurnCapability<SupraCoin>, MintCapability<SupraCoin>) {
+        use supra_framework::aggregator_factory;
+        use supra_framework::permissioned_signer;
 
         pragma verify = false;
 
-        aborts_if permissioned_signer::spec_is_permissioned_signer(aptos_framework);
-        let addr = signer::address_of(aptos_framework);
-        aborts_if addr != @aptos_framework;
-        aborts_if !string::spec_internal_check_utf8(b"Aptos Coin");
+        aborts_if permissioned_signer::spec_is_permissioned_signer(supra_framework);
+        let addr = signer::address_of(supra_framework);
+        aborts_if addr != @supra_framework;
+        aborts_if !string::spec_internal_check_utf8(b"Supra Coin");
         aborts_if !string::spec_internal_check_utf8(b"APT");
         aborts_if exists<MintCapStore>(addr);
-        aborts_if exists<coin::CoinInfo<AptosCoin>>(addr);
+        aborts_if exists<coin::CoinInfo<SupraCoin>>(addr);
         aborts_if !exists<aggregator_factory::AggregatorFactory>(addr);
         /// [high-level-req-1]
         ensures exists<MintCapStore>(addr);
-        // property 3: The abilities to mint Aptos tokens should be transferable, duplicatable, and destroyable.
+        // property 3: The abilities to mint Supra tokens should be transferable, duplicatable, and destroyable.
         /// [high-level-req-3]
-        ensures global<MintCapStore>(addr).mint_cap ==  MintCapability<AptosCoin> {};
-        ensures exists<coin::CoinInfo<AptosCoin>>(addr);
-        ensures result_1 == BurnCapability<AptosCoin> {};
-        ensures result_2 == MintCapability<AptosCoin> {};
+        ensures global<MintCapStore>(addr).mint_cap ==  MintCapability<SupraCoin> {};
+        ensures exists<coin::CoinInfo<SupraCoin>>(addr);
+        ensures result_1 == BurnCapability<SupraCoin> {};
+        ensures result_2 == MintCapability<SupraCoin> {};
     }
 
     spec destroy_mint_cap {
-        let addr = signer::address_of(aptos_framework);
-        aborts_if addr != @aptos_framework;
-        aborts_if !exists<MintCapStore>(@aptos_framework);
+        let addr = signer::address_of(supra_framework);
+        aborts_if addr != @supra_framework;
+        aborts_if !exists<MintCapStore>(@supra_framework);
     }
 
     // Test function, not needed verify.
@@ -92,8 +92,8 @@ spec aptos_framework::aptos_coin {
         aborts_if !exists<Delegations>(@core_resources);
     }
 
-    spec schema ExistsAptosCoin {
-        requires exists<coin::CoinInfo<AptosCoin>>(@aptos_framework);
+    spec schema ExistsSupraCoin {
+        requires exists<coin::CoinInfo<SupraCoin>>(@supra_framework);
     }
 
 }

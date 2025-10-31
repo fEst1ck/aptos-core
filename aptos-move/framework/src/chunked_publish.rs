@@ -1,7 +1,7 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_types::{
+use supra_types::{
     chain_id::ChainId,
     transaction::{EntryFunction, TransactionPayload},
 };

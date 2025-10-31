@@ -4,7 +4,7 @@
 /// and then expects that to be signed.
 /// authenticator is expected to be signature: vector<u8>
 /// account_identity is raw public_key.
-module aptos_experimental::test_derivable_account_abstraction_ed25519_hex {
+module supra_experimental::test_derivable_account_abstraction_ed25519_hex {
     use std::error;
     use aptos_std::string_utils;
     use aptos_std::ed25519::{
@@ -12,7 +12,7 @@ module aptos_experimental::test_derivable_account_abstraction_ed25519_hex {
         new_signature_from_bytes,
         new_unvalidated_public_key_from_bytes
     };
-    use aptos_framework::auth_data::AbstractionAuthData;
+    use supra_framework::auth_data::AbstractionAuthData;
 
     const EINVALID_SIGNATURE: u64 = 1;
 

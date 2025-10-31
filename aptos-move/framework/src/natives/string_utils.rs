@@ -1,13 +1,13 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_gas_algebra::NumBytes;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_algebra::NumBytes;
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
-use aptos_types::on_chain_config::FeatureFlag;
+use supra_types::on_chain_config::FeatureFlag;
 use ark_std::iterable::Iterable;
 use move_binary_format::errors::PartialVMError;
 use move_core_types::{
@@ -268,7 +268,7 @@ fn native_format_impl(
             if let MoveTypeLayout::U8 = ty.as_ref() {
                 let bytes = val.value_as::<Vec<u8>>()?;
                 if context.context.timed_feature_enabled(
-                    aptos_types::on_chain_config::TimedFeatureFlag::ChargeBytesForPrints,
+                    supra_types::on_chain_config::TimedFeatureFlag::ChargeBytesForPrints,
                 ) {
                     context
                         .context

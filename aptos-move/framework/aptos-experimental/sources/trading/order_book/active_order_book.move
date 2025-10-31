@@ -3,11 +3,11 @@
 /// The orders are matched based on time-price priority.
 ///
 /// This is internal module, which cannot be used directly, use OrderBook instead.
-module aptos_experimental::active_order_book {
+module supra_experimental::active_order_book {
     use std::option::{Self, Option};
     use aptos_std::math64::mul_div;
-    use aptos_framework::big_ordered_map::BigOrderedMap;
-    use aptos_experimental::order_book_types::{
+    use supra_framework::big_ordered_map::BigOrderedMap;
+    use supra_experimental::order_book_types::{
         OrderIdType,
         UniqueIdxType,
         new_active_matched_order,
@@ -18,13 +18,13 @@ module aptos_experimental::active_order_book {
     #[test_only]
     use std::vector;
     #[test_only]
-    use aptos_experimental::order_book_types::{new_order_id_type, new_unique_idx_type};
+    use supra_experimental::order_book_types::{new_order_id_type, new_unique_idx_type};
 
     const EINVALID_MAKER_ORDER: u64 = 1;
     /// There is a code bug that breaks internal invariant
     const EINTERNAL_INVARIANT_BROKEN: u64 = 2;
 
-    friend aptos_experimental::order_book;
+    friend supra_experimental::order_book;
 
     /// ========= Active OrderBook ===========
 

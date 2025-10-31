@@ -1,12 +1,12 @@
-module aptos_framework::staking_proxy {
+module supra_framework::staking_proxy {
     use std::error;
     use std::signer;
     use std::vector;
 
-    use aptos_framework::permissioned_signer;
-    use aptos_framework::stake;
-    use aptos_framework::staking_contract;
-    use aptos_framework::vesting;
+    use supra_framework::permissioned_signer;
+    use supra_framework::stake;
+    use supra_framework::staking_contract;
+    use supra_framework::vesting;
 
     struct StakeProxyPermission has copy, drop, store {}
 
@@ -99,14 +99,14 @@ module aptos_framework::staking_proxy {
     const INITIAL_BALANCE: u64 = 100000000000000; // 1M APT coins with 8 decimals.
 
     #[test(
-        aptos_framework = @0x1,
+        supra_framework = @0x1,
         owner = @0x123,
         operator_1 = @0x234,
         operator_2 = @0x345,
         new_operator = @0x567,
     )]
     public entry fun test_set_operator(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         owner: &signer,
         operator_1: &signer,
         operator_2: &signer,
@@ -117,9 +117,9 @@ module aptos_framework::staking_proxy {
         let operator_2_address = signer::address_of(operator_2);
         let new_operator_address = signer::address_of(new_operator);
         vesting::setup(
-            aptos_framework, &vector[owner_address, operator_1_address, operator_2_address, new_operator_address]);
-        staking_contract::setup_staking_contract(aptos_framework, owner, operator_1, INITIAL_BALANCE, 0);
-        staking_contract::setup_staking_contract(aptos_framework, owner, operator_2, INITIAL_BALANCE, 0);
+            supra_framework, &vector[owner_address, operator_1_address, operator_2_address, new_operator_address]);
+        staking_contract::setup_staking_contract(supra_framework, owner, operator_1, INITIAL_BALANCE, 0);
+        staking_contract::setup_staking_contract(supra_framework, owner, operator_2, INITIAL_BALANCE, 0);
 
         let vesting_contract_1 = vesting::setup_vesting_contract(owner, &vector[@11], &vector[INITIAL_BALANCE], owner_address, 0);
         vesting::update_operator(owner, vesting_contract_1, operator_1_address, 0);
@@ -144,14 +144,14 @@ module aptos_framework::staking_proxy {
     }
 
     #[test(
-        aptos_framework = @0x1,
+        supra_framework = @0x1,
         owner = @0x123,
         operator_1 = @0x234,
         operator_2 = @0x345,
         new_operator = @0x567,
     )]
     public entry fun test_set_operator_nothing_to_change(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         owner: &signer,
         operator_1: &signer,
         operator_2: &signer,
@@ -162,8 +162,8 @@ module aptos_framework::staking_proxy {
         let operator_2_address = signer::address_of(operator_2);
         let new_operator_address = signer::address_of(new_operator);
         vesting::setup(
-            aptos_framework, &vector[owner_address, operator_1_address, operator_2_address, new_operator_address]);
-        staking_contract::setup_staking_contract(aptos_framework, owner, operator_2, INITIAL_BALANCE, 0);
+            supra_framework, &vector[owner_address, operator_1_address, operator_2_address, new_operator_address]);
+        staking_contract::setup_staking_contract(supra_framework, owner, operator_2, INITIAL_BALANCE, 0);
 
         let vesting_contract_2 = vesting::setup_vesting_contract(owner, &vector[@12], &vector[INITIAL_BALANCE], owner_address, 0);
         vesting::update_operator(owner, vesting_contract_2, operator_2_address, 0);
@@ -176,14 +176,14 @@ module aptos_framework::staking_proxy {
     }
 
     #[test(
-        aptos_framework = @0x1,
+        supra_framework = @0x1,
         owner = @0x123,
         operator_1 = @0x234,
         operator_2 = @0x345,
         new_voter = @0x567,
     )]
     public entry fun test_set_voter(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         owner: &signer,
         operator_1: &signer,
         operator_2: &signer,
@@ -194,9 +194,9 @@ module aptos_framework::staking_proxy {
         let operator_2_address = signer::address_of(operator_2);
         let new_voter_address = signer::address_of(new_voter);
         vesting::setup(
-            aptos_framework, &vector[owner_address, operator_1_address, operator_2_address, new_voter_address]);
-        staking_contract::setup_staking_contract(aptos_framework, owner, operator_1, INITIAL_BALANCE, 0);
-        staking_contract::setup_staking_contract(aptos_framework, owner, operator_2, INITIAL_BALANCE, 0);
+            supra_framework, &vector[owner_address, operator_1_address, operator_2_address, new_voter_address]);
+        staking_contract::setup_staking_contract(supra_framework, owner, operator_1, INITIAL_BALANCE, 0);
+        staking_contract::setup_staking_contract(supra_framework, owner, operator_2, INITIAL_BALANCE, 0);
 
         let vesting_contract_1 = vesting::setup_vesting_contract(owner, &vector[@11], &vector[INITIAL_BALANCE], owner_address, 0);
         vesting::update_operator(owner, vesting_contract_1, operator_1_address, 0);
@@ -221,14 +221,14 @@ module aptos_framework::staking_proxy {
     }
 
     #[test(
-        aptos_framework = @0x1,
+        supra_framework = @0x1,
         owner = @0x123,
         operator_1 = @0x234,
         operator_2 = @0x345,
         new_voter = @0x567,
     )]
     public entry fun test_set_voter_nothing_to_change(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         owner: &signer,
         operator_1: &signer,
         operator_2: &signer,
@@ -239,8 +239,8 @@ module aptos_framework::staking_proxy {
         let operator_2_address = signer::address_of(operator_2);
         let new_voter_address = signer::address_of(new_voter);
         vesting::setup(
-            aptos_framework, &vector[owner_address, operator_1_address, operator_2_address, new_voter_address]);
-        staking_contract::setup_staking_contract(aptos_framework, owner, operator_2, INITIAL_BALANCE, 0);
+            supra_framework, &vector[owner_address, operator_1_address, operator_2_address, new_voter_address]);
+        staking_contract::setup_staking_contract(supra_framework, owner, operator_2, INITIAL_BALANCE, 0);
 
         let vesting_contract_2 = vesting::setup_vesting_contract(owner, &vector[@12], &vector[INITIAL_BALANCE], owner_address, 0);
         vesting::update_operator(owner, vesting_contract_2, operator_2_address, 0);

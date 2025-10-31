@@ -1,21 +1,21 @@
 #[test_only]
-module aptos_experimental::confidential_asset_tests {
+module supra_experimental::confidential_asset_tests {
     use std::features;
     use std::option;
     use std::signer;
     use std::string::utf8;
     use aptos_std::ristretto255::Scalar;
-    use aptos_framework::account;
-    use aptos_framework::chain_id;
-    use aptos_framework::coin;
-    use aptos_framework::fungible_asset::{Self, Metadata};
-    use aptos_framework::object::{Self, Object};
-    use aptos_framework::primary_fungible_store;
+    use supra_framework::account;
+    use supra_framework::chain_id;
+    use supra_framework::coin;
+    use supra_framework::fungible_asset::{Self, Metadata};
+    use supra_framework::object::{Self, Object};
+    use supra_framework::primary_fungible_store;
 
-    use aptos_experimental::confidential_asset;
-    use aptos_experimental::confidential_balance;
-    use aptos_experimental::confidential_proof;
-    use aptos_experimental::ristretto255_twisted_elgamal::{
+    use supra_experimental::confidential_asset;
+    use supra_experimental::confidential_balance;
+    use supra_experimental::confidential_proof;
+    use supra_experimental::ristretto255_twisted_elgamal::{
         Self as twisted_elgamal,
         generate_twisted_elgamal_keypair
     };
@@ -238,14 +238,14 @@ module aptos_experimental::confidential_asset_tests {
 
     public fun set_up_for_confidential_asset_test(
         confidential_asset: &signer,
-        aptos_fx: &signer,
+        supra_fx: &signer,
         fa: &signer,
         sender: &signer,
         recipient: &signer,
         sender_amount: u64,
         recipient_amount: u64
     ): Object<Metadata> {
-        chain_id::initialize_for_test(aptos_fx, 4);
+        chain_id::initialize_for_test(supra_fx, 4);
 
         let ctor_ref = &object::create_sticky_object(signer::address_of(fa));
 
@@ -261,13 +261,13 @@ module aptos_experimental::confidential_asset_tests {
 
         let mint_ref = fungible_asset::generate_mint_ref(ctor_ref);
 
-        assert!(signer::address_of(aptos_fx) != signer::address_of(sender), 1);
-        assert!(signer::address_of(aptos_fx) != signer::address_of(recipient), 2);
+        assert!(signer::address_of(supra_fx) != signer::address_of(sender), 1);
+        assert!(signer::address_of(supra_fx) != signer::address_of(recipient), 2);
 
         confidential_asset::init_module_for_testing(confidential_asset);
 
         features::change_feature_flags_for_testing(
-            aptos_fx,
+            supra_fx,
             vector[features::get_bulletproofs_feature()],
             vector[]
         );
@@ -291,8 +291,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -300,7 +300,7 @@ module aptos_experimental::confidential_asset_tests {
     ]
     fun success_deposit_test(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -308,7 +308,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -345,8 +345,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -354,7 +354,7 @@ module aptos_experimental::confidential_asset_tests {
     ]
     fun success_withdraw_test(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -362,7 +362,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -401,8 +401,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -410,7 +410,7 @@ module aptos_experimental::confidential_asset_tests {
     ]
     fun success_transfer_test(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -418,7 +418,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -467,8 +467,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -476,7 +476,7 @@ module aptos_experimental::confidential_asset_tests {
     ]
     fun success_audit_transfer_test(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -484,7 +484,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -501,7 +501,7 @@ module aptos_experimental::confidential_asset_tests {
         let (auditor2_dk, auditor2_ek) = generate_twisted_elgamal_keypair();
 
         confidential_asset::set_auditor(
-            &aptos_fx,
+            &supra_fx,
             token,
             twisted_elgamal::pubkey_to_bytes(&auditor1_ek)
         );
@@ -552,8 +552,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -562,7 +562,7 @@ module aptos_experimental::confidential_asset_tests {
     #[expected_failure(abort_code = 0x010006, location = confidential_asset)]
     fun fail_audit_transfer_if_wrong_auditor_list(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -570,7 +570,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -586,7 +586,7 @@ module aptos_experimental::confidential_asset_tests {
         let (_, auditor2_ek) = generate_twisted_elgamal_keypair();
 
         confidential_asset::set_auditor(
-            &aptos_fx,
+            &supra_fx,
             token,
             twisted_elgamal::pubkey_to_bytes(&auditor1_ek)
         );
@@ -617,8 +617,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -626,7 +626,7 @@ module aptos_experimental::confidential_asset_tests {
     ]
     fun success_rotate(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -634,7 +634,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -678,8 +678,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1,
             bob = @0xb0
@@ -687,7 +687,7 @@ module aptos_experimental::confidential_asset_tests {
     ]
     fun success_normalize(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer,
         bob: signer
@@ -696,7 +696,7 @@ module aptos_experimental::confidential_asset_tests {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &bob,
@@ -749,8 +749,8 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1
         )
@@ -758,14 +758,14 @@ module aptos_experimental::confidential_asset_tests {
     #[expected_failure(abort_code = 0x01000D, location = confidential_asset)]
     fun fail_register_if_token_disallowed(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer
     ) {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &alice,
@@ -773,7 +773,7 @@ module aptos_experimental::confidential_asset_tests {
                 500
             );
 
-        confidential_asset::enable_allow_list(&aptos_fx);
+        confidential_asset::enable_allow_list(&supra_fx);
 
         let (_, alice_ek) = generate_twisted_elgamal_keypair();
 
@@ -784,22 +784,22 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             fa = @0xfa,
             alice = @0xa1
         )
     ]
     fun success_register_if_token_allowed(
         confidential_asset: signer,
-        aptos_fx: signer,
+        supra_fx: signer,
         fa: signer,
         alice: signer
     ) {
         let token =
             set_up_for_confidential_asset_test(
                 &confidential_asset,
-                &aptos_fx,
+                &supra_fx,
                 &fa,
                 &alice,
                 &alice,
@@ -807,8 +807,8 @@ module aptos_experimental::confidential_asset_tests {
                 500
             );
 
-        confidential_asset::enable_allow_list(&aptos_fx);
-        confidential_asset::enable_token(&aptos_fx, token);
+        confidential_asset::enable_allow_list(&supra_fx);
+        confidential_asset::enable_token(&supra_fx, token);
 
         let (_, alice_ek) = generate_twisted_elgamal_keypair();
 
@@ -819,17 +819,17 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             alice = @0xa1
         )
     ]
     fun fail_deposit_with_coins_if_insufficient_amount(
-        confidential_asset: signer, aptos_fx: signer, alice: signer
+        confidential_asset: signer, supra_fx: signer, alice: signer
     ) {
-        chain_id::initialize_for_test(&aptos_fx, 4);
+        chain_id::initialize_for_test(&supra_fx, 4);
         confidential_asset::init_module_for_testing(&confidential_asset);
-        coin::create_coin_conversion_map(&aptos_fx);
+        coin::create_coin_conversion_map(&supra_fx);
 
         let alice_addr = signer::address_of(&alice);
 
@@ -851,7 +851,7 @@ module aptos_experimental::confidential_asset_tests {
         coin::register<MockCoin>(&alice);
         coin::deposit(alice_addr, coin_amount);
 
-        coin::create_pairing<MockCoin>(&aptos_fx);
+        coin::create_pairing<MockCoin>(&supra_fx);
 
         let token = coin::paired_metadata<MockCoin>().extract();
 
@@ -865,17 +865,17 @@ module aptos_experimental::confidential_asset_tests {
 
     #[
         test(
-            confidential_asset = @aptos_experimental,
-            aptos_fx = @aptos_framework,
+            confidential_asset = @supra_experimental,
+            supra_fx = @supra_framework,
             alice = @0xa1
         )
     ]
     fun success_deposit_with_coins(
-        confidential_asset: signer, aptos_fx: signer, alice: signer
+        confidential_asset: signer, supra_fx: signer, alice: signer
     ) {
-        chain_id::initialize_for_test(&aptos_fx, 4);
+        chain_id::initialize_for_test(&supra_fx, 4);
         confidential_asset::init_module_for_testing(&confidential_asset);
-        coin::create_coin_conversion_map(&aptos_fx);
+        coin::create_coin_conversion_map(&supra_fx);
 
         let alice_addr = signer::address_of(&alice);
 
@@ -897,7 +897,7 @@ module aptos_experimental::confidential_asset_tests {
         coin::register<MockCoin>(&alice);
         coin::deposit(alice_addr, coin_amount);
 
-        coin::create_pairing<MockCoin>(&aptos_fx);
+        coin::create_pairing<MockCoin>(&supra_fx);
 
         let token = coin::paired_metadata<MockCoin>().extract();
 

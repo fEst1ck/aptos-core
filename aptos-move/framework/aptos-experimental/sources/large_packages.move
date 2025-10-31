@@ -1,6 +1,6 @@
-/// # Aptos Large Packages Framework
+/// # Supra Large Packages Framework
 ///
-/// This module provides a framework for uploading large packages to the Aptos network, under standard
+/// This module provides a framework for uploading large packages to the Supra network, under standard
 /// accounts or objects.
 /// To publish using this API, you must divide your metadata and modules across multiple calls
 /// into `large_packages::stage_code_chunk`.
@@ -9,12 +9,12 @@
 /// `stage_code_chunk_and_upgrade_object_code` to upload the final data chunk and publish or upgrade the package on-chain.
 ///
 /// The above logic is currently implemented in the Python
-/// SDK: [`aptos-python-sdk`](https://github.com/aptos-labs/aptos-python-sdk/blob/main/aptos_sdk/package_publisher.py).
+/// SDK: [`supra-python-sdk`](https://github.com/supra-labs/supra-python-sdk/blob/main/supra_sdk/package_publisher.py).
 ///
-/// Aptos CLI supports this as well with `--chunked-publish` flag:
-/// - `aptos move publish [OPTIONS] --chunked-publish`
-/// - `aptos move create-object-and-publish-package [OPTIONS] --address-name <ADDRESS_NAME> --chunked-publish`
-/// - `aptos move upgrade-object-package [OPTIONS] --address-name <ADDRESS_NAME> --chunked-publish`
+/// Supra CLI supports this as well with `--chunked-publish` flag:
+/// - `supra move publish [OPTIONS] --chunked-publish`
+/// - `supra move create-object-and-publish-package [OPTIONS] --address-name <ADDRESS_NAME> --chunked-publish`
+/// - `supra move upgrade-object-package [OPTIONS] --address-name <ADDRESS_NAME> --chunked-publish`
 ///
 /// # Usage
 ///
@@ -36,21 +36,21 @@
 ///
 /// * Make sure LargePackages is deployed to your network of choice, you can currently find it both on
 ///   mainnet and testnet at `0xa29df848eebfe5d981f708c2a5b06d31af2be53bbd8ddc94c8523f4b903f7adb`, and
-///   in 0x7 (aptos-experimental) on devnet/localnet.
+///   in 0x7 (supra-experimental) on devnet/localnet.
 /// * Ensure that `code_indices` have no gaps. For example, if code_indices are
 ///   provided as [0, 1, 3] (skipping index 2), the inline function `assemble_module_code` will abort
 ///   since `StagingArea.last_module_idx` is set as the max value of the provided index
 ///   from `code_indices`, and `assemble_module_code` will lookup the `StagingArea.code` SmartTable from
 ///   0 to `StagingArea.last_module_idx` in turn.
-module aptos_experimental::large_packages {
+module supra_experimental::large_packages {
     use std::error;
     use std::signer;
     use std::vector;
     use aptos_std::smart_table::{Self, SmartTable};
 
-    use aptos_framework::code::{Self, PackageRegistry};
-    use aptos_framework::object::{Object};
-    use aptos_framework::object_code_deployment;
+    use supra_framework::code::{Self, PackageRegistry};
+    use supra_framework::object::{Object};
+    use supra_framework::object_code_deployment;
 
     /// code_indices and code_chunks should be the same length.
     const ECODE_MISMATCH: u64 = 1;

@@ -1,1 +1,1 @@
-spec aptos_experimental::ristretto255_twisted_elgamal {}
+spec supra_experimental::ristretto255_twisted_elgamal {}

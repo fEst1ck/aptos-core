@@ -1,35 +1,35 @@
-module aptos_framework::genesis {
+module supra_framework::genesis {
     use std::error;
     use std::fixed_point32;
     use std::vector;
 
     use aptos_std::simple_map;
 
-    use aptos_framework::account;
-    use aptos_framework::aggregator_factory;
-    use aptos_framework::aptos_account;
-    use aptos_framework::aptos_coin::{Self, AptosCoin};
-    use aptos_framework::aptos_governance;
-    use aptos_framework::block;
-    use aptos_framework::chain_id;
-    use aptos_framework::chain_status;
-    use aptos_framework::coin;
-    use aptos_framework::consensus_config;
-    use aptos_framework::execution_config;
-    use aptos_framework::create_signer::create_signer;
-    use aptos_framework::gas_schedule;
-    use aptos_framework::nonce_validation;
-    use aptos_framework::reconfiguration;
-    use aptos_framework::stake;
-    use aptos_framework::staking_contract;
-    use aptos_framework::staking_config;
-    use aptos_framework::state_storage;
-    use aptos_framework::storage_gas;
-    use aptos_framework::timestamp;
-    use aptos_framework::transaction_fee;
-    use aptos_framework::transaction_validation;
-    use aptos_framework::version;
-    use aptos_framework::vesting;
+    use supra_framework::account;
+    use supra_framework::aggregator_factory;
+    use supra_framework::supra_account;
+    use supra_framework::supra_coin::{Self, SupraCoin};
+    use supra_framework::supra_governance;
+    use supra_framework::block;
+    use supra_framework::chain_id;
+    use supra_framework::chain_status;
+    use supra_framework::coin;
+    use supra_framework::consensus_config;
+    use supra_framework::execution_config;
+    use supra_framework::create_signer::create_signer;
+    use supra_framework::gas_schedule;
+    use supra_framework::nonce_validation;
+    use supra_framework::reconfiguration;
+    use supra_framework::stake;
+    use supra_framework::staking_contract;
+    use supra_framework::staking_config;
+    use supra_framework::state_storage;
+    use supra_framework::storage_gas;
+    use supra_framework::timestamp;
+    use supra_framework::transaction_fee;
+    use supra_framework::transaction_validation;
+    use supra_framework::version;
+    use supra_framework::vesting;
 
     const EDUPLICATE_ACCOUNT: u64 = 1;
     const EACCOUNT_DOES_NOT_EXIST: u64 = 2;
@@ -64,7 +64,7 @@ module aptos_framework::genesis {
         join_during_genesis: bool,
     }
 
-    /// Genesis step 1: Initialize aptos framework account and core modules on chain.
+    /// Genesis step 1: Initialize supra framework account and core modules on chain.
     fun initialize(
         gas_schedule: vector<u8>,
         chain_id: u8,
@@ -80,39 +80,39 @@ module aptos_framework::genesis {
         rewards_rate_denominator: u64,
         voting_power_increase_limit: u64,
     ) {
-        // Initialize the aptos framework account. This is the account where system resources and modules will be
+        // Initialize the supra framework account. This is the account where system resources and modules will be
         // deployed to. This will be entirely managed by on-chain governance and no entities have the key or privileges
         // to use this account.
-        let (aptos_framework_account, aptos_framework_signer_cap) = account::create_framework_reserved_account(@aptos_framework);
-        // Initialize account configs on aptos framework account.
-        account::initialize(&aptos_framework_account);
+        let (supra_framework_account, supra_framework_signer_cap) = account::create_framework_reserved_account(@supra_framework);
+        // Initialize account configs on supra framework account.
+        account::initialize(&supra_framework_account);
 
         transaction_validation::initialize(
-            &aptos_framework_account,
+            &supra_framework_account,
             b"script_prologue",
             b"module_prologue",
             b"multi_agent_script_prologue",
             b"epilogue",
         );
         // Give the decentralized on-chain governance control over the core framework account.
-        aptos_governance::store_signer_cap(&aptos_framework_account, @aptos_framework, aptos_framework_signer_cap);
+        supra_governance::store_signer_cap(&supra_framework_account, @supra_framework, supra_framework_signer_cap);
 
-        // put reserved framework reserved accounts under aptos governance
+        // put reserved framework reserved accounts under supra governance
         let framework_reserved_addresses = vector<address>[@0x2, @0x3, @0x4, @0x5, @0x6, @0x7, @0x8, @0x9, @0xa];
         while (!vector::is_empty(&framework_reserved_addresses)) {
             let address = vector::pop_back<address>(&mut framework_reserved_addresses);
             let (_, framework_signer_cap) = account::create_framework_reserved_account(address);
-            aptos_governance::store_signer_cap(&aptos_framework_account, address, framework_signer_cap);
+            supra_governance::store_signer_cap(&supra_framework_account, address, framework_signer_cap);
         };
 
-        consensus_config::initialize(&aptos_framework_account, consensus_config);
-        execution_config::set(&aptos_framework_account, execution_config);
-        version::initialize(&aptos_framework_account, initial_version);
-        stake::initialize(&aptos_framework_account);
-        stake::initialize_pending_transaction_fee(&aptos_framework_account);
-        timestamp::set_time_has_started(&aptos_framework_account);
+        consensus_config::initialize(&supra_framework_account, consensus_config);
+        execution_config::set(&supra_framework_account, execution_config);
+        version::initialize(&supra_framework_account, initial_version);
+        stake::initialize(&supra_framework_account);
+        stake::initialize_pending_transaction_fee(&supra_framework_account);
+        timestamp::set_time_has_started(&supra_framework_account);
         staking_config::initialize(
-            &aptos_framework_account,
+            &supra_framework_account,
             minimum_stake,
             maximum_stake,
             recurring_lockup_duration_secs,
@@ -121,58 +121,58 @@ module aptos_framework::genesis {
             rewards_rate_denominator,
             voting_power_increase_limit,
         );
-        storage_gas::initialize(&aptos_framework_account);
-        gas_schedule::initialize(&aptos_framework_account, gas_schedule);
+        storage_gas::initialize(&supra_framework_account);
+        gas_schedule::initialize(&supra_framework_account, gas_schedule);
 
         // Ensure we can create aggregators for supply, but not enable it for common use just yet.
-        aggregator_factory::initialize_aggregator_factory(&aptos_framework_account);
+        aggregator_factory::initialize_aggregator_factory(&supra_framework_account);
 
-        chain_id::initialize(&aptos_framework_account, chain_id);
-        reconfiguration::initialize(&aptos_framework_account);
-        block::initialize(&aptos_framework_account, epoch_interval_microsecs);
-        state_storage::initialize(&aptos_framework_account);
-        nonce_validation::initialize(&aptos_framework_account);
+        chain_id::initialize(&supra_framework_account, chain_id);
+        reconfiguration::initialize(&supra_framework_account);
+        block::initialize(&supra_framework_account, epoch_interval_microsecs);
+        state_storage::initialize(&supra_framework_account);
+        nonce_validation::initialize(&supra_framework_account);
     }
 
-    /// Genesis step 2: Initialize Aptos coin.
-    fun initialize_aptos_coin(aptos_framework: &signer) {
-        let (burn_cap, mint_cap) = aptos_coin::initialize(aptos_framework);
+    /// Genesis step 2: Initialize Supra coin.
+    fun initialize_supra_coin(supra_framework: &signer) {
+        let (burn_cap, mint_cap) = supra_coin::initialize(supra_framework);
 
-        coin::create_coin_conversion_map(aptos_framework);
-        coin::create_pairing<AptosCoin>(aptos_framework);
+        coin::create_coin_conversion_map(supra_framework);
+        coin::create_pairing<SupraCoin>(supra_framework);
 
-        // Give stake module MintCapability<AptosCoin> so it can mint rewards.
-        stake::store_aptos_coin_mint_cap(aptos_framework, mint_cap);
-        // Give transaction_fee module BurnCapability<AptosCoin> so it can burn gas.
-        transaction_fee::store_aptos_coin_burn_cap(aptos_framework, burn_cap);
-        // Give transaction_fee module MintCapability<AptosCoin> so it can mint refunds.
-        transaction_fee::store_aptos_coin_mint_cap(aptos_framework, mint_cap);
+        // Give stake module MintCapability<SupraCoin> so it can mint rewards.
+        stake::store_supra_coin_mint_cap(supra_framework, mint_cap);
+        // Give transaction_fee module BurnCapability<SupraCoin> so it can burn gas.
+        transaction_fee::store_supra_coin_burn_cap(supra_framework, burn_cap);
+        // Give transaction_fee module MintCapability<SupraCoin> so it can mint refunds.
+        transaction_fee::store_supra_coin_mint_cap(supra_framework, mint_cap);
     }
 
     /// Only called for testnets and e2e tests.
-    fun initialize_core_resources_and_aptos_coin(
-        aptos_framework: &signer,
+    fun initialize_core_resources_and_supra_coin(
+        supra_framework: &signer,
         core_resources_auth_key: vector<u8>,
     ) {
-        let (burn_cap, mint_cap) = aptos_coin::initialize(aptos_framework);
+        let (burn_cap, mint_cap) = supra_coin::initialize(supra_framework);
 
-        coin::create_coin_conversion_map(aptos_framework);
-        coin::create_pairing<AptosCoin>(aptos_framework);
+        coin::create_coin_conversion_map(supra_framework);
+        coin::create_pairing<SupraCoin>(supra_framework);
 
-        // Give stake module MintCapability<AptosCoin> so it can mint rewards.
-        stake::store_aptos_coin_mint_cap(aptos_framework, mint_cap);
-        // Give transaction_fee module BurnCapability<AptosCoin> so it can burn gas.
-        transaction_fee::store_aptos_coin_burn_cap(aptos_framework, burn_cap);
-        // Give transaction_fee module MintCapability<AptosCoin> so it can mint refunds.
-        transaction_fee::store_aptos_coin_mint_cap(aptos_framework, mint_cap);
+        // Give stake module MintCapability<SupraCoin> so it can mint rewards.
+        stake::store_supra_coin_mint_cap(supra_framework, mint_cap);
+        // Give transaction_fee module BurnCapability<SupraCoin> so it can burn gas.
+        transaction_fee::store_supra_coin_burn_cap(supra_framework, burn_cap);
+        // Give transaction_fee module MintCapability<SupraCoin> so it can mint refunds.
+        transaction_fee::store_supra_coin_mint_cap(supra_framework, mint_cap);
 
         let core_resources = account::create_account(@core_resources);
         account::rotate_authentication_key_internal(&core_resources, core_resources_auth_key);
-        aptos_account::register_apt(&core_resources); // registers APT store
-        aptos_coin::configure_accounts_for_test(aptos_framework, &core_resources, mint_cap);
+        supra_account::register_apt(&core_resources); // registers APT store
+        supra_coin::configure_accounts_for_test(supra_framework, &core_resources, mint_cap);
     }
 
-    fun create_accounts(aptos_framework: &signer, accounts: vector<AccountMap>) {
+    fun create_accounts(supra_framework: &signer, accounts: vector<AccountMap>) {
         let unique_accounts = vector::empty();
         vector::for_each_ref(&accounts, |account_map| {
             let account_map: &AccountMap = account_map;
@@ -183,7 +183,7 @@ module aptos_framework::genesis {
             vector::push_back(&mut unique_accounts, account_map.account_address);
 
             create_account(
-                aptos_framework,
+                supra_framework,
                 account_map.account_address,
                 account_map.balance,
             );
@@ -192,16 +192,16 @@ module aptos_framework::genesis {
 
     /// This creates an funds an account if it doesn't exist.
     /// If it exists, it just returns the signer.
-    fun create_account(aptos_framework: &signer, account_address: address, balance: u64): signer {
+    fun create_account(supra_framework: &signer, account_address: address, balance: u64): signer {
         let account = if (account::exists_at(account_address)) {
             create_signer(account_address)
         } else {
             account::create_account(account_address)
         };
 
-        if (coin::balance<AptosCoin>(account_address) == 0) {
-            coin::register<AptosCoin>(&account);
-            aptos_coin::mint(aptos_framework, account_address, balance);
+        if (coin::balance<SupraCoin>(account_address) == 0) {
+            coin::register<SupraCoin>(&account);
+            supra_coin::mint(supra_framework, account_address, balance);
         };
         account
     }
@@ -229,8 +229,8 @@ module aptos_framework::genesis {
                 vector::push_back(&mut unique_accounts, *account);
 
                 let employee = create_signer(*account);
-                let total = coin::balance<AptosCoin>(*account);
-                let coins = coin::withdraw<AptosCoin>(&employee, total);
+                let total = coin::balance<SupraCoin>(*account);
+                let coins = coin::withdraw<SupraCoin>(&employee, total);
                 simple_map::add(&mut buy_ins, *account, coins);
 
                 j = j + 1;
@@ -295,18 +295,18 @@ module aptos_framework::genesis {
     }
 
     fun create_initialize_validators_with_commission(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         use_staking_contract: bool,
         validators: vector<ValidatorConfigurationWithCommission>,
     ) {
         vector::for_each_ref(&validators, |validator| {
             let validator: &ValidatorConfigurationWithCommission = validator;
-            create_initialize_validator(aptos_framework, validator, use_staking_contract);
+            create_initialize_validator(supra_framework, validator, use_staking_contract);
         });
 
-        // Destroy the aptos framework account's ability to mint coins now that we're done with setting up the initial
+        // Destroy the supra framework account's ability to mint coins now that we're done with setting up the initial
         // validators.
-        aptos_coin::destroy_mint_cap(aptos_framework);
+        supra_coin::destroy_mint_cap(supra_framework);
 
         stake::on_new_epoch();
     }
@@ -321,7 +321,7 @@ module aptos_framework::genesis {
     ///
     /// Network address fields are a vector per account, where each entry is a vector of addresses
     /// encoded in a single BCS byte array.
-    fun create_initialize_validators(aptos_framework: &signer, validators: vector<ValidatorConfiguration>) {
+    fun create_initialize_validators(supra_framework: &signer, validators: vector<ValidatorConfiguration>) {
         let validators_with_commission = vector::empty();
         vector::for_each_reverse(validators, |validator| {
             let validator_with_commission = ValidatorConfigurationWithCommission {
@@ -332,19 +332,19 @@ module aptos_framework::genesis {
             vector::push_back(&mut validators_with_commission, validator_with_commission);
         });
 
-        create_initialize_validators_with_commission(aptos_framework, false, validators_with_commission);
+        create_initialize_validators_with_commission(supra_framework, false, validators_with_commission);
     }
 
     fun create_initialize_validator(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         commission_config: &ValidatorConfigurationWithCommission,
         use_staking_contract: bool,
     ) {
         let validator = &commission_config.validator_config;
 
-        let owner = &create_account(aptos_framework, validator.owner_address, validator.stake_amount);
-        create_account(aptos_framework, validator.operator_address, 0);
-        create_account(aptos_framework, validator.voter_address, 0);
+        let owner = &create_account(supra_framework, validator.owner_address, validator.stake_amount);
+        create_account(supra_framework, validator.operator_address, 0);
+        create_account(supra_framework, validator.voter_address, 0);
 
         // Initialize the stake pool and join the validator set.
         let pool_address = if (use_staking_contract) {
@@ -391,8 +391,8 @@ module aptos_framework::genesis {
     }
 
     /// The last step of genesis.
-    fun set_genesis_end(aptos_framework: &signer) {
-        chain_status::set_genesis_end(aptos_framework);
+    fun set_genesis_end(supra_framework: &signer) {
+        chain_status::set_genesis_end(supra_framework);
     }
 
     #[verify_only]
@@ -413,7 +413,7 @@ module aptos_framework::genesis {
         rewards_rate: u64,
         rewards_rate_denominator: u64,
         voting_power_increase_limit: u64,
-        aptos_framework: &signer,
+        supra_framework: &signer,
         min_voting_threshold: u128,
         required_proposer_stake: u64,
         voting_duration_secs: u64,
@@ -438,18 +438,18 @@ module aptos_framework::genesis {
             rewards_rate_denominator,
             voting_power_increase_limit
         );
-        features::change_feature_flags_for_verification(aptos_framework, vector[1, 2], vector[]);
-        initialize_aptos_coin(aptos_framework);
-        aptos_governance::initialize_for_verification(
-            aptos_framework,
+        features::change_feature_flags_for_verification(supra_framework, vector[1, 2], vector[]);
+        initialize_supra_coin(supra_framework);
+        supra_governance::initialize_for_verification(
+            supra_framework,
             min_voting_threshold,
             required_proposer_stake,
             voting_duration_secs
         );
-        create_accounts(aptos_framework, accounts);
+        create_accounts(supra_framework, accounts);
         create_employee_validators(employee_vesting_start, employee_vesting_period_duration, employees);
-        create_initialize_validators_with_commission(aptos_framework, true, validators);
-        set_genesis_end(aptos_framework);
+        create_initialize_validators_with_commission(supra_framework, true, validators);
+        set_genesis_end(supra_framework);
     }
 
     #[test_only]
@@ -474,7 +474,7 @@ module aptos_framework::genesis {
     #[test]
     fun test_setup() {
         setup();
-        assert!(account::exists_at(@aptos_framework), 1);
+        assert!(account::exists_at(@supra_framework), 1);
         assert!(account::exists_at(@0x2), 1);
         assert!(account::exists_at(@0x3), 1);
         assert!(account::exists_at(@0x4), 1);
@@ -486,22 +486,22 @@ module aptos_framework::genesis {
         assert!(account::exists_at(@0xa), 1);
     }
 
-    #[test(aptos_framework = @0x1)]
-    fun test_create_account(aptos_framework: &signer) {
+    #[test(supra_framework = @0x1)]
+    fun test_create_account(supra_framework: &signer) {
         setup();
-        initialize_aptos_coin(aptos_framework);
+        initialize_supra_coin(supra_framework);
 
         let addr = @0x121341; // 01 -> 0a are taken
-        let test_signer_before = create_account(aptos_framework, addr, 15);
-        let test_signer_after = create_account(aptos_framework, addr, 500);
+        let test_signer_before = create_account(supra_framework, addr, 15);
+        let test_signer_after = create_account(supra_framework, addr, 500);
         assert!(test_signer_before == test_signer_after, 0);
-        assert!(coin::balance<AptosCoin>(addr) == 15, 1);
+        assert!(coin::balance<SupraCoin>(addr) == 15, 1);
     }
 
-    #[test(aptos_framework = @0x1)]
-    fun test_create_accounts(aptos_framework: &signer) {
+    #[test(supra_framework = @0x1)]
+    fun test_create_accounts(supra_framework: &signer) {
         setup();
-        initialize_aptos_coin(aptos_framework);
+        initialize_supra_coin(supra_framework);
 
         // 01 -> 0a are taken
         let addr0 = @0x121341;
@@ -518,37 +518,37 @@ module aptos_framework::genesis {
             },
         ];
 
-        create_accounts(aptos_framework, accounts);
-        assert!(coin::balance<AptosCoin>(addr0) == 12345, 0);
-        assert!(coin::balance<AptosCoin>(addr1) == 67890, 1);
+        create_accounts(supra_framework, accounts);
+        assert!(coin::balance<SupraCoin>(addr0) == 12345, 0);
+        assert!(coin::balance<SupraCoin>(addr1) == 67890, 1);
 
-        create_account(aptos_framework, addr0, 23456);
-        assert!(coin::balance<AptosCoin>(addr0) == 12345, 2);
+        create_account(supra_framework, addr0, 23456);
+        assert!(coin::balance<SupraCoin>(addr0) == 12345, 2);
     }
 
-    #[test(aptos_framework = @0x1, root = @0xabcd)]
-    fun test_create_root_account(aptos_framework: &signer) {
-        use aptos_framework::aggregator_factory;
-        use aptos_framework::object;
-        use aptos_framework::primary_fungible_store;
-        use aptos_framework::fungible_asset::Metadata;
+    #[test(supra_framework = @0x1, root = @0xabcd)]
+    fun test_create_root_account(supra_framework: &signer) {
+        use supra_framework::aggregator_factory;
+        use supra_framework::object;
+        use supra_framework::primary_fungible_store;
+        use supra_framework::fungible_asset::Metadata;
         use std::features;
 
         let feature = features::get_new_accounts_default_to_fa_apt_store_feature();
-        features::change_feature_flags_for_testing(aptos_framework, vector[feature], vector[]);
+        features::change_feature_flags_for_testing(supra_framework, vector[feature], vector[]);
 
-        aggregator_factory::initialize_aggregator_factory_for_test(aptos_framework);
+        aggregator_factory::initialize_aggregator_factory_for_test(supra_framework);
 
-        let (burn_cap, mint_cap) = aptos_coin::initialize(aptos_framework);
-        aptos_coin::ensure_initialized_with_apt_fa_metadata_for_test();
+        let (burn_cap, mint_cap) = supra_coin::initialize(supra_framework);
+        supra_coin::ensure_initialized_with_apt_fa_metadata_for_test();
 
         let core_resources = account::create_account(@core_resources);
-        aptos_account::register_apt(&core_resources); // registers APT store
+        supra_account::register_apt(&core_resources); // registers APT store
 
-        let apt_metadata = object::address_to_object<Metadata>(@aptos_fungible_asset);
+        let apt_metadata = object::address_to_object<Metadata>(@supra_fungible_asset);
         assert!(primary_fungible_store::primary_store_exists(@core_resources, apt_metadata), 2);
 
-        aptos_coin::configure_accounts_for_test(aptos_framework, &core_resources, mint_cap);
+        supra_coin::configure_accounts_for_test(supra_framework, &core_resources, mint_cap);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);

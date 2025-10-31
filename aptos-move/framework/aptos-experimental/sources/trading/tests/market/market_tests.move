@@ -1,32 +1,32 @@
 #[test_only]
-module aptos_experimental::market_tests {
+module supra_experimental::market_tests {
     use std::option;
     use std::option::Option;
     use std::signer;
     use std::vector;
-    use aptos_framework::timestamp;
-    use aptos_experimental::clearinghouse_test;
-    use aptos_experimental::clearinghouse_test::{
+    use supra_framework::timestamp;
+    use supra_experimental::clearinghouse_test;
+    use supra_experimental::clearinghouse_test::{
         test_market_callbacks,
         new_test_order_metadata,
         get_position_size,
         test_market_callbacks_with_taker_cancelled
     };
-    use aptos_experimental::market_test_utils::{
+    use supra_experimental::market_test_utils::{
         place_order_and_verify,
         place_taker_order_and_verify_fill,
         place_taker_order,
         verify_cancel_event,
         verify_fills
     };
-    use aptos_experimental::event_utils;
-    use aptos_experimental::market_types::{
+    use supra_experimental::event_utils;
+    use supra_experimental::market_types::{
         good_till_cancelled,
         post_only,
         immediate_or_cancel
     };
-    use aptos_experimental::market::{new_market, new_market_config};
-    use aptos_experimental::order_book_types::OrderIdType;
+    use supra_experimental::market::{new_market, new_market_config};
+    use supra_experimental::order_book_types::OrderIdType;
 
     const PRE_CANCEL_WINDOW_MICROS: u64 = 1000000; // 1 second
 
@@ -1006,16 +1006,16 @@ module aptos_experimental::market_tests {
     }
 
     #[test(
-       aptos_framework = @0x1, admin = @0x1, market_signer = @0x123, maker1 = @0x456, maker2 = @0x789
+       supra_framework = @0x1, admin = @0x1, market_signer = @0x123, maker1 = @0x456, maker2 = @0x789
     )]
     public fun test_self_matching_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         admin: &signer,
         market_signer: &signer,
         maker1: &signer,
         maker2: &signer
     ) {
-        timestamp::set_time_has_started_for_testing(aptos_framework);
+        timestamp::set_time_has_started_for_testing(supra_framework);
         // Setup accounts
         let market = new_market(
             admin,
@@ -1185,14 +1185,14 @@ module aptos_experimental::market_tests {
         market.destroy_market()
     }
 
-    #[test(aptos_framework = @0x1, admin = @0x1, market_signer = @0x123, maker1 = @0x456)]
+    #[test(supra_framework = @0x1, admin = @0x1, market_signer = @0x123, maker1 = @0x456)]
     public fun test_duplicate_client_order_id_not_allowed(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         admin: &signer,
         market_signer: &signer,
         maker1: &signer
     ) {
-        timestamp::set_time_has_started_for_testing(aptos_framework);
+        timestamp::set_time_has_started_for_testing(supra_framework);
         // Setup accounts
         let market = new_market(
             admin,
@@ -1236,14 +1236,14 @@ module aptos_experimental::market_tests {
     }
 
 
-    #[test(aptos_framework = @0x1, admin = @0x1, market_signer = @0x123, maker1 = @0x456)]
+    #[test(supra_framework = @0x1, admin = @0x1, market_signer = @0x123, maker1 = @0x456)]
     public fun test_metadata_update(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         admin: &signer,
         market_signer: &signer,
         maker1: &signer
     ) {
-        timestamp::set_time_has_started_for_testing(aptos_framework);
+        timestamp::set_time_has_started_for_testing(supra_framework);
         // Setup accounts
         let market = new_market(
             admin,

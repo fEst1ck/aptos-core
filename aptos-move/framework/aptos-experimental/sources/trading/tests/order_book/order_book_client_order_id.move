@@ -1,9 +1,9 @@
 #[test_only]
-module aptos_experimental::order_book_client_order_id {
+module supra_experimental::order_book_client_order_id {
     use std::option;
     use std::signer;
-    use aptos_experimental::order_book_types::new_order_id_type;
-    use aptos_experimental::order_book::{new_order_book, new_order_request};
+    use supra_experimental::order_book_types::new_order_id_type;
+    use supra_experimental::order_book::{new_order_book, new_order_request};
 
     #[test(user1 = @0x456)]
     public fun test_try_cancel_order_with_client_order_id_success(

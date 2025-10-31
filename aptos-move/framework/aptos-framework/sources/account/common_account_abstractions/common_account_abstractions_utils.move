@@ -1,10 +1,10 @@
-module aptos_framework::common_account_abstractions_utils {
+module supra_framework::common_account_abstractions_utils {
     use std::chain_id;
     use std::string_utils;
     use std::transaction_context::{Self, EntryFunctionPayload};
 
-    friend aptos_framework::ethereum_derivable_account;
-    friend aptos_framework::solana_derivable_account;
+    friend supra_framework::ethereum_derivable_account;
+    friend supra_framework::solana_derivable_account;
 
     public(friend) fun network_name(): vector<u8> {
         let chain_id = chain_id::get();

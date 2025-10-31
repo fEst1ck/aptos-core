@@ -1,8 +1,8 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 use crate::natives::transaction_context::NativeTransactionContext;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError, SafeNativeResult,
 };
 use move_core_types::{

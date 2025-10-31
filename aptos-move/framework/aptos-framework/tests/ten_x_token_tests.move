@@ -1,9 +1,9 @@
 #[test_only]
-module aptos_framework::ten_x_token_tests {
-    use aptos_framework::fungible_asset::{Self, Metadata, TestToken};
-    use aptos_framework::dispatchable_fungible_asset;
-    use aptos_framework::primary_fungible_store;
-    use aptos_framework::object;
+module supra_framework::ten_x_token_tests {
+    use supra_framework::fungible_asset::{Self, Metadata, TestToken};
+    use supra_framework::dispatchable_fungible_asset;
+    use supra_framework::primary_fungible_store;
+    use supra_framework::object;
     use 0xcafe::ten_x_token;
     use std::option;
     use std::signer;
@@ -52,7 +52,7 @@ module aptos_framework::ten_x_token_tests {
     }
 
     #[test(creator = @0xcafe)]
-    #[expected_failure(abort_code=0x1001C, location=aptos_framework::fungible_asset)]
+    #[expected_failure(abort_code=0x1001C, location=supra_framework::fungible_asset)]
     fun ten_x_balance_abort(
         creator: &signer,
     ) {
@@ -67,7 +67,7 @@ module aptos_framework::ten_x_token_tests {
     }
 
     #[test(creator = @0xcafe)]
-    #[expected_failure(abort_code=0x1001C, location=aptos_framework::fungible_asset)]
+    #[expected_failure(abort_code=0x1001C, location=supra_framework::fungible_asset)]
     fun ten_x_supply_abort(
         creator: &signer,
     ) {

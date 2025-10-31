@@ -1,4 +1,4 @@
-spec aptos_token::token_transfers {
+spec supra_token::token_transfers {
     spec module {
         pragma verify = false;
         pragma aborts_if_is_strict;
@@ -10,7 +10,7 @@ spec aptos_token::token_transfers {
 
     /// Abort according to the code
     spec schema InitializeTokenTransfersAbortsIf {
-        use aptos_framework::account::{Account};
+        use supra_framework::account::{Account};
         account: &signer;
 
         let addr = signer::address_of(account);
@@ -44,7 +44,7 @@ spec aptos_token::token_transfers {
         token_id: TokenId,
         amount: u64,
     ){
-        use aptos_token::token::{TokenStore,Self};
+        use supra_token::token::{TokenStore,Self};
 
         // TODO: Can't get the return from `withdraw_token`.
         pragma verify = false;
@@ -73,7 +73,7 @@ spec aptos_token::token_transfers {
         id: TokenId,
         amount: u64
     ): u64 {
-        use aptos_token::token::{TokenStore};
+        use supra_token::token::{TokenStore};
         use aptos_std::table::{Self};
         let tokens = global<TokenStore>(account_addr).tokens;
         let balance = table::spec_get(tokens, id).amount;
@@ -92,7 +92,7 @@ spec aptos_token::token_transfers {
         name: String,
         property_version: u64,
     ){
-        use aptos_token::token::{TokenStore};
+        use supra_token::token::{TokenStore};
 
         // TODO: deposit_token has pending issues
         pragma aborts_if_is_partial;
@@ -120,7 +120,7 @@ spec aptos_token::token_transfers {
         sender: address,
         token_id: TokenId,
     ){
-        use aptos_token::token::{TokenStore};
+        use supra_token::token::{TokenStore};
         // TODO: deposit_token has pending issues
         pragma aborts_if_is_partial;
 
@@ -148,7 +148,7 @@ spec aptos_token::token_transfers {
         name: String,
         property_version: u64,
     ){
-        use aptos_token::token::{TokenStore};
+        use supra_token::token::{TokenStore};
 
         // TODO: deposit_token has pending issues.
         pragma aborts_if_is_partial;
@@ -177,7 +177,7 @@ spec aptos_token::token_transfers {
         receiver: address,
         token_id: TokenId,
     ){
-        use aptos_token::token::{TokenStore};
+        use supra_token::token::{TokenStore};
 
         // TODO: deposit_token has pending issues.
         pragma aborts_if_is_partial;

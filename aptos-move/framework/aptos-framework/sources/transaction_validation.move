@@ -1,4 +1,4 @@
-module aptos_framework::transaction_validation {
+module supra_framework::transaction_validation {
     use std::error;
     use std::features;
     use std::option;
@@ -6,20 +6,20 @@ module aptos_framework::transaction_validation {
     use std::signer;
     use std::vector;
 
-    use aptos_framework::account;
-    use aptos_framework::aptos_account;
-    use aptos_framework::account_abstraction;
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::chain_id;
-    use aptos_framework::coin;
-    use aptos_framework::create_signer;
-    use aptos_framework::permissioned_signer;
-    use aptos_framework::system_addresses;
-    use aptos_framework::timestamp;
-    use aptos_framework::transaction_fee;
-    use aptos_framework::nonce_validation;
+    use supra_framework::account;
+    use supra_framework::supra_account;
+    use supra_framework::account_abstraction;
+    use supra_framework::supra_coin::SupraCoin;
+    use supra_framework::chain_id;
+    use supra_framework::coin;
+    use supra_framework::create_signer;
+    use supra_framework::permissioned_signer;
+    use supra_framework::system_addresses;
+    use supra_framework::timestamp;
+    use supra_framework::transaction_fee;
+    use supra_framework::nonce_validation;
 
-    friend aptos_framework::genesis;
+    friend supra_framework::genesis;
 
     // We will advertise to the community that max expiration time for orderless txns is 60 seconds.
     // Adding a 5 second slack here as the client's time and the blockchain's time may drift.
@@ -95,17 +95,17 @@ module aptos_framework::transaction_validation {
 
     /// Only called during genesis to initialize system resources for this module.
     public(friend) fun initialize(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         script_prologue_name: vector<u8>,
         // module_prologue_name is deprecated and not used.
         module_prologue_name: vector<u8>,
         multi_agent_prologue_name: vector<u8>,
         user_epilogue_name: vector<u8>,
     ) {
-        system_addresses::assert_aptos_framework(aptos_framework);
+        system_addresses::assert_supra_framework(supra_framework);
 
-        move_to(aptos_framework, TransactionValidation {
-            module_addr: @aptos_framework,
+        move_to(supra_framework, TransactionValidation {
+            module_addr: @supra_framework,
             module_name: b"transaction_validation",
             script_prologue_name,
             // module_prologue_name is deprecated and not used.
@@ -199,12 +199,12 @@ module aptos_framework::transaction_validation {
             );
             if (features::operations_default_to_fa_apt_store_enabled()) {
                 assert!(
-                    aptos_account::is_fungible_balance_at_least(gas_payer_address, max_transaction_fee),
+                    supra_account::is_fungible_balance_at_least(gas_payer_address, max_transaction_fee),
                     error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
                 );
             } else {
                 assert!(
-                    coin::is_balance_at_least<AptosCoin>(gas_payer_address, max_transaction_fee),
+                    coin::is_balance_at_least<SupraCoin>(gas_payer_address, max_transaction_fee),
                     error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
                 );
             }
@@ -286,7 +286,7 @@ module aptos_framework::transaction_validation {
     }
 
     // This function extends the script_prologue by adding a parameter to indicate simulation mode.
-    // Once the transaction_simulation_enhancement feature is enabled, the Aptos VM will invoke this function instead.
+    // Once the transaction_simulation_enhancement feature is enabled, the Supra VM will invoke this function instead.
     // Eventually, this function will be consolidated with the original function once the feature is fully enabled.
     fun script_prologue_extended(
         sender: signer,
@@ -344,7 +344,7 @@ module aptos_framework::transaction_validation {
     }
 
     // This function extends the multi_agent_script_prologue by adding a parameter to indicate simulation mode.
-    // Once the transaction_simulation_enhancement feature is enabled, the Aptos VM will invoke this function instead.
+    // Once the transaction_simulation_enhancement feature is enabled, the Supra VM will invoke this function instead.
     // Eventually, this function will be consolidated with the original function once the feature is fully enabled.
     fun multi_agent_script_prologue_extended(
         sender: signer,
@@ -475,7 +475,7 @@ module aptos_framework::transaction_validation {
     }
 
     // This function extends the fee_payer_script_prologue by adding a parameter to indicate simulation mode.
-    // Once the transaction_simulation_enhancement feature is enabled, the Aptos VM will invoke this function instead.
+    // Once the transaction_simulation_enhancement feature is enabled, the Supra VM will invoke this function instead.
     // Eventually, this function will be consolidated with the original function once the feature is fully enabled.
     fun fee_payer_script_prologue_extended(
         sender: signer,
@@ -537,7 +537,7 @@ module aptos_framework::transaction_validation {
     }
 
     // This function extends the epilogue by adding a parameter to indicate simulation mode.
-    // Once the transaction_simulation_enhancement feature is enabled, the Aptos VM will invoke this function instead.
+    // Once the transaction_simulation_enhancement feature is enabled, the Supra VM will invoke this function instead.
     // Eventually, this function will be consolidated with the original function once the feature is fully enabled.
     fun epilogue_extended(
         account: signer,
@@ -583,7 +583,7 @@ module aptos_framework::transaction_validation {
     }
 
     // This function extends the epilogue_gas_payer by adding a parameter to indicate simulation mode.
-    // Once the transaction_simulation_enhancement feature is enabled, the Aptos VM will invoke this function instead.
+    // Once the transaction_simulation_enhancement feature is enabled, the Supra VM will invoke this function instead.
     // Eventually, this function will be consolidated with the original function once the feature is fully enabled.
     fun epilogue_gas_payer_extended(
         account: signer,
@@ -608,12 +608,12 @@ module aptos_framework::transaction_validation {
         if (!skip_gas_payment(is_simulation, gas_payer)) {
             if (features::operations_default_to_fa_apt_store_enabled()) {
                 assert!(
-                    aptos_account::is_fungible_balance_at_least(gas_payer, transaction_fee_amount),
+                    supra_account::is_fungible_balance_at_least(gas_payer, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             } else {
                 assert!(
-                    coin::is_balance_at_least<AptosCoin>(gas_payer, transaction_fee_amount),
+                    coin::is_balance_at_least<SupraCoin>(gas_payer, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             };
@@ -828,12 +828,12 @@ module aptos_framework::transaction_validation {
         )) {
             if (features::operations_default_to_fa_apt_store_enabled()) {
                 assert!(
-                    aptos_account::is_fungible_balance_at_least(gas_payer_address, transaction_fee_amount),
+                    supra_account::is_fungible_balance_at_least(gas_payer_address, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             } else {
                 assert!(
-                    coin::is_balance_at_least<AptosCoin>(gas_payer_address, transaction_fee_amount),
+                    coin::is_balance_at_least<SupraCoin>(gas_payer_address, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             };

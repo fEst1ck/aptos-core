@@ -1,8 +1,8 @@
 #[test_only]
-module aptos_experimental::confidential_proof_tests {
-    use aptos_experimental::confidential_balance;
-    use aptos_experimental::confidential_proof;
-    use aptos_experimental::ristretto255_twisted_elgamal::{
+module supra_experimental::confidential_proof_tests {
+    use supra_experimental::confidential_balance;
+    use supra_experimental::confidential_proof;
+    use supra_experimental::ristretto255_twisted_elgamal::{
         Self as twisted_elgamal,
         generate_twisted_elgamal_keypair
     };

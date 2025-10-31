@@ -1,9 +1,9 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use super::function_info::extract_function_info;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::DISPATCHABLE_AUTHENTICATE_DISPATCH_BASE;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::DISPATCHABLE_AUTHENTICATE_DISPATCH_BASE;
+use supra_native_interface::{
     RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError, SafeNativeResult,
 };
 use move_vm_runtime::native_functions::NativeFunction;

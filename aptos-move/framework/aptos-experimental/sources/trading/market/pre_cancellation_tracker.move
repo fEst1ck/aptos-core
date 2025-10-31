@@ -5,18 +5,18 @@
 /// end-to-end blockchain latency (~500 ms). This adds support for an MM to pre-cancel an order,
 /// which means specify that this order with a client order id is cancelled even before the order is placed.
 /// This reduces the latency to submit a cancellation transaction from 500 ms to 0.
-module aptos_experimental::pre_cancellation_tracker {
+module supra_experimental::pre_cancellation_tracker {
     use std::signer;
     use aptos_std::big_ordered_map;
     use aptos_std::big_ordered_map::BigOrderedMap;
-    use aptos_experimental::order_book_types::{
+    use supra_experimental::order_book_types::{
         AccountClientOrderId,
         new_account_client_order_id
     };
     #[test_only]
     use std::vector;
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
 
     const DUPLICATE_ORDER_PLACEMENT: u64 = 1;
 
@@ -123,11 +123,11 @@ module aptos_experimental::pre_cancellation_tracker {
         account_order_ids.destroy(|_v| {});
     }
 
-    #[test(account = @0x456, aptos_framework = @0x1)]
+    #[test(account = @0x456, supra_framework = @0x1)]
     public fun test_order_id_tracking_flow(
-        account: &signer, aptos_framework: &signer
+        account: &signer, supra_framework: &signer
     ) {
-        timestamp::set_time_has_started_for_testing(aptos_framework);
+        timestamp::set_time_has_started_for_testing(supra_framework);
         // Set short expiration for test purposes
         let expiration_window = 100; // 100 seconds
         let tracker = new_pre_cancellation_tracker(expiration_window);
@@ -148,11 +148,11 @@ module aptos_experimental::pre_cancellation_tracker {
         destroy_tracker(tracker);
     }
 
-    #[test(account = @0x456, aptos_framework = @0x1)]
+    #[test(account = @0x456, supra_framework = @0x1)]
     public fun test_order_expiration(
-        account: &signer, aptos_framework: &signer
+        account: &signer, supra_framework: &signer
     ) {
-        timestamp::set_time_has_started_for_testing(aptos_framework);
+        timestamp::set_time_has_started_for_testing(supra_framework);
         // Set very short expiration for test
         let expiration_window = 10; // 10 seconds
         let tracker = new_pre_cancellation_tracker(expiration_window);
@@ -177,11 +177,11 @@ module aptos_experimental::pre_cancellation_tracker {
         destroy_tracker(tracker);
     }
 
-    #[test(account = @0x456, aptos_framework = @0x1)]
+    #[test(account = @0x456, supra_framework = @0x1)]
     public fun test_garbage_collection(
-        account: &signer, aptos_framework: &signer
+        account: &signer, supra_framework: &signer
     ) {
-        timestamp::set_time_has_started_for_testing(aptos_framework);
+        timestamp::set_time_has_started_for_testing(supra_framework);
         let expiration_window = 5;
         let tracker = new_pre_cancellation_tracker(expiration_window);
         let addr = signer::address_of(account);

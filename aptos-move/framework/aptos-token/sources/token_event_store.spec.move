@@ -1,4 +1,4 @@
-spec aptos_token::token_event_store {
+spec supra_token::token_event_store {
     spec module {
         pragma verify = false;
         pragma aborts_if_is_strict;
@@ -12,7 +12,7 @@ spec aptos_token::token_event_store {
     /// Adjust the overflow value according to the
     /// number of registered events
     spec schema InitializeTokenEventStoreAbortsIf {
-        use aptos_framework::account::{Account};
+        use supra_framework::account::{Account};
         creator: &signer;
         let addr = signer::address_of(creator);
         let account = global<Account>(addr);
@@ -22,7 +22,7 @@ spec aptos_token::token_event_store {
     }
 
     spec schema TokenEventStoreAbortsIf {
-        use aptos_framework::account::{Account};
+        use supra_framework::account::{Account};
         creator: &signer;
         let addr = signer::address_of(creator);
         let account = global<Account>(addr);

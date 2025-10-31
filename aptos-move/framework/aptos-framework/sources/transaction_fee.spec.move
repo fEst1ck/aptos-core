@@ -1,10 +1,10 @@
-spec aptos_framework::transaction_fee {
+spec supra_framework::transaction_fee {
     /// <high-level-req>
     /// No.: 1
-    /// Requirement: Given the blockchain is in an operating state, it guarantees that the Aptos framework signer may burn
-    /// Aptos coins.
+    /// Requirement: Given the blockchain is in an operating state, it guarantees that the Supra framework signer may burn
+    /// Supra coins.
     /// Criticality: Critical
-    /// Implementation: The AptosCoinCapabilities structure is defined in this module and it stores burn capability to
+    /// Implementation: The SupraCoinCapabilities structure is defined in this module and it stores burn capability to
     /// burn the gas fees.
     /// Enforcement: Formally Verified via [high-level-req-1](module).
     ///
@@ -18,7 +18,7 @@ spec aptos_framework::transaction_fee {
     /// No.: 3
     /// Requirement: Only the admin address is authorized to call the initialization function.
     /// Criticality: Critical
-    /// Implementation: The initialize_fee_collection_and_distribution function ensures only the Aptos framework address
+    /// Implementation: The initialize_fee_collection_and_distribution function ensures only the Supra framework address
     /// calls it.
     /// Enforcement: Formally verified via [high-level-req-3](initialize_fee_collection_and_distribution).
     ///
@@ -38,27 +38,27 @@ spec aptos_framework::transaction_fee {
     /// Enforcement: Formally verified in [high-level-req-5](ProcessCollectedFeesRequiresAndEnsures).
     ///
     /// No.: 6
-    /// Requirement: The presence of the resource, indicating collected fees per block under the Aptos framework account,
+    /// Requirement: The presence of the resource, indicating collected fees per block under the Supra framework account,
     /// is a prerequisite for the successful execution of the following functionalities: Upgrading burn percentage.
     /// Registering a block proposer. Processing collected fees.
     /// Criticality: Low
     /// Implementation: The functions: upgrade_burn_percentage, register_proposer_for_fee_collection, and
-    /// process_collected_fees all ensure that the CollectedFeesPerBlock resource exists under aptos_framework by
+    /// process_collected_fees all ensure that the CollectedFeesPerBlock resource exists under supra_framework by
     /// calling the is_fees_collection_enabled method, which returns a boolean value confirming if the resource exists
     /// or not.
     /// Enforcement: Formally verified via [high-level-req-6.1](register_proposer_for_fee_collection), [high-level-req-6.2](process_collected_fees), and [high-level-req-6.3](upgrade_burn_percentage).
     /// </high-level-req>
     ///
     spec module {
-        use aptos_framework::chain_status;
+        use supra_framework::chain_status;
 
         // TODO(fa_migration)
         pragma verify = false;
 
         pragma aborts_if_is_strict;
-        // property 1: Given the blockchain is in an operating state, it guarantees that the Aptos framework signer may burn Aptos coins.
+        // property 1: Given the blockchain is in an operating state, it guarantees that the Supra framework signer may burn Supra coins.
         /// [high-level-req-1]
-        invariant [suspendable] chain_status::is_operating() ==> exists<AptosCoinCapabilities>(@aptos_framework) || exists<AptosFABurnCapabilities>(@aptos_framework);
+        invariant [suspendable] chain_status::is_operating() ==> exists<SupraCoinCapabilities>(@supra_framework) || exists<SupraFABurnCapabilities>(@supra_framework);
     }
 
     spec CollectedFeesPerBlock {
@@ -67,39 +67,39 @@ spec aptos_framework::transaction_fee {
         invariant burn_percentage <= 100;
     }
 
-    spec initialize_fee_collection_and_distribution(_aptos_framework: &signer, _burn_percentage: u8) {
+    spec initialize_fee_collection_and_distribution(_supra_framework: &signer, _burn_percentage: u8) {
     }
 
-    /// `AptosCoinCapabilities` should be exists.
+    /// `SupraCoinCapabilities` should be exists.
     spec burn_fee(account: address, fee: u64) {
         use aptos_std::type_info;
-        use aptos_framework::optional_aggregator;
-        use aptos_framework::coin;
-        use aptos_framework::coin::{CoinInfo, CoinStore};
+        use supra_framework::optional_aggregator;
+        use supra_framework::coin;
+        use supra_framework::coin::{CoinInfo, CoinStore};
         // TODO(fa_migration)
         pragma verify = false;
 
-        aborts_if !exists<AptosCoinCapabilities>(@aptos_framework);
+        aborts_if !exists<SupraCoinCapabilities>(@supra_framework);
 
-        // This function essentially calls `coin::burn_coin`, monophormized for `AptosCoin`.
+        // This function essentially calls `coin::burn_coin`, monophormized for `SupraCoin`.
         let account_addr = account;
         let amount = fee;
 
-        let aptos_addr = type_info::type_of<AptosCoin>().account_address;
-        let coin_store = global<CoinStore<AptosCoin>>(account_addr);
-        let post post_coin_store = global<CoinStore<AptosCoin>>(account_addr);
+        let supra_addr = type_info::type_of<SupraCoin>().account_address;
+        let coin_store = global<CoinStore<SupraCoin>>(account_addr);
+        let post post_coin_store = global<CoinStore<SupraCoin>>(account_addr);
 
-        // modifies global<CoinStore<AptosCoin>>(account_addr);
+        // modifies global<CoinStore<SupraCoin>>(account_addr);
 
-        aborts_if amount != 0 && !(exists<CoinInfo<AptosCoin>>(aptos_addr)
-            && exists<CoinStore<AptosCoin>>(account_addr));
+        aborts_if amount != 0 && !(exists<CoinInfo<SupraCoin>>(supra_addr)
+            && exists<CoinStore<SupraCoin>>(account_addr));
         aborts_if coin_store.coin.value < amount;
 
-        let maybe_supply = global<CoinInfo<AptosCoin>>(aptos_addr).supply;
+        let maybe_supply = global<CoinInfo<SupraCoin>>(supra_addr).supply;
         let supply_aggr = option::spec_borrow(maybe_supply);
         let value = optional_aggregator::optional_aggregator_value(supply_aggr);
 
-        let post post_maybe_supply = global<CoinInfo<AptosCoin>>(aptos_addr).supply;
+        let post post_maybe_supply = global<CoinInfo<SupraCoin>>(supra_addr).supply;
         let post post_supply = option::spec_borrow(post_maybe_supply);
         let post post_value = optional_aggregator::optional_aggregator_value(post_supply);
 
@@ -111,59 +111,59 @@ spec aptos_framework::transaction_fee {
         } else {
             option::spec_is_none(post_maybe_supply)
         };
-        ensures coin::supply<AptosCoin> == old(coin::supply<AptosCoin>) - amount;
+        ensures coin::supply<SupraCoin> == old(coin::supply<SupraCoin>) - amount;
     }
 
     spec mint_and_refund(account: address, refund: u64) {
         use aptos_std::type_info;
-        use aptos_framework::aptos_coin::AptosCoin;
-        use aptos_framework::coin::{CoinInfo, CoinStore};
-        use aptos_framework::coin;
+        use supra_framework::supra_coin::SupraCoin;
+        use supra_framework::coin::{CoinInfo, CoinStore};
+        use supra_framework::coin;
         // TODO(fa_migration)
         pragma verify = false;
         // pragma opaque;
 
-        let aptos_addr = type_info::type_of<AptosCoin>().account_address;
+        let supra_addr = type_info::type_of<SupraCoin>().account_address;
 
-        aborts_if (refund != 0) && !exists<CoinInfo<AptosCoin>>(aptos_addr);
-        include coin::CoinAddAbortsIf<AptosCoin> { amount: refund };
+        aborts_if (refund != 0) && !exists<CoinInfo<SupraCoin>>(supra_addr);
+        include coin::CoinAddAbortsIf<SupraCoin> { amount: refund };
 
-        aborts_if !exists<CoinStore<AptosCoin>>(account);
-        // modifies global<CoinStore<AptosCoin>>(account);
+        aborts_if !exists<CoinStore<SupraCoin>>(account);
+        // modifies global<CoinStore<SupraCoin>>(account);
 
-        aborts_if !exists<AptosCoinMintCapability>(@aptos_framework);
+        aborts_if !exists<SupraCoinMintCapability>(@supra_framework);
 
-        let supply = coin::supply<AptosCoin>;
-        let post post_supply = coin::supply<AptosCoin>;
+        let supply = coin::supply<SupraCoin>;
+        let post post_supply = coin::supply<SupraCoin>;
         aborts_if [abstract] supply + refund > MAX_U128;
         ensures post_supply == supply + refund;
     }
 
     /// Ensure caller is admin.
-    /// Aborts if `AptosCoinCapabilities` already exists.
-    spec store_aptos_coin_burn_cap(aptos_framework: &signer, burn_cap: BurnCapability<AptosCoin>) {
+    /// Aborts if `SupraCoinCapabilities` already exists.
+    spec store_supra_coin_burn_cap(supra_framework: &signer, burn_cap: BurnCapability<SupraCoin>) {
         use std::signer;
 
         // TODO(fa_migration)
         pragma verify = false;
 
-        let addr = signer::address_of(aptos_framework);
-        aborts_if !system_addresses::is_aptos_framework_address(addr);
+        let addr = signer::address_of(supra_framework);
+        aborts_if !system_addresses::is_supra_framework_address(addr);
 
-        aborts_if exists<AptosFABurnCapabilities>(addr);
-        aborts_if exists<AptosCoinCapabilities>(addr);
+        aborts_if exists<SupraFABurnCapabilities>(addr);
+        aborts_if exists<SupraCoinCapabilities>(addr);
 
-        ensures exists<AptosFABurnCapabilities>(addr) || exists<AptosCoinCapabilities>(addr);
+        ensures exists<SupraFABurnCapabilities>(addr) || exists<SupraCoinCapabilities>(addr);
     }
 
     /// Ensure caller is admin.
-    /// Aborts if `AptosCoinMintCapability` already exists.
-    spec store_aptos_coin_mint_cap(aptos_framework: &signer, mint_cap: MintCapability<AptosCoin>) {
+    /// Aborts if `SupraCoinMintCapability` already exists.
+    spec store_supra_coin_mint_cap(supra_framework: &signer, mint_cap: MintCapability<SupraCoin>) {
         use std::signer;
-        let addr = signer::address_of(aptos_framework);
-        aborts_if !system_addresses::is_aptos_framework_address(addr);
-        aborts_if exists<AptosCoinMintCapability>(addr);
-        ensures exists<AptosCoinMintCapability>(addr);
+        let addr = signer::address_of(supra_framework);
+        aborts_if !system_addresses::is_supra_framework_address(addr);
+        aborts_if exists<SupraCoinMintCapability>(addr);
+        ensures exists<SupraCoinMintCapability>(addr);
     }
 
     /// Historical. Aborts.

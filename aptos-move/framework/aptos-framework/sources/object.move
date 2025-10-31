@@ -14,7 +14,7 @@
 /// TODO:
 /// * There is no means to borrow an object or a reference to an object. We are exploring how to
 ///   make it so that a reference to a global object can be returned from a function.
-module aptos_framework::object {
+module supra_framework::object {
     use std::bcs;
     use std::error;
     use std::hash;
@@ -23,15 +23,15 @@ module aptos_framework::object {
 
     use aptos_std::from_bcs;
 
-    use aptos_framework::account;
-    use aptos_framework::transaction_context;
-    use aptos_framework::create_signer::create_signer;
-    use aptos_framework::event;
-    use aptos_framework::guid;
-    use aptos_framework::permissioned_signer;
+    use supra_framework::account;
+    use supra_framework::transaction_context;
+    use supra_framework::create_signer::create_signer;
+    use supra_framework::event;
+    use supra_framework::guid;
+    use supra_framework::permissioned_signer;
 
-    friend aptos_framework::coin;
-    friend aptos_framework::primary_fungible_store;
+    friend supra_framework::coin;
+    friend supra_framework::primary_fungible_store;
 
     /// An object already exists at this address
     const EOBJECT_EXISTS: u64 = 1;
@@ -95,7 +95,7 @@ module aptos_framework::object {
     /// Address where unwanted objects can be forcefully transferred to.
     const BURN_ADDRESS: address = @0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// The core of the object model that defines ownership, transferability, and events.
     struct ObjectCore has key {
         /// Used by guid to guarantee globally unique objects and create event streams
@@ -109,14 +109,14 @@ module aptos_framework::object {
         transfer_events: event::EventHandle<TransferEvent>,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// This is added to objects that are burnt (ownership transferred to BURN_ADDRESS).
     struct TombStone has key {
         /// Track the previous owner before the object is burnt so they can reclaim later if so desired.
         original_owner: address,
     }
 
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// The existence of this renders all `TransferRef`s irrelevant. The object cannot be moved.
     struct Untransferable has key {}
 
@@ -285,7 +285,7 @@ module aptos_framework::object {
         create_object_internal(owner_address, unique_address, false)
     }
 
-    /// Create a sticky object at a specific address. Only used by aptos_framework::coin.
+    /// Create a sticky object at a specific address. Only used by supra_framework::coin.
     public(friend) fun create_sticky_object_at_address(
         owner_address: address,
         object_address: address,
@@ -785,14 +785,14 @@ module aptos_framework::object {
     }
 
     #[test_only]
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct Hero has key {
         equip_events: event::EventHandle<HeroEquipEvent>,
         weapon: Option<Object<Weapon>>,
     }
 
     #[test_only]
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct Weapon has key {}
 
     #[test_only]
@@ -912,8 +912,8 @@ module aptos_framework::object {
 
     #[test(fx = @std)]
     fun test_correct_auid() {
-        let auid1 = aptos_framework::transaction_context::generate_auid_address();
-        let bytes = aptos_framework::transaction_context::get_transaction_hash();
+        let auid1 = supra_framework::transaction_context::generate_auid_address();
+        let bytes = supra_framework::transaction_context::get_transaction_hash();
         std::vector::push_back(&mut bytes, 1);
         std::vector::push_back(&mut bytes, 0);
         std::vector::push_back(&mut bytes, 0);
@@ -923,14 +923,14 @@ module aptos_framework::object {
         std::vector::push_back(&mut bytes, 0);
         std::vector::push_back(&mut bytes, 0);
         std::vector::push_back(&mut bytes, DERIVE_AUID_ADDRESS_SCHEME);
-        let auid2 = aptos_framework::from_bcs::to_address(std::hash::sha3_256(bytes));
+        let auid2 = supra_framework::from_bcs::to_address(std::hash::sha3_256(bytes));
         assert!(auid1 == auid2, 0);
     }
 
     #[test(fx = @std)]
     fun test_correct_derived_object_address(fx: signer) {
         use std::features;
-        use aptos_framework::object;
+        use supra_framework::object;
         let feature = features::get_object_native_derived_address_feature();
 
         let source = @0x12345;
@@ -1180,14 +1180,14 @@ module aptos_framework::object {
     }
 
     #[test_only]
-    use aptos_framework::timestamp;
+    use supra_framework::timestamp;
 
     #[test(creator = @0x123)]
     fun test_transfer_permission_e2e(
         creator: &signer,
     ) acquires ObjectCore {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (_, hero) = create_hero(creator);
         let (_, weapon) = create_weapon(creator);
@@ -1208,8 +1208,8 @@ module aptos_framework::object {
     fun test_transfer_no_permission(
         creator: &signer,
     ) acquires ObjectCore {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (_, hero) = create_hero(creator);
         let (_, weapon) = create_weapon(creator);
@@ -1227,8 +1227,8 @@ module aptos_framework::object {
     fun test_create_and_transfer(
         creator: &signer,
     ) acquires ObjectCore {
-        let aptos_framework = account::create_signer_for_test(@0x1);
-        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        let supra_framework = account::create_signer_for_test(@0x1);
+        timestamp::set_time_has_started_for_testing(&supra_framework);
 
         let (_, hero) = create_hero(creator);
         let (weapon_ref, weapon) = create_weapon(creator);

@@ -1,23 +1,23 @@
-module aptos_framework::aptos_account {
-    use aptos_framework::account::{Self, new_event_handle};
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::coin::{Self, Coin};
-    use aptos_framework::create_signer::create_signer;
-    use aptos_framework::event::{EventHandle, emit_event, emit};
-    use aptos_framework::fungible_asset::{Self, Metadata, BurnRef, FungibleAsset};
-    use aptos_framework::primary_fungible_store;
-    use aptos_framework::object;
+module supra_framework::supra_account {
+    use supra_framework::account::{Self, new_event_handle};
+    use supra_framework::supra_coin::SupraCoin;
+    use supra_framework::coin::{Self, Coin};
+    use supra_framework::create_signer::create_signer;
+    use supra_framework::event::{EventHandle, emit_event, emit};
+    use supra_framework::fungible_asset::{Self, Metadata, BurnRef, FungibleAsset};
+    use supra_framework::primary_fungible_store;
+    use supra_framework::object;
 
     use std::error;
     use std::features;
     use std::signer;
     use std::vector;
-    use aptos_framework::object::Object;
+    use supra_framework::object::Object;
 
-    friend aptos_framework::genesis;
-    friend aptos_framework::resource_account;
-    friend aptos_framework::transaction_fee;
-    friend aptos_framework::transaction_validation;
+    friend supra_framework::genesis;
+    friend supra_framework::resource_account;
+    friend supra_framework::transaction_fee;
+    friend supra_framework::transaction_validation;
 
     /// Account does not exist.
     const EACCOUNT_NOT_FOUND: u64 = 1;
@@ -84,10 +84,10 @@ module aptos_framework::aptos_account {
         } else {
             // Resource accounts can be created without registering them to receive APT.
             // This conveniently does the registration if necessary.
-            if (!coin::is_account_registered<AptosCoin>(to)) {
-                coin::register<AptosCoin>(&create_signer(to));
+            if (!coin::is_account_registered<SupraCoin>(to)) {
+                coin::register<SupraCoin>(&create_signer(to));
             };
-            coin::transfer<AptosCoin>(source, to, amount)
+            coin::transfer<SupraCoin>(source, to, amount)
         }
     }
 
@@ -119,8 +119,8 @@ module aptos_framework::aptos_account {
             create_account(to);
             spec {
                 // TODO(fa_migration)
-                // assert coin::spec_is_account_registered<AptosCoin>(to);
-                // assume aptos_std::type_info::type_of<CoinType>() == aptos_std::type_info::type_of<AptosCoin>() ==>
+                // assert coin::spec_is_account_registered<SupraCoin>(to);
+                // assume aptos_std::type_info::type_of<CoinType>() == aptos_std::type_info::type_of<SupraCoin>() ==>
                 //     coin::spec_is_account_registered<CoinType>(to);
             };
         };
@@ -174,7 +174,7 @@ module aptos_framework::aptos_account {
 
     public fun assert_account_is_registered_for_apt(addr: address) {
         assert_account_exists(addr);
-        assert!(coin::is_account_registered<AptosCoin>(addr), error::not_found(EACCOUNT_NOT_REGISTERED_FOR_APT));
+        assert!(coin::is_account_registered<SupraCoin>(addr), error::not_found(EACCOUNT_NOT_REGISTERED_FOR_APT));
     }
 
     /// Set whether `account` can receive direct transfers of coins that they have not explicitly registered to receive.
@@ -226,7 +226,7 @@ module aptos_framework::aptos_account {
         if (features::new_accounts_default_to_fa_apt_store_enabled()) {
             ensure_primary_fungible_store_exists(signer::address_of(account_signer));
         } else {
-            coin::register<AptosCoin>(account_signer);
+            coin::register<SupraCoin>(account_signer);
         }
     }
 
@@ -277,13 +277,13 @@ module aptos_framework::aptos_account {
         if (fungible_asset::store_exists(store_addr)) {
             store_addr
         } else {
-            object::object_address(&primary_fungible_store::create_primary_store(owner, object::address_to_object<Metadata>(@aptos_fungible_asset)))
+            object::object_address(&primary_fungible_store::create_primary_store(owner, object::address_to_object<Metadata>(@supra_fungible_asset)))
         }
     }
 
     /// Address of APT Primary Fungible Store
     inline fun primary_fungible_store_address(account: address): address {
-        object::create_user_derived_object_address(account, @aptos_fungible_asset)
+        object::create_user_derived_object_address(account, @supra_fungible_asset)
     }
 
     // tests
@@ -293,7 +293,7 @@ module aptos_framework::aptos_account {
     #[test_only]
     use std::string::utf8;
     #[test_only]
-    use aptos_framework::account::create_account_for_test;
+    use supra_framework::account::create_account_for_test;
 
     #[test_only]
     struct FakeCoin {}
@@ -303,15 +303,15 @@ module aptos_framework::aptos_account {
         let bob = from_bcs::to_address(x"0000000000000000000000000000000000000000000000000000000000000b0b");
         let carol = from_bcs::to_address(x"00000000000000000000000000000000000000000000000000000000000ca501");
 
-        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(core);
+        let (burn_cap, mint_cap) = supra_framework::supra_coin::initialize_for_test(core);
         create_account(signer::address_of(alice));
         coin::deposit(signer::address_of(alice), coin::mint(10000, &mint_cap));
         transfer(alice, bob, 500);
-        assert!(coin::balance<AptosCoin>(bob) == 500, 0);
+        assert!(coin::balance<SupraCoin>(bob) == 500, 0);
         transfer(alice, carol, 500);
-        assert!(coin::balance<AptosCoin>(carol) == 500, 1);
+        assert!(coin::balance<SupraCoin>(carol) == 500, 1);
         transfer(alice, carol, 1500);
-        assert!(coin::balance<AptosCoin>(carol) == 2000, 2);
+        assert!(coin::balance<SupraCoin>(carol) == 2000, 2);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
@@ -319,11 +319,11 @@ module aptos_framework::aptos_account {
 
     #[test(alice = @0xa11ce, core = @0x1)]
     public fun test_transfer_permission(alice: &signer, core: &signer) {
-        use aptos_framework::permissioned_signer;
+        use supra_framework::permissioned_signer;
 
         let bob = from_bcs::to_address(x"0000000000000000000000000000000000000000000000000000000000000b0b");
 
-        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(core);
+        let (burn_cap, mint_cap) = supra_framework::supra_coin::initialize_for_test(core);
         create_account(signer::address_of(alice));
         coin::deposit(signer::address_of(alice), coin::mint(10000, &mint_cap));
 
@@ -342,13 +342,13 @@ module aptos_framework::aptos_account {
     public fun test_transfer_to_resource_account(alice: &signer, core: &signer) {
         let (resource_account, _) = account::create_resource_account(alice, vector[]);
         let resource_acc_addr = signer::address_of(&resource_account);
-        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(core);
-        assert!(coin::is_account_registered<AptosCoin>(resource_acc_addr), 0);
+        let (burn_cap, mint_cap) = supra_framework::supra_coin::initialize_for_test(core);
+        assert!(coin::is_account_registered<SupraCoin>(resource_acc_addr), 0);
 
         create_account(signer::address_of(alice));
         coin::deposit(signer::address_of(alice), coin::mint(10000, &mint_cap));
         transfer(alice, resource_acc_addr, 500);
-        assert!(coin::balance<AptosCoin>(resource_acc_addr) == 500, 1);
+        assert!(coin::balance<SupraCoin>(resource_acc_addr) == 500, 1);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
@@ -356,7 +356,7 @@ module aptos_framework::aptos_account {
 
     #[test(from = @0x123, core = @0x1, recipient_1 = @0x124, recipient_2 = @0x125)]
     public fun test_batch_transfer(from: &signer, core: &signer, recipient_1: &signer, recipient_2: &signer) {
-        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(core);
+        let (burn_cap, mint_cap) = supra_framework::supra_coin::initialize_for_test(core);
         create_account(signer::address_of(from));
         let recipient_1_addr = signer::address_of(recipient_1);
         let recipient_2_addr = signer::address_of(recipient_2);
@@ -368,8 +368,8 @@ module aptos_framework::aptos_account {
             vector[recipient_1_addr, recipient_2_addr],
             vector[100, 500],
         );
-        assert!(coin::balance<AptosCoin>(recipient_1_addr) == 100, 0);
-        assert!(coin::balance<AptosCoin>(recipient_2_addr) == 500, 1);
+        assert!(coin::balance<SupraCoin>(recipient_1_addr) == 100, 0);
+        assert!(coin::balance<SupraCoin>(recipient_2_addr) == 500, 1);
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
     }
@@ -494,12 +494,12 @@ module aptos_framework::aptos_account {
     fun test_primary_fungible_store_address(
         user: &signer,
     ) {
-        use aptos_framework::fungible_asset::Metadata;
-        use aptos_framework::aptos_coin;
+        use supra_framework::fungible_asset::Metadata;
+        use supra_framework::supra_coin;
 
-        aptos_coin::ensure_initialized_with_apt_fa_metadata_for_test();
+        supra_coin::ensure_initialized_with_apt_fa_metadata_for_test();
 
-        let apt_metadata = object::address_to_object<Metadata>(@aptos_fungible_asset);
+        let apt_metadata = object::address_to_object<Metadata>(@supra_fungible_asset);
         let user_addr = signer::address_of(user);
         assert!(primary_fungible_store_address(user_addr) == primary_fungible_store::primary_store_address(user_addr, apt_metadata), 1);
 

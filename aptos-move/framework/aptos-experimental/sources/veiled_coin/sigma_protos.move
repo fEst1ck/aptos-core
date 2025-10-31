@@ -94,7 +94,7 @@
 /// $C'$ -> $\bar{C}$, $Y$ -> $y$, $Y'$ -> $\bar{y}$, $v$ -> $b^*$). Note that their relation does not include the
 /// ElGamal-to-Pedersen conversion parts, as they can do ZK range proofs directly over ElGamal ciphertexts using their
 /// $\Sigma$-bullets modification of Bulletproofs.
-module aptos_experimental::sigma_protos {
+module supra_experimental::sigma_protos {
     use std::error;
     use std::option::Option;
     use std::vector;
@@ -103,10 +103,10 @@ module aptos_experimental::sigma_protos {
     use aptos_std::ristretto255_pedersen as pedersen;
     use aptos_std::ristretto255::{Self, RistrettoPoint, Scalar};
 
-    use aptos_experimental::helpers::cut_vector;
+    use supra_experimental::helpers::cut_vector;
 
     #[test_only]
-    use aptos_experimental::helpers::generate_elgamal_keypair;
+    use supra_experimental::helpers::generate_elgamal_keypair;
 
     //
     // Errors
@@ -120,7 +120,7 @@ module aptos_experimental::sigma_protos {
     //
 
     /// The domain separation tag (DST) used in the Fiat-Shamir transform of our $\Sigma$-protocol.
-    const FIAT_SHAMIR_SIGMA_DST: vector<u8> = b"AptosVeiledCoin/WithdrawalSubproofFiatShamir";
+    const FIAT_SHAMIR_SIGMA_DST: vector<u8> = b"SupraVeiledCoin/WithdrawalSubproofFiatShamir";
 
     //
     // Structs

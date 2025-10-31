@@ -1,6 +1,6 @@
 /// The `confidential_proof` module provides the infrastructure for verifying zero-knowledge proofs used in the Confidential Asset protocol.
 /// These proofs ensure correctness for operations such as `confidential_transfer`, `withdraw`, `rotate_encryption_key`, and `normalize`.
-module aptos_experimental::confidential_proof {
+module supra_experimental::confidential_proof {
     use std::error;
     use std::option;
     use std::option::Option;
@@ -8,10 +8,10 @@ module aptos_experimental::confidential_proof {
     use aptos_std::ristretto255::{Self, CompressedRistretto, Scalar};
     use aptos_std::ristretto255_bulletproofs::{Self as bulletproofs, RangeProof};
 
-    use aptos_experimental::confidential_balance;
-    use aptos_experimental::ristretto255_twisted_elgamal as twisted_elgamal;
+    use supra_experimental::confidential_balance;
+    use supra_experimental::ristretto255_twisted_elgamal as twisted_elgamal;
 
-    friend aptos_experimental::confidential_asset;
+    friend supra_experimental::confidential_asset;
 
     //
     // Errors
@@ -24,12 +24,12 @@ module aptos_experimental::confidential_proof {
     // Constants
     //
 
-    const FIAT_SHAMIR_WITHDRAWAL_SIGMA_DST: vector<u8> = b"AptosConfidentialAsset/WithdrawalProofFiatShamir";
-    const FIAT_SHAMIR_TRANSFER_SIGMA_DST: vector<u8> = b"AptosConfidentialAsset/TransferProofFiatShamir";
-    const FIAT_SHAMIR_ROTATION_SIGMA_DST: vector<u8> = b"AptosConfidentialAsset/RotationProofFiatShamir";
-    const FIAT_SHAMIR_NORMALIZATION_SIGMA_DST: vector<u8> = b"AptosConfidentialAsset/NormalizationProofFiatShamir";
+    const FIAT_SHAMIR_WITHDRAWAL_SIGMA_DST: vector<u8> = b"SupraConfidentialAsset/WithdrawalProofFiatShamir";
+    const FIAT_SHAMIR_TRANSFER_SIGMA_DST: vector<u8> = b"SupraConfidentialAsset/TransferProofFiatShamir";
+    const FIAT_SHAMIR_ROTATION_SIGMA_DST: vector<u8> = b"SupraConfidentialAsset/RotationProofFiatShamir";
+    const FIAT_SHAMIR_NORMALIZATION_SIGMA_DST: vector<u8> = b"SupraConfidentialAsset/NormalizationProofFiatShamir";
 
-    const BULLETPROOFS_DST: vector<u8> = b"AptosConfidentialAsset/BulletproofRangeProof";
+    const BULLETPROOFS_DST: vector<u8> = b"SupraConfidentialAsset/BulletproofRangeProof";
     const BULLETPROOFS_NUM_BITS: u64 = 16;
 
     //
