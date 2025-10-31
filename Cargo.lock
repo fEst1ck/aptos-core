@@ -895,7 +895,7 @@ dependencies = [
  "futures-channel",
  "hex",
  "itertools 0.12.1",
- "lru 0.7.8",
+ "lru 0.16.2",
  "maplit",
  "mini-moka",
  "mirai-annotations",
@@ -1150,7 +1150,7 @@ dependencies = [
  "hex",
  "indicatif 0.15.0",
  "itertools 0.12.1",
- "lru 0.7.8",
+ "lru 0.16.2",
  "move-core-types",
  "num-derive",
  "once_cell",
@@ -1788,7 +1788,7 @@ dependencies = [
  "legacy-move-compiler",
  "libsecp256k1",
  "log",
- "lru 0.7.8",
+ "lru 0.16.2",
  "merlin",
  "move-binary-format",
  "move-cli",
@@ -4159,7 +4159,7 @@ dependencies = [
  "async-recursion",
  "async-trait",
  "bcs 0.1.4",
- "lru 0.7.8",
+ "lru 0.16.2",
  "move-core-types",
  "tokio",
 ]
@@ -7827,6 +7827,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
+name = "foldhash"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
+
+[[package]]
 name = "foreign-types"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8497,6 +8503,17 @@ checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 dependencies = [
  "ahash 0.8.11",
  "allocator-api2",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash",
 ]
 
 [[package]]
@@ -9877,20 +9894,20 @@ dependencies = [
 
 [[package]]
 name = "lru"
-version = "0.7.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e999beba7b6e8345721bd280141ed958096a2e4abdf74f67ff4ce49b4b54e47a"
-dependencies = [
- "hashbrown 0.12.3",
-]
-
-[[package]]
-name = "lru"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71e7d46de488603ffdd5f30afbc64fbba2378214a2c3a2fb83abf3d33126df17"
 dependencies = [
  "hashbrown 0.13.2",
+]
+
+[[package]]
+name = "lru"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96051b46fc183dc9cd4a223960ef37b9af631b55191852a8274bfef064cda20f"
+dependencies = [
+ "hashbrown 0.16.0",
 ]
 
 [[package]]
@@ -10933,7 +10950,7 @@ dependencies = [
  "hex",
  "lazy_static",
  "legacy-move-compiler",
- "lru 0.7.8",
+ "lru 0.16.2",
  "move-binary-format",
  "move-bytecode-verifier",
  "move-core-types",
