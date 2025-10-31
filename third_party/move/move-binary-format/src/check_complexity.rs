@@ -7,7 +7,12 @@ use crate::{
     file_format::{
         Bytecode, CodeUnit, CompiledModule, CompiledScript, FieldInstantiationIndex,
         FunctionInstantiationIndex, IdentifierIndex, ModuleHandleIndex, SignatureIndex,
+<<<<<<< HEAD
         SignatureToken, StructDefInstantiationIndex, StructFieldInformation, TableIndex,
+=======
+        SignatureToken, StructDefInstantiationIndex, StructFieldInformation,
+        StructVariantInstantiationIndex, TableIndex, VariantFieldInstantiationIndex,
+>>>>>>> tags/aptos-framework-v1.34.0
     },
 };
 use move_core_types::vm_status::StatusCode;
@@ -33,7 +38,11 @@ struct BinaryComplexityMeter<'a> {
     balance: RefCell<u64>,
 }
 
+<<<<<<< HEAD
 impl<'a> BinaryComplexityMeter<'a> {
+=======
+impl BinaryComplexityMeter<'_> {
+>>>>>>> tags/aptos-framework-v1.34.0
     fn charge(&self, amount: u64) -> PartialVMResult<()> {
         let mut balance = self.balance.borrow_mut();
         match balance.checked_sub(amount) {
@@ -67,7 +76,11 @@ impl<'a> BinaryComplexityMeter<'a> {
                     cost = cost.saturating_add(moduel_name.len() as u64 * COST_PER_IDENT_BYTE);
                 },
                 U8 | U16 | U32 | U64 | U128 | U256 | Signer | Address | Bool | Vector(_)
+<<<<<<< HEAD
                 | TypeParameter(_) | Reference(_) | MutableReference(_) => (),
+=======
+                | Function(..) | TypeParameter(_) | Reference(_) | MutableReference(_) => (),
+>>>>>>> tags/aptos-framework-v1.34.0
             }
         }
 
@@ -134,6 +147,25 @@ impl<'a> BinaryComplexityMeter<'a> {
         self.meter_signature(struct_inst.type_parameters)
     }
 
+<<<<<<< HEAD
+=======
+    fn meter_struct_variant_instantiation(
+        &self,
+        struct_inst_idx: StructVariantInstantiationIndex,
+    ) -> PartialVMResult<()> {
+        let struct_variant_insts =
+            self.resolver
+                .struct_variant_instantiations()
+                .ok_or_else(|| {
+                    PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR).with_message(
+                        "Can't get enum type instantiation -- not a module.".to_string(),
+                    )
+                })?;
+        let struct_variant_inst = safe_get_table(struct_variant_insts, struct_inst_idx.0)?;
+        self.meter_signature(struct_variant_inst.type_parameters)
+    }
+
+>>>>>>> tags/aptos-framework-v1.34.0
     fn meter_struct_def_instantiations(&self) -> PartialVMResult<()> {
         let struct_insts = self.resolver.struct_instantiations().ok_or_else(|| {
             PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
@@ -159,6 +191,26 @@ impl<'a> BinaryComplexityMeter<'a> {
         self.meter_signature(field_inst.type_parameters)
     }
 
+<<<<<<< HEAD
+=======
+    fn meter_variant_field_instantiation(
+        &self,
+        variant_field_inst_idx: VariantFieldInstantiationIndex,
+    ) -> PartialVMResult<()> {
+        let variant_field_insts =
+            self.resolver
+                .variant_field_instantiations()
+                .ok_or_else(|| {
+                    PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR).with_message(
+                        "Can't get variant field instantiations -- not a module.".to_string(),
+                    )
+                })?;
+        let field_inst = safe_get_table(variant_field_insts, variant_field_inst_idx.0)?;
+
+        self.meter_signature(field_inst.type_parameters)
+    }
+
+>>>>>>> tags/aptos-framework-v1.34.0
     fn meter_field_instantiations(&self) -> PartialVMResult<()> {
         let field_insts = self.resolver.field_instantiations().ok_or_else(|| {
             PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
@@ -201,6 +253,7 @@ impl<'a> BinaryComplexityMeter<'a> {
         })?;
 
         for sdef in struct_defs {
+<<<<<<< HEAD
             let fields = match &sdef.field_information {
                 StructFieldInformation::Native => continue,
                 StructFieldInformation::Declared(fields) => fields,
@@ -208,6 +261,23 @@ impl<'a> BinaryComplexityMeter<'a> {
 
             for field in fields {
                 self.charge(field.signature.0.num_nodes() as u64)?;
+=======
+            match &sdef.field_information {
+                StructFieldInformation::Native => continue,
+                StructFieldInformation::Declared(fields) => {
+                    for field in fields {
+                        self.charge(field.signature.0.num_nodes() as u64)?;
+                    }
+                },
+                StructFieldInformation::DeclaredVariants(variants) => {
+                    for variant in variants {
+                        self.meter_identifier(variant.name)?;
+                        for field in &variant.fields {
+                            self.charge(field.signature.0.num_nodes() as u64)?;
+                        }
+                    }
+                },
+>>>>>>> tags/aptos-framework-v1.34.0
             }
         }
         Ok(())
@@ -220,12 +290,22 @@ impl<'a> BinaryComplexityMeter<'a> {
 
         for instr in &code.code {
             match instr {
+<<<<<<< HEAD
                 CallGeneric(idx) => {
+=======
+                CallGeneric(idx) | PackClosureGeneric(idx, ..) => {
+>>>>>>> tags/aptos-framework-v1.34.0
                     self.meter_function_instantiation(*idx)?;
                 },
                 PackGeneric(idx) | UnpackGeneric(idx) => {
                     self.meter_struct_instantiation(*idx)?;
                 },
+<<<<<<< HEAD
+=======
+                PackVariantGeneric(idx) | UnpackVariantGeneric(idx) | TestVariantGeneric(idx) => {
+                    self.meter_struct_variant_instantiation(*idx)?;
+                },
+>>>>>>> tags/aptos-framework-v1.34.0
                 ExistsGeneric(idx)
                 | MoveFromGeneric(idx)
                 | MoveToGeneric(idx)
@@ -236,7 +316,15 @@ impl<'a> BinaryComplexityMeter<'a> {
                 ImmBorrowFieldGeneric(idx) | MutBorrowFieldGeneric(idx) => {
                     self.meter_field_instantiation(*idx)?;
                 },
+<<<<<<< HEAD
                 VecPack(idx, _)
+=======
+                ImmBorrowVariantFieldGeneric(idx) | MutBorrowVariantFieldGeneric(idx) => {
+                    self.meter_variant_field_instantiation(*idx)?;
+                },
+                CallClosure(idx)
+                | VecPack(idx, _)
+>>>>>>> tags/aptos-framework-v1.34.0
                 | VecLen(idx)
                 | VecImmBorrow(idx)
                 | VecMutBorrow(idx)
@@ -249,6 +337,7 @@ impl<'a> BinaryComplexityMeter<'a> {
 
                 // List out the other options explicitly so there's a compile error if a new
                 // bytecode gets added.
+<<<<<<< HEAD
                 Pop | Ret | Branch(_) | BrTrue(_) | BrFalse(_) | LdU8(_) | LdU16(_) | LdU32(_)
                 | LdU64(_) | LdU128(_) | LdU256(_) | LdConst(_) | CastU8 | CastU16 | CastU32
                 | CastU64 | CastU128 | CastU256 | LdTrue | LdFalse | Call(_) | Pack(_)
@@ -257,6 +346,73 @@ impl<'a> BinaryComplexityMeter<'a> {
                 | Ge | CopyLoc(_) | MoveLoc(_) | StLoc(_) | MutBorrowLoc(_) | ImmBorrowLoc(_)
                 | MutBorrowField(_) | ImmBorrowField(_) | MutBorrowGlobal(_)
                 | ImmBorrowGlobal(_) | Exists(_) | MoveTo(_) | MoveFrom(_) | Abort | Nop => (),
+=======
+                Pop
+                | Ret
+                | Branch(_)
+                | BrTrue(_)
+                | BrFalse(_)
+                | LdU8(_)
+                | LdU16(_)
+                | LdU32(_)
+                | LdU64(_)
+                | LdU128(_)
+                | LdU256(_)
+                | LdConst(_)
+                | CastU8
+                | CastU16
+                | CastU32
+                | CastU64
+                | CastU128
+                | CastU256
+                | LdTrue
+                | LdFalse
+                | Call(_)
+                | Pack(_)
+                | Unpack(_)
+                | PackVariant(_)
+                | UnpackVariant(_)
+                | TestVariant(_)
+                | PackClosure(..)
+                | ReadRef
+                | WriteRef
+                | FreezeRef
+                | Add
+                | Sub
+                | Mul
+                | Mod
+                | Div
+                | BitOr
+                | BitAnd
+                | Xor
+                | Shl
+                | Shr
+                | Or
+                | And
+                | Not
+                | Eq
+                | Neq
+                | Lt
+                | Gt
+                | Le
+                | Ge
+                | CopyLoc(_)
+                | MoveLoc(_)
+                | StLoc(_)
+                | MutBorrowLoc(_)
+                | ImmBorrowLoc(_)
+                | MutBorrowField(_)
+                | ImmBorrowField(_)
+                | MutBorrowVariantField(_)
+                | ImmBorrowVariantField(_)
+                | MutBorrowGlobal(_)
+                | ImmBorrowGlobal(_)
+                | Exists(_)
+                | MoveTo(_)
+                | MoveFrom(_)
+                | Abort
+                | Nop => (),
+>>>>>>> tags/aptos-framework-v1.34.0
             }
         }
         Ok(())
