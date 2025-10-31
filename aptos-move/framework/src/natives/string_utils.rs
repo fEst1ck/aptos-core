@@ -1,13 +1,13 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_gas_algebra::NumBytes;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_algebra::NumBytes;
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
-use aptos_types::on_chain_config::FeatureFlag;
+use supra_types::on_chain_config::FeatureFlag;
 use ark_std::iterable::Iterable;
 use move_core_types::{
     account_address::AccountAddress,

@@ -1,15 +1,15 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::natives::aggregator_natives::{helpers_v1::get_handle, NativeAggregatorContext};
-use aptos_aggregator::aggregator_v1_extension::AggregatorID;
-use aptos_crypto::hash::DefaultHasher;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_aggregator::aggregator_v1_extension::AggregatorID;
+use supra_crypto::hash::DefaultHasher;
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
-use aptos_types::account_address::AccountAddress;
+use supra_types::account_address::AccountAddress;
 use move_binary_format::errors::PartialVMError;
 use move_core_types::vm_status::StatusCode;
 use move_vm_runtime::native_functions::NativeFunction;

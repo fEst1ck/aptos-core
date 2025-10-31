@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "testing")]
@@ -16,8 +16,8 @@ use crate::natives::cryptography::algebra::{
     pairing::{multi_pairing_internal, pairing_internal},
     serialization::{deserialize_internal, serialize_internal},
 };
-use aptos_native_interface::{RawSafeNative, SafeNativeBuilder};
-use aptos_types::on_chain_config::FeatureFlag;
+use supra_native_interface::{RawSafeNative, SafeNativeBuilder};
+use supra_types::on_chain_config::FeatureFlag;
 use arithmetics::{
     div::div_internal,
     inv::inv_internal,

@@ -1,16 +1,16 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
 #[cfg(feature = "testing")]
-use aptos_types::account_address::AccountAddress;
-use aptos_types::contract_event::ContractEvent;
+use supra_types::account_address::AccountAddress;
+use supra_types::contract_event::ContractEvent;
 #[cfg(feature = "testing")]
-use aptos_types::event::EventKey;
+use supra_types::event::EventKey;
 use better_any::{Tid, TidAble};
 use move_binary_format::errors::PartialVMError;
 use move_core_types::{language_storage::TypeTag, value::MoveTypeLayout, vm_status::StatusCode};

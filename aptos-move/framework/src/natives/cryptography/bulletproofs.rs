@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "testing")]
@@ -6,9 +6,9 @@ use crate::natives::cryptography::ristretto255::pop_scalar_from_bytes;
 use crate::natives::cryptography::ristretto255_point::{
     get_point_handle, NativeRistrettoPointContext,
 };
-use aptos_crypto::bulletproofs::MAX_RANGE_BITS;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_crypto::bulletproofs::MAX_RANGE_BITS;
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };

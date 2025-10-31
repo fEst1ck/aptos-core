@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_framework::{extended_checks, prover::ProverOptions};
+use supra_framework::{extended_checks, prover::ProverOptions};
 use std::{collections::BTreeMap, path::PathBuf};
 
 const ENV_TEST_INCONSISTENCY: &str = "MVP_TEST_INCONSISTENCY";
@@ -36,7 +36,7 @@ pub fn run_prover_for_pkg(path_to_pkg: impl Into<String>) {
     if no_tools {
         panic!(
             "Prover tools are not configured, \
-        See https://github.com/aptos-labs/aptos-core/blob/main/aptos-move/framework/FRAMEWORK-PROVER-GUIDE.md \
+        See https://github.com/supra-labs/supra-core/blob/main/supra-move/framework/FRAMEWORK-PROVER-GUIDE.md \
         for instructions, or \
         use \"-- --skip prover\" to filter out the prover tests"
         );
@@ -69,17 +69,17 @@ pub fn run_prover_for_pkg(path_to_pkg: impl Into<String>) {
 
 #[test]
 fn move_framework_prover_tests() {
-    run_prover_for_pkg("aptos-framework");
+    run_prover_for_pkg("supra-framework");
 }
 
 #[test]
 fn move_token_prover_tests() {
-    run_prover_for_pkg("aptos-token");
+    run_prover_for_pkg("supra-token");
 }
 
 #[test]
 fn move_aptos_stdlib_prover_tests() {
-    run_prover_for_pkg("aptos-stdlib");
+    run_prover_for_pkg("supra-stdlib");
 }
 
 #[test]

@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 // Copyright (c) The Diem Core Contributors
@@ -10,8 +10,8 @@
 //! See [`Table.move`](../sources/Table.move) for language use.
 //! See [`README.md`](../README.md) for integration into an adapter.
 
-use aptos_gas_schedule::gas_params::natives::table::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::table::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };

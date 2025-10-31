@@ -1,11 +1,11 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError, SafeNativeResult,
 };
-use aptos_types::{
+use supra_types::{
     error,
     transaction::{
         authenticator::AuthenticationKey,
@@ -32,7 +32,7 @@ pub mod abort_codes {
 #[derive(Tid)]
 pub struct NativeTransactionContext {
     txn_hash: Vec<u8>,
-    /// The number of AUIDs (Aptos unique identifiers) issued during the
+    /// The number of AUIDs (Supra unique identifiers) issued during the
     /// execution of this transaction.
     auid_counter: u64,
     script_hash: Vec<u8>,

@@ -1,8 +1,8 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::extended_checks::ResourceGroupScope;
-use aptos_types::{
+use supra_types::{
     on_chain_config::{FeatureFlag, Features, TimedFeatureFlag, TimedFeatures},
     transaction::AbortInfo,
 };
@@ -41,11 +41,11 @@ const COMPLEXITY_BUDGET: usize = 200000000;
 
 /// The keys used to identify the metadata in the metadata section of the module bytecode.
 /// This is more or less arbitrary, besides we should use some unique key to identify
-/// Aptos specific metadata (`aptos::` here).
-pub static APTOS_METADATA_KEY: &[u8] = "aptos::metadata_v0".as_bytes();
-pub static APTOS_METADATA_KEY_V1: &[u8] = "aptos::metadata_v1".as_bytes();
+/// Supra specific metadata (`supra::` here).
+pub static APTOS_METADATA_KEY: &[u8] = "supra::metadata_v0".as_bytes();
+pub static APTOS_METADATA_KEY_V1: &[u8] = "supra::metadata_v1".as_bytes();
 
-/// Aptos specific metadata attached to the metadata section of file_format.
+/// Supra specific metadata attached to the metadata section of file_format.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RuntimeModuleMetadata {
     /// The error map containing the description of error reasons as grabbed from the source.
@@ -53,7 +53,7 @@ pub struct RuntimeModuleMetadata {
     pub error_map: BTreeMap<u64, ErrorDescription>,
 }
 
-/// V1 of Aptos specific metadata attached to the metadata section of file_format.
+/// V1 of Supra specific metadata attached to the metadata section of file_format.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RuntimeModuleMetadataV1 {
     /// The error map containing the description of error reasons as grabbed from the source.

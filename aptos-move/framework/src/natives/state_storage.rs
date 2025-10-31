@@ -1,12 +1,12 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeResult,
 };
-use aptos_types::vm_status::StatusCode;
-use aptos_vm_types::resolver::StateStorageView;
+use supra_types::vm_status::StatusCode;
+use supra_vm_types::resolver::StateStorageView;
 use better_any::{Tid, TidAble};
 use move_binary_format::errors::PartialVMError;
 use move_vm_runtime::native_functions::NativeFunction;

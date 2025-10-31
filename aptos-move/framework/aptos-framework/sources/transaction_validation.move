@@ -1,20 +1,20 @@
-module aptos_framework::transaction_validation {
+module supra_framework::transaction_validation {
     use std::bcs;
     use std::error;
     use std::features;
     use std::signer;
     use std::vector;
 
-    use aptos_framework::account;
-    use aptos_framework::aptos_account;
-    use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::chain_id;
-    use aptos_framework::coin;
-    use aptos_framework::system_addresses;
-    use aptos_framework::timestamp;
-    use aptos_framework::transaction_fee;
+    use supra_framework::account;
+    use supra_framework::supra_account;
+    use supra_framework::supra_coin::SupraCoin;
+    use supra_framework::chain_id;
+    use supra_framework::coin;
+    use supra_framework::system_addresses;
+    use supra_framework::timestamp;
+    use supra_framework::transaction_fee;
 
-    friend aptos_framework::genesis;
+    friend supra_framework::genesis;
 
     /// This holds information that will be picked up by the VM to call the
     /// correct chain-specific prologue and epilogue functions
@@ -50,17 +50,17 @@ module aptos_framework::transaction_validation {
 
     /// Only called during genesis to initialize system resources for this module.
     public(friend) fun initialize(
-        aptos_framework: &signer,
+        supra_framework: &signer,
         script_prologue_name: vector<u8>,
         // module_prologue_name is deprecated and not used.
         module_prologue_name: vector<u8>,
         multi_agent_prologue_name: vector<u8>,
         user_epilogue_name: vector<u8>,
     ) {
-        system_addresses::assert_aptos_framework(aptos_framework);
+        system_addresses::assert_supra_framework(supra_framework);
 
-        move_to(aptos_framework, TransactionValidation {
-            module_addr: @aptos_framework,
+        move_to(supra_framework, TransactionValidation {
+            module_addr: @supra_framework,
             module_name: b"transaction_validation",
             script_prologue_name,
             // module_prologue_name is deprecated and not used.
@@ -133,12 +133,12 @@ module aptos_framework::transaction_validation {
 
         if (features::operations_default_to_fa_apt_store_enabled()) {
             assert!(
-                aptos_account::is_fungible_balance_at_least(gas_payer, max_transaction_fee),
+                supra_account::is_fungible_balance_at_least(gas_payer, max_transaction_fee),
                 error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
             );
         } else {
             assert!(
-                coin::is_balance_at_least<AptosCoin>(gas_payer, max_transaction_fee),
+                coin::is_balance_at_least<SupraCoin>(gas_payer, max_transaction_fee),
                 error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
             );
         }
@@ -292,12 +292,12 @@ module aptos_framework::transaction_validation {
         // to do failed transaction cleanup.
         if (features::operations_default_to_fa_apt_store_enabled()) {
             assert!(
-                aptos_account::is_fungible_balance_at_least(gas_payer, transaction_fee_amount),
+                supra_account::is_fungible_balance_at_least(gas_payer, transaction_fee_amount),
                 error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
             );
         } else {
             assert!(
-                coin::is_balance_at_least<AptosCoin>(gas_payer, transaction_fee_amount),
+                coin::is_balance_at_least<SupraCoin>(gas_payer, transaction_fee_amount),
                 error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
             );
         };

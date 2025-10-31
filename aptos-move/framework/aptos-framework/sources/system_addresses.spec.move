@@ -1,4 +1,4 @@
-spec aptos_framework::system_addresses {
+spec supra_framework::system_addresses {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: Asserting that a provided address corresponds to the Core Resources address should always yield a true
@@ -9,12 +9,12 @@ spec aptos_framework::system_addresses {
     /// Enforcement: Formally verified via [high-level-req-1](AbortsIfNotCoreResource).
     ///
     /// No.: 2
-    /// Requirement: Asserting that a provided address corresponds to the Aptos Framework Resources address should always
+    /// Requirement: Asserting that a provided address corresponds to the Supra Framework Resources address should always
     /// yield a true result when matched.
     /// Criticality: High
-    /// Implementation: The assert_aptos_framework function ensures that the provided signer belongs to the
-    /// @aptos_framework account.
-    /// Enforcement: Formally verified via [high-level-req-2](AbortsIfNotAptosFramework).
+    /// Implementation: The assert_supra_framework function ensures that the provided signer belongs to the
+    /// @supra_framework account.
+    /// Enforcement: Formally verified via [high-level-req-2](AbortsIfNotSupraFramework).
     ///
     /// No.: 3
     /// Requirement: Asserting that a provided address corresponds to the VM address should always yield a true result when
@@ -52,9 +52,9 @@ spec aptos_framework::system_addresses {
         aborts_if addr != @core_resources with error::PERMISSION_DENIED;
     }
 
-    spec assert_aptos_framework(account: &signer) {
+    spec assert_supra_framework(account: &signer) {
         pragma opaque;
-        include AbortsIfNotAptosFramework;
+        include AbortsIfNotSupraFramework;
     }
 
     spec assert_framework_reserved_address(account: &signer) {
@@ -64,11 +64,11 @@ spec aptos_framework::system_addresses {
     spec assert_framework_reserved(addr: address) {
         aborts_if !is_framework_reserved_address(addr);
     }
-    /// Specifies that a function aborts if the account does not have the aptos framework address.
-    spec schema AbortsIfNotAptosFramework {
+    /// Specifies that a function aborts if the account does not have the supra framework address.
+    spec schema AbortsIfNotSupraFramework {
         account: signer;
         /// [high-level-req-2]
-        aborts_if signer::address_of(account) != @aptos_framework with error::PERMISSION_DENIED;
+        aborts_if signer::address_of(account) != @supra_framework with error::PERMISSION_DENIED;
     }
 
     spec assert_vm(account: &signer) {

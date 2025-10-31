@@ -1,7 +1,7 @@
-/// `PropertyMap` provides generic metadata support for `AptosToken`. It is a specialization of
+/// `PropertyMap` provides generic metadata support for `SupraToken`. It is a specialization of
 /// `SimpleMap` that enforces strict typing with minimal storage use by using constant u64 to
 /// represent types and storing values in bcs format.
-module aptos_token_objects::property_map {
+module supra_token_objects::property_map {
     use std::bcs;
     use std::vector;
     use std::error;
@@ -9,7 +9,7 @@ module aptos_token_objects::property_map {
     use aptos_std::from_bcs;
     use aptos_std::simple_map::{Self, SimpleMap};
     use aptos_std::type_info;
-    use aptos_framework::object::{Self, ConstructorRef, Object, ExtendRef, ObjectCore};
+    use supra_framework::object::{Self, ConstructorRef, Object, ExtendRef, ObjectCore};
 
     // Errors
     /// The property map does not exist
@@ -48,7 +48,7 @@ module aptos_token_objects::property_map {
     const STRING: u8 = 9;
 
     // Structs
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// A Map for typed key to value mapping, the contract using it
     /// should keep track of what keys are what types, and parse them accordingly.
     struct PropertyMap has drop, key {

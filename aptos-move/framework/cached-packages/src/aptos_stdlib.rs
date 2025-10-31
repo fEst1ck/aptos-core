@@ -4,20 +4,20 @@
 #![allow(unused_imports)]
 
 pub use crate::{
-    aptos_framework_sdk_builder::*, aptos_token_objects_sdk_builder as aptos_token_objects_stdlib,
-    aptos_token_sdk_builder as aptos_token_stdlib,
+    supra_framework_sdk_builder::*, supra_token_objects_sdk_builder as supra_token_objects_stdlib,
+    supra_token_sdk_builder as supra_token_stdlib,
 };
-use aptos_framework::{BuildOptions, BuiltPackage};
-use aptos_package_builder::PackageBuilder;
-use aptos_types::{
+use supra_framework::{BuildOptions, BuiltPackage};
+use supra_package_builder::PackageBuilder;
+use supra_types::{
     account_address::AccountAddress,
     transaction::{EntryFunction, TransactionPayload},
 };
 use move_core_types::{ident_str, language_storage::ModuleId};
 
-pub fn aptos_coin_transfer(to: AccountAddress, amount: u64) -> TransactionPayload {
+pub fn supra_coin_transfer(to: AccountAddress, amount: u64) -> TransactionPayload {
     coin_transfer(
-        aptos_types::utility_coin::APTOS_COIN_TYPE.clone(),
+        supra_types::utility_coin::APTOS_COIN_TYPE.clone(),
         to,
         amount,
     )

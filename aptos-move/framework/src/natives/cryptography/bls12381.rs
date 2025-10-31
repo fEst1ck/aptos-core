@@ -1,15 +1,15 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_crypto::{bls12381, traits};
+use supra_crypto::{bls12381, traits};
 #[cfg(feature = "testing")]
-use aptos_crypto::{
+use supra_crypto::{
     bls12381::{PrivateKey, ProofOfPossession, PublicKey},
     test_utils::KeyPair,
     SigningKey, Uniform,
 };
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, safely_pop_vec_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext,
     SafeNativeResult,
 };

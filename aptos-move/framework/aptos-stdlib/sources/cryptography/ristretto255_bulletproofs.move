@@ -151,7 +151,7 @@ module aptos_std::ristretto255_bulletproofs {
     use aptos_std::ristretto255::{Scalar, scalar_to_bytes, point_equals};
 
     #[test_only]
-    const A_DST: vector<u8> = b"AptosBulletproofs";
+    const A_DST: vector<u8> = b"SupraBulletproofs";
     #[test_only]
     const A_VALUE: vector<u8> = x"870c2fa1b2e9ac45000000000000000000000000000000000000000000000000";  // i.e., 5020644638028926087u64
     #[test_only]

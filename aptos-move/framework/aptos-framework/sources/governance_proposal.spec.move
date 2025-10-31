@@ -1,4 +1,4 @@
-spec aptos_framework::governance_proposal {
+spec supra_framework::governance_proposal {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: Creating a proposal should never abort but should always return a governance proposal resource.
@@ -7,10 +7,10 @@ spec aptos_framework::governance_proposal {
     /// Enforcement: Enforced via [high-level-req-1.1](create_proposal) and [high-level-req-1.2](create_empty_proposal).
     ///
     /// No.: 2
-    /// Requirement: The governance proposal module should only be accessible to the aptos governance.
+    /// Requirement: The governance proposal module should only be accessible to the supra governance.
     /// Criticality: Medium
     /// Implementation: Both create_proposal and create_empty_proposal functions are only available to the friend module
-    /// aptos_framework::aptos_governance.
+    /// supra_framework::supra_governance.
     /// Enforcement: Enforced via friend module relationship.
     /// </high-level-req>
     ///

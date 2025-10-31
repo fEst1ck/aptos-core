@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // Parts of the project are originally copyright © Meta Platforms, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,7 +24,7 @@ pub mod util;
 
 use crate::natives::cryptography::multi_ed25519;
 use aggregator_natives::{aggregator, aggregator_factory, aggregator_v2};
-use aptos_native_interface::SafeNativeBuilder;
+use supra_native_interface::SafeNativeBuilder;
 use cryptography::ed25519;
 use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::native_functions::{make_table_from_iter, NativeFunctionTable};
@@ -58,7 +58,7 @@ pub fn all_natives(
     add_natives_from_module!("multi_ed25519", multi_ed25519::make_all(builder));
     add_natives_from_module!("bls12381", cryptography::bls12381::make_all(builder));
     add_natives_from_module!("secp256k1", cryptography::secp256k1::make_all(builder));
-    add_natives_from_module!("aptos_hash", hash::make_all(builder));
+    add_natives_from_module!("supra_hash", hash::make_all(builder));
     add_natives_from_module!(
         "ristretto255",
         cryptography::ristretto255::make_all(builder)

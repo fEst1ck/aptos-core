@@ -12,7 +12,7 @@ pub mod string;
 #[cfg(feature = "testing")]
 pub mod unit_test;
 
-use aptos_native_interface::SafeNativeBuilder;
+use supra_native_interface::SafeNativeBuilder;
 use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::native_functions::{make_table_from_iter, NativeFunctionTable};
 

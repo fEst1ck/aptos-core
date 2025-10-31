@@ -1,14 +1,14 @@
-spec aptos_framework::reconfiguration_with_dkg {
+spec supra_framework::reconfiguration_with_dkg {
     spec module {
         pragma verify = true;
     }
 
     spec try_start() {
-        use aptos_framework::chain_status;
-        use aptos_framework::staking_config;
-        use aptos_framework::reconfiguration;
+        use supra_framework::chain_status;
+        use supra_framework::staking_config;
+        use supra_framework::reconfiguration;
         pragma verify_duration_estimate = 120;
-        requires exists<reconfiguration::Configuration>(@aptos_framework);
+        requires exists<reconfiguration::Configuration>(@supra_framework);
         requires chain_status::is_operating();
         include stake::ResourceRequirement;
         include stake::GetReconfigStartTimeRequirement;
@@ -25,29 +25,29 @@ spec aptos_framework::reconfiguration_with_dkg {
     }
 
     spec schema FinishRequirement {
-        use aptos_framework::chain_status;
+        use supra_framework::chain_status;
         use std::signer;
         use std::features;
-        use aptos_framework::stake;
-        use aptos_framework::coin::CoinInfo;
-        use aptos_framework::aptos_coin::AptosCoin;
-        use aptos_framework::transaction_fee;
-        use aptos_framework::staking_config;
-        use aptos_framework::config_buffer;
-        use aptos_framework::version;
-        use aptos_framework::consensus_config;
-        use aptos_framework::execution_config;
-        use aptos_framework::gas_schedule;
-        use aptos_framework::jwks;
-        use aptos_framework::randomness_config;
-        use aptos_framework::jwk_consensus_config;
+        use supra_framework::stake;
+        use supra_framework::coin::CoinInfo;
+        use supra_framework::supra_coin::SupraCoin;
+        use supra_framework::transaction_fee;
+        use supra_framework::staking_config;
+        use supra_framework::config_buffer;
+        use supra_framework::version;
+        use supra_framework::consensus_config;
+        use supra_framework::execution_config;
+        use supra_framework::gas_schedule;
+        use supra_framework::jwks;
+        use supra_framework::randomness_config;
+        use supra_framework::jwk_consensus_config;
         framework: signer;
-        requires signer::address_of(framework) == @aptos_framework;
+        requires signer::address_of(framework) == @supra_framework;
         requires chain_status::is_operating();
-        requires exists<CoinInfo<AptosCoin>>(@aptos_framework);
+        requires exists<CoinInfo<SupraCoin>>(@supra_framework);
         include staking_config::StakingRewardsConfigRequirement;
-        requires exists<stake::ValidatorFees>(@aptos_framework);
-        include transaction_fee::RequiresCollectedFeesPerValueLeqBlockAptosSupply;
+        requires exists<stake::ValidatorFees>(@supra_framework);
+        include transaction_fee::RequiresCollectedFeesPerValueLeqBlockSupraSupply;
         requires exists<features::Features>(@std);
         include config_buffer::OnNewEpochRequirement<version::Version>;
         include config_buffer::OnNewEpochRequirement<gas_schedule::GasScheduleV2>;
@@ -64,7 +64,7 @@ spec aptos_framework::reconfiguration_with_dkg {
     }
 
     spec finish_with_dkg_result(account: &signer, dkg_result: vector<u8>) {
-        use aptos_framework::dkg;
+        use supra_framework::dkg;
         pragma verify_duration_estimate = 1500;
         include FinishRequirement {
             framework: account

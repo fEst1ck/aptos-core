@@ -1,4 +1,4 @@
-spec aptos_framework::storage_gas {
+spec supra_framework::storage_gas {
     // -----------------
     // Struct invariants
     // -----------------
@@ -62,12 +62,12 @@ spec aptos_framework::storage_gas {
     /// </high-level-req>
     ///
     spec module {
-        use aptos_framework::chain_status;
+        use supra_framework::chain_status;
         pragma verify = true;
         pragma aborts_if_is_strict;
         // After genesis, `StateStorageUsage` and `GasParameter` exist.
-        invariant [suspendable] chain_status::is_operating() ==> exists<StorageGasConfig>(@aptos_framework);
-        invariant [suspendable] chain_status::is_operating() ==> exists<StorageGas>(@aptos_framework);
+        invariant [suspendable] chain_status::is_operating() ==> exists<StorageGasConfig>(@supra_framework);
+        invariant [suspendable] chain_status::is_operating() ==> exists<StorageGas>(@supra_framework);
     }
 
 
@@ -118,24 +118,24 @@ spec aptos_framework::storage_gas {
         ensures result.byte_config == byte_config;
     }
 
-    /// Signer address must be @aptos_framework and StorageGasConfig exists.
-    spec set_config(aptos_framework: &signer, config: StorageGasConfig) {
-        include system_addresses::AbortsIfNotAptosFramework{ account: aptos_framework };
-        aborts_if !exists<StorageGasConfig>(@aptos_framework);
+    /// Signer address must be @supra_framework and StorageGasConfig exists.
+    spec set_config(supra_framework: &signer, config: StorageGasConfig) {
+        include system_addresses::AbortsIfNotSupraFramework{ account: supra_framework };
+        aborts_if !exists<StorageGasConfig>(@supra_framework);
     }
 
-    /// Signer address must be @aptos_framework.
-    /// Address @aptos_framework does not exist StorageGasConfig and StorageGas before the function call is restricted
+    /// Signer address must be @supra_framework.
+    /// Address @supra_framework does not exist StorageGasConfig and StorageGas before the function call is restricted
     /// and exists after the function is executed.
-    spec initialize(aptos_framework: &signer) {
-        include system_addresses::AbortsIfNotAptosFramework{ account: aptos_framework };
+    spec initialize(supra_framework: &signer) {
+        include system_addresses::AbortsIfNotSupraFramework{ account: supra_framework };
         pragma verify_duration_estimate = 120;
-        aborts_if exists<StorageGasConfig>(@aptos_framework);
-        aborts_if exists<StorageGas>(@aptos_framework);
+        aborts_if exists<StorageGasConfig>(@supra_framework);
+        aborts_if exists<StorageGas>(@supra_framework);
 
         /// [high-level-req-1]
-        ensures exists<StorageGasConfig>(@aptos_framework);
-        ensures exists<StorageGas>(@aptos_framework);
+        ensures exists<StorageGasConfig>(@supra_framework);
+        ensures exists<StorageGas>(@supra_framework);
     }
 
     /// A non decreasing curve must ensure that next is greater than cur.
@@ -163,13 +163,13 @@ spec aptos_framework::storage_gas {
         aborts_if false;
     }
 
-    /// Address @aptos_framework must exist StorageGasConfig and StorageGas and StateStorageUsage.
+    /// Address @supra_framework must exist StorageGasConfig and StorageGas and StateStorageUsage.
     spec on_reconfig {
-        use aptos_framework::chain_status;
+        use supra_framework::chain_status;
         requires chain_status::is_operating();
-        aborts_if !exists<StorageGasConfig>(@aptos_framework);
-        aborts_if !exists<StorageGas>(@aptos_framework);
-        aborts_if !exists<state_storage::StateStorageUsage>(@aptos_framework);
+        aborts_if !exists<StorageGasConfig>(@supra_framework);
+        aborts_if !exists<StorageGas>(@supra_framework);
+        aborts_if !exists<state_storage::StateStorageUsage>(@supra_framework);
     }
 
 

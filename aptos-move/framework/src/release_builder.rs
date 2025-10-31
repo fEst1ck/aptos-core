@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -7,8 +7,8 @@ use crate::{
     release_bundle::{ReleaseBundle, ReleasePackage},
 };
 use anyhow::{anyhow, Context};
-use aptos_sdk_builder::rust;
-use aptos_types::transaction::EntryABI;
+use supra_sdk_builder::rust;
+use supra_types::transaction::EntryABI;
 use clap::Parser;
 use std::path::{Path, PathBuf};
 
@@ -16,7 +16,7 @@ pub const RELEASE_BUNDLE_EXTENSION: &str = "mrb";
 
 /// Options to configure the generation of a release.
 #[derive(Debug, Clone, Parser)]
-#[clap(name = "Aptos Releasing", author, version)]
+#[clap(name = "Supra Releasing", author, version)]
 pub struct ReleaseOptions {
     #[clap(flatten)]
     pub build_options: BuildOptions,

@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "testing")]
@@ -9,7 +9,7 @@ use crate::{
     },
     structure_from_ty_arg,
 };
-use aptos_native_interface::{SafeNativeContext, SafeNativeError, SafeNativeResult};
+use supra_native_interface::{SafeNativeContext, SafeNativeError, SafeNativeResult};
 #[cfg(feature = "testing")]
 use ark_ff::Field;
 #[cfg(feature = "testing")]

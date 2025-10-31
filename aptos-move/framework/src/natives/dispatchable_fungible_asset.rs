@@ -1,8 +1,8 @@
 use super::function_info::extract_function_info;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::DISPATCHABLE_FUNGIBLE_ASSET_DISPATCH_BASE;
-// Copyright © Aptos Foundation
+use supra_gas_schedule::gas_params::natives::supra_framework::DISPATCHABLE_FUNGIBLE_ASSET_DISPATCH_BASE;
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
-use aptos_native_interface::{
+use supra_native_interface::{
     RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError, SafeNativeResult,
 };
 use move_vm_runtime::native_functions::NativeFunction;

@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -10,13 +10,13 @@ use crate::{
     },
     safe_borrow_element, store_element, structure_from_ty_arg,
 };
-use aptos_gas_schedule::{
-    gas_feature_versions::RELEASE_V1_16, gas_params::natives::aptos_framework::*,
+use supra_gas_schedule::{
+    gas_feature_versions::RELEASE_V1_16, gas_params::natives::supra_framework::*,
 };
-use aptos_native_interface::{
+use supra_native_interface::{
     safely_pop_arg, SafeNativeContext, SafeNativeError, SafeNativeResult,
 };
-use aptos_types::on_chain_config::FeatureFlag;
+use supra_types::on_chain_config::FeatureFlag;
 use ark_ec::CurveGroup;
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};

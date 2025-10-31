@@ -1,12 +1,12 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // Parts of the project are originally copyright © Meta Platforms, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 #![forbid(unsafe_code)]
 
-mod aptos;
+mod supra;
 
-pub use aptos::*;
+pub use supra::*;
 use std::io::{Read, Write};
 
 mod built_package;

@@ -1,9 +1,9 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{built_package::BuiltPackage, natives::code::PackageMetadata, path_in_crate};
 use anyhow::Context;
-use aptos_types::account_address::AccountAddress;
+use supra_types::account_address::AccountAddress;
 use move_binary_format::{access::ModuleAccess, errors::PartialVMError, CompiledModule};
 use move_command_line_common::files::{extension_equals, find_filenames, MOVE_EXTENSION};
 use move_core_types::language_storage::ModuleId;
@@ -203,15 +203,15 @@ impl ReleasePackage {
         emitln!(writer, "script {");
         writer.indent();
         emitln!(writer, "use std::vector;");
-        emitln!(writer, "use aptos_framework::aptos_governance;");
-        emitln!(writer, "use aptos_framework::code;\n");
+        emitln!(writer, "use supra_framework::supra_governance;");
+        emitln!(writer, "use supra_framework::code;\n");
 
         if is_testnet && !is_multi_step {
             emitln!(writer, "fun main(core_resources: &signer){");
             writer.indent();
             emitln!(
                 writer,
-                "let framework_signer = aptos_governance::get_signer_testnet_only(core_resources, @{});",
+                "let framework_signer = supra_governance::get_signer_testnet_only(core_resources, @{});",
                 for_address
             );
         } else if !is_multi_step {
@@ -219,7 +219,7 @@ impl ReleasePackage {
             writer.indent();
             emitln!(
                 writer,
-                "let framework_signer = aptos_governance::resolve(proposal_id, @{});",
+                "let framework_signer = supra_governance::resolve(proposal_id, @{});",
                 for_address
             );
         } else {
@@ -289,14 +289,14 @@ impl ReleasePackage {
         if next_execution_hash == "vector::empty<u8>()".as_bytes() {
             emitln!(
                 writer,
-                "let framework_signer = aptos_governance::resolve_multi_step_proposal(proposal_id, @{}, {});\n",
+                "let framework_signer = supra_governance::resolve_multi_step_proposal(proposal_id, @{}, {});\n",
                 for_address,
                 "vector::empty<u8>()",
             );
         } else {
             emitln!(
                 writer,
-                "let framework_signer = aptos_governance::resolve_multi_step_proposal("
+                "let framework_signer = supra_governance::resolve_multi_step_proposal("
             );
             writer.indent();
             emitln!(writer, "proposal_id,");

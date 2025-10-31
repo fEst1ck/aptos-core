@@ -1,9 +1,9 @@
-spec aptos_framework::chain_status {
+spec supra_framework::chain_status {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: The end of genesis mark should persist throughout the entire life of the chain.
     /// Criticality: Medium
-    /// Implementation: The Aptos framework account should never drop the GenesisEndMarker resource.
+    /// Implementation: The Supra framework account should never drop the GenesisEndMarker resource.
     /// Enforcement: Audited that GenesisEndMarker is published at the end of genesis and never removed. Formally
     /// verified via [high-level-req-1](set_genesis_end) that GenesisEndMarker is published.
     ///
@@ -27,16 +27,16 @@ spec aptos_framework::chain_status {
         invariant is_genesis() == !is_operating();
     }
 
-    spec set_genesis_end(aptos_framework: &signer) {
+    spec set_genesis_end(supra_framework: &signer) {
         use std::signer;
         pragma verify = true;
         pragma delegate_invariants_to_caller;
-        let addr = signer::address_of(aptos_framework);
-        aborts_if addr != @aptos_framework;
+        let addr = signer::address_of(supra_framework);
+        aborts_if addr != @supra_framework;
         /// [high-level-req-3]
-        aborts_if exists<GenesisEndMarker>(@aptos_framework);
+        aborts_if exists<GenesisEndMarker>(@supra_framework);
         /// [high-level-req-1]
-        ensures global<GenesisEndMarker>(@aptos_framework) == GenesisEndMarker {};
+        ensures global<GenesisEndMarker>(@supra_framework) == GenesisEndMarker {};
     }
 
     spec schema RequiresIsOperating {

@@ -1,14 +1,14 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::unzip_metadata_str;
 use anyhow::bail;
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_pop_arg, RawSafeNative, SafeNativeBuilder, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
-use aptos_types::{
+use supra_types::{
     move_any::Any, on_chain_config::OnChainConfig, transaction::ModuleBundle, vm_status::StatusCode,
 };
 use better_any::{Tid, TidAble};
@@ -200,7 +200,7 @@ pub struct NativeCodeContext {
 }
 
 /// Represents a request for code publishing made from a native call and to be processed
-/// by the Aptos VM.
+/// by the Supra VM.
 pub struct PublishRequest {
     pub destination: AccountAddress,
     pub bundle: ModuleBundle,

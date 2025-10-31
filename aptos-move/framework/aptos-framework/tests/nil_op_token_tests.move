@@ -1,13 +1,13 @@
 #[test_only]
-module aptos_framework::nil_op_token_tests {
-    use aptos_framework::fungible_asset::{Self, Metadata, TestToken};
-    use aptos_framework::dispatchable_fungible_asset;
+module supra_framework::nil_op_token_tests {
+    use supra_framework::fungible_asset::{Self, Metadata, TestToken};
+    use supra_framework::dispatchable_fungible_asset;
     use 0xcafe::nil_op_token;
-    use aptos_framework::object;
+    use supra_framework::object;
     use std::option;
 
     #[test(creator = @0xcafe)]
-    #[expected_failure(abort_code=0x70002, location=aptos_framework::dispatchable_fungible_asset)]
+    #[expected_failure(abort_code=0x70002, location=supra_framework::dispatchable_fungible_asset)]
     fun test_nil_op_token(
         creator: &signer,
     ) {

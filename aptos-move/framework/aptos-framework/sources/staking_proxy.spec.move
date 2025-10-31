@@ -1,4 +1,4 @@
-spec aptos_framework::staking_proxy {
+spec supra_framework::staking_proxy {
     /// <high-level-req>
     /// No.: 1
     /// Requirement: When updating the Vesting operator, it should be updated throughout all depending units.
@@ -36,7 +36,7 @@ spec aptos_framework::staking_proxy {
     /// Criticality: Medium
     /// Implementation: Duplicates among operators could result in incorrectly updating the operator or voter
     /// associated with the incorrect StakingContract.
-    /// Enforcement: Enforced via [https://github.com/aptos-labs/aptos-core/blob/main/aptos-move/framework/aptos-framework/sources/staking_contract.move#L87](SimpleMap).
+    /// Enforcement: Enforced via [https://github.com/supra-labs/supra-core/blob/main/supra-move/framework/supra-framework/sources/staking_contract.move#L87](SimpleMap).
     /// </high-level-req>
     ///
     spec module {
@@ -76,8 +76,8 @@ spec aptos_framework::staking_proxy {
 
     spec schema SetStakingContractOperator {
         use aptos_std::simple_map;
-        use aptos_framework::staking_contract::{Store};
-        use aptos_framework::coin;
+        use supra_framework::staking_contract::{Store};
+        use supra_framework::coin;
 
         owner: signer;
         old_operator: address;
@@ -143,7 +143,7 @@ spec aptos_framework::staking_proxy {
     /// Then abort if the resource is not exist
     spec schema SetStakingContractVoter {
         use aptos_std::simple_map;
-        use aptos_framework::staking_contract::{Store};
+        use supra_framework::staking_contract::{Store};
 
         owner: &signer;
         operator: address;

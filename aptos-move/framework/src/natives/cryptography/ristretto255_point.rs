@@ -1,4 +1,4 @@
-// Copyright © Aptos Foundation
+// Copyright © Supra Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 //! A crate which extends Move with a RistrettoPoint struct that points to a Rust-native
@@ -10,8 +10,8 @@ use crate::natives::cryptography::{
         pop_64_byte_slice, pop_scalar_from_bytes, scalar_from_struct, COMPRESSED_POINT_NUM_BYTES,
     },
 };
-use aptos_gas_schedule::gas_params::natives::aptos_framework::*;
-use aptos_native_interface::{
+use supra_gas_schedule::gas_params::natives::supra_framework::*;
+use supra_native_interface::{
     safely_assert_eq, safely_pop_arg, safely_pop_type_arg, SafeNativeContext, SafeNativeError,
     SafeNativeResult,
 };
