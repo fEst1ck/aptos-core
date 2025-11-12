@@ -18,6 +18,7 @@ module supra_framework::transaction_validation {
     use supra_framework::timestamp;
     use supra_framework::transaction_fee;
     use supra_framework::nonce_validation;
+    use supra_framework::automation_registry;
 
     friend supra_framework::genesis;
 
@@ -203,14 +204,14 @@ module supra_framework::transaction_validation {
                 ),
                 error::permission_denied(PROLOGUE_PERMISSIONED_GAS_LIMIT_INSUFFICIENT)
             );
-            if (features::operations_default_to_fa_apt_store_enabled()) {
+            if (features::operations_default_to_fa_supra_store_enabled()) {
                 assert!(
                     supra_account::is_fungible_balance_at_least(gas_payer_address, max_transaction_fee),
                     error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
                 );
             } else {
                 assert!(
-                    coin::is_balance_at_least<AptosCoin>(gas_payer_address, max_transaction_fee),
+                    coin::is_balance_at_least<SupraCoin>(gas_payer_address, max_transaction_fee),
                     error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
                 );
             }
@@ -710,14 +711,14 @@ module supra_framework::transaction_validation {
         // it's important to maintain the error code consistent with vm
         // to do failed transaction cleanup.
         if (!skip_gas_payment(is_simulation, gas_payer)) {
-            if (features::operations_default_to_fa_apt_store_enabled()) {
+            if (features::operations_default_to_fa_supra_store_enabled()) {
                 assert!(
                     supra_account::is_fungible_balance_at_least(gas_payer, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             } else {
                 assert!(
-                    coin::is_balance_at_least<AptosCoin>(gas_payer, transaction_fee_amount),
+                    coin::is_balance_at_least<SupraCoin>(gas_payer, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             };
@@ -927,14 +928,14 @@ module supra_framework::transaction_validation {
             is_simulation,
             gas_payer_address
         )) {
-            if (features::operations_default_to_fa_apt_store_enabled()) {
+            if (features::operations_default_to_fa_supra_store_enabled()) {
                 assert!(
                     supra_account::is_fungible_balance_at_least(gas_payer_address, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             } else {
                 assert!(
-                    coin::is_balance_at_least<AptosCoin>(gas_payer_address, transaction_fee_amount),
+                    coin::is_balance_at_least<SupraCoin>(gas_payer_address, transaction_fee_amount),
                     error::out_of_range(PROLOGUE_ECANT_PAY_GAS_DEPOSIT),
                 );
             };
