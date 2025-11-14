@@ -129,18 +129,6 @@ return true.
 -  [Function `default_to_concurrent_fungible_balance_enabled`](#0x1_features_default_to_concurrent_fungible_balance_enabled)
 -  [Function `get_abort_if_multisig_payload_mismatch_feature`](#0x1_features_get_abort_if_multisig_payload_mismatch_feature)
 -  [Function `abort_if_multisig_payload_mismatch_enabled`](#0x1_features_abort_if_multisig_payload_mismatch_enabled)
--  [Function `get_supra_native_automation_feature`](#0x1_features_get_supra_native_automation_feature)
--  [Function `supra_native_automation_enabled`](#0x1_features_supra_native_automation_enabled)
--  [Function `get_supra_eth_trie_feature`](#0x1_features_get_supra_eth_trie_feature)
--  [Function `supra_eth_trie_enabled`](#0x1_features_supra_eth_trie_enabled)
--  [Function `get_supra_automation_payload_gas_check_feature`](#0x1_features_get_supra_automation_payload_gas_check_feature)
--  [Function `supra_automation_payload_gas_check_enabled`](#0x1_features_supra_automation_payload_gas_check_enabled)
--  [Function `get_supra_private_poll_feature`](#0x1_features_get_supra_private_poll_feature)
--  [Function `supra_private_poll_enabled`](#0x1_features_supra_private_poll_enabled)
--  [Function `get_supra_automation_task_sync_feature`](#0x1_features_get_supra_automation_task_sync_feature)
--  [Function `supra_automation_task_sync_enabled`](#0x1_features_supra_automation_task_sync_enabled)
--  [Function `get_supra_count_failed_proposals_feature`](#0x1_features_get_supra_count_failed_proposals_feature)
--  [Function `supra_count_failed_proposals_enabled`](#0x1_features_supra_count_failed_proposals_enabled)
 -  [Function `get_transaction_simulation_enhancement_feature`](#0x1_features_get_transaction_simulation_enhancement_feature)
 -  [Function `transaction_simulation_enhancement_enabled`](#0x1_features_transaction_simulation_enhancement_enabled)
 -  [Function `get_collection_owner_feature`](#0x1_features_get_collection_owner_feature)
@@ -817,12 +805,30 @@ Lifetime: transient
 
 
 
+<a id="0x1_features_NATIVE_MEMORY_OPERATIONS"></a>
+
+
+
+<pre><code><b>const</b> <a href="features.md#0x1_features_NATIVE_MEMORY_OPERATIONS">NATIVE_MEMORY_OPERATIONS</a>: u64 = 80;
+</code></pre>
+
+
+
+<a id="0x1_features_NATIVE_MEMORY_OPERATIONS"></a>
+
+
+
+<pre><code><b>const</b> <a href="features.md#0x1_features_NATIVE_MEMORY_OPERATIONS">NATIVE_MEMORY_OPERATIONS</a>: u64 = 80;
+</code></pre>
+
+
+
 <a id="0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE"></a>
 
 Lifetime: transient
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE</a>: u64 = 64;
+<pre><code><b>const</b> <a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE</a>: u64 = 64;
 </code></pre>
 
 
@@ -3525,294 +3531,6 @@ Deprecated feature
 
 </details>
 
-<a id="0x1_features_get_supra_native_automation_feature"></a>
-
-## Function `get_supra_native_automation_feature`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_native_automation_feature">get_supra_native_automation_feature</a>(): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_native_automation_feature">get_supra_native_automation_feature</a>(): u64 {
-    <a href="features.md#0x1_features_SUPRA_NATIVE_AUTOMATION">SUPRA_NATIVE_AUTOMATION</a>
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_supra_native_automation_enabled"></a>
-
-## Function `supra_native_automation_enabled`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_native_automation_enabled">supra_native_automation_enabled</a>(): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_native_automation_enabled">supra_native_automation_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_NATIVE_AUTOMATION">SUPRA_NATIVE_AUTOMATION</a>)
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_get_supra_eth_trie_feature"></a>
-
-## Function `get_supra_eth_trie_feature`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_eth_trie_feature">get_supra_eth_trie_feature</a>(): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_eth_trie_feature">get_supra_eth_trie_feature</a>(): u64 {
-    <a href="features.md#0x1_features_SUPRA_ETH_TRIE">SUPRA_ETH_TRIE</a>
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_supra_eth_trie_enabled"></a>
-
-## Function `supra_eth_trie_enabled`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_eth_trie_enabled">supra_eth_trie_enabled</a>(): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_eth_trie_enabled">supra_eth_trie_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_ETH_TRIE">SUPRA_ETH_TRIE</a>)
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_get_supra_automation_payload_gas_check_feature"></a>
-
-## Function `get_supra_automation_payload_gas_check_feature`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_payload_gas_check_feature">get_supra_automation_payload_gas_check_feature</a>(): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_payload_gas_check_feature">get_supra_automation_payload_gas_check_feature</a>(): u64 {
-    <a href="features.md#0x1_features_SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK">SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK</a>
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_supra_automation_payload_gas_check_enabled"></a>
-
-## Function `supra_automation_payload_gas_check_enabled`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_payload_gas_check_enabled">supra_automation_payload_gas_check_enabled</a>(): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_payload_gas_check_enabled">supra_automation_payload_gas_check_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK">SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK</a>)
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_get_supra_private_poll_feature"></a>
-
-## Function `get_supra_private_poll_feature`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_private_poll_feature">get_supra_private_poll_feature</a>(): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_private_poll_feature">get_supra_private_poll_feature</a>(): u64 {
-    <a href="features.md#0x1_features_PRIVATE_POLL">PRIVATE_POLL</a>
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_supra_private_poll_enabled"></a>
-
-## Function `supra_private_poll_enabled`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_private_poll_enabled">supra_private_poll_enabled</a>(): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_private_poll_enabled">supra_private_poll_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_PRIVATE_POLL">PRIVATE_POLL</a>)
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_get_supra_automation_task_sync_feature"></a>
-
-## Function `get_supra_automation_task_sync_feature`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_task_sync_feature">get_supra_automation_task_sync_feature</a>(): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_task_sync_feature">get_supra_automation_task_sync_feature</a>(): u64 {
-    <a href="features.md#0x1_features_SUPRA_AUTOMATION_TASK_SYNC">SUPRA_AUTOMATION_TASK_SYNC</a>
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_supra_automation_task_sync_enabled"></a>
-
-## Function `supra_automation_task_sync_enabled`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_task_sync_enabled">supra_automation_task_sync_enabled</a>(): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_task_sync_enabled">supra_automation_task_sync_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_AUTOMATION_TASK_SYNC">SUPRA_AUTOMATION_TASK_SYNC</a>)
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_get_supra_count_failed_proposals_feature"></a>
-
-## Function `get_supra_count_failed_proposals_feature`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_count_failed_proposals_feature">get_supra_count_failed_proposals_feature</a>(): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_count_failed_proposals_feature">get_supra_count_failed_proposals_feature</a>(): u64 {
-    <a href="features.md#0x1_features_SUPRA_COUNT_FAILED_PROPOSALS">SUPRA_COUNT_FAILED_PROPOSALS</a>
-}
-</code></pre>
-
-
-
-</details>
-
-<a id="0x1_features_supra_count_failed_proposals_enabled"></a>
-
-## Function `supra_count_failed_proposals_enabled`
-
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_count_failed_proposals_enabled">supra_count_failed_proposals_enabled</a>(): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_count_failed_proposals_enabled">supra_count_failed_proposals_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_COUNT_FAILED_PROPOSALS">SUPRA_COUNT_FAILED_PROPOSALS</a>)
-}
-</code></pre>
-
-
-
-</details>
-
 <a id="0x1_features_get_transaction_simulation_enhancement_feature"></a>
 
 ## Function `get_transaction_simulation_enhancement_feature`
@@ -4471,11 +4189,11 @@ Update feature flags directly. Only used in genesis/tests.
     <b>if</b> (!<b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)) {
         <b>move_to</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(framework, <a href="features.md#0x1_features_Features">Features</a> { <a href="features.md#0x1_features">features</a>: <a href="vector.md#0x1_vector">vector</a>[] })
     };
-    <b>let</b> <a href="features.md#0x1_features">features</a> = &<b>mut</b> <b>borrow_global_mut</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std).<a href="features.md#0x1_features">features</a>;
-    <a href="vector.md#0x1_vector_for_each_ref">vector::for_each_ref</a>(&enable, |feature| {
+    <b>let</b> <a href="features.md#0x1_features">features</a> = &<b>mut</b> <a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a>;
+    enable.for_each_ref(|feature| {
         <a href="features.md#0x1_features_set">set</a>(<a href="features.md#0x1_features">features</a>, *feature, <b>true</b>);
     });
-    <a href="vector.md#0x1_vector_for_each_ref">vector::for_each_ref</a>(&disable, |feature| {
+    disable.for_each_ref(|feature| {
         <a href="features.md#0x1_features_set">set</a>(<a href="features.md#0x1_features">features</a>, *feature, <b>false</b>);
     });
 }
@@ -4510,18 +4228,17 @@ Enable and disable features for the next epoch.
     );
 
     // Figure out the baseline feature vec that the diff will be applied <b>to</b>.
-    <b>let</b> new_feature_vec =
-        <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a>&gt;(@std)) {
-            // If there is a buffered feature vec, <b>use</b> it <b>as</b> the baseline.
-            <b>let</b> <a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a> { <a href="features.md#0x1_features">features</a> } = <b>move_from</b>&lt;<a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a>&gt;(@std);
-            <a href="features.md#0x1_features">features</a>
-        } <b>else</b> <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)) {
-            // Otherwise, <b>use</b> the currently effective feature flag vec <b>as</b> the baseline, <b>if</b> it <b>exists</b>.
-            <a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a>
-        } <b>else</b> {
-            // Otherwise, <b>use</b> an empty feature vec.
-            <a href="vector.md#0x1_vector">vector</a>[]
-        };
+    <b>let</b> new_feature_vec = <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a>&gt;(@std)) {
+        // If there is a buffered feature vec, <b>use</b> it <b>as</b> the baseline.
+        <b>let</b> <a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a> { <a href="features.md#0x1_features">features</a> } = <b>move_from</b>&lt;<a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a>&gt;(@std);
+        <a href="features.md#0x1_features">features</a>
+    } <b>else</b> <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)) {
+        // Otherwise, <b>use</b> the currently effective feature flag vec <b>as</b> the baseline, <b>if</b> it <b>exists</b>.
+        <b>borrow_global</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std).<a href="features.md#0x1_features">features</a>
+    } <b>else</b> {
+        // Otherwise, <b>use</b> an empty feature vec.
+        <a href="vector.md#0x1_vector">vector</a>[]
+    };
 
     // Apply the diff and save it <b>to</b> the buffer.
     <a href="features.md#0x1_features_apply_diff">apply_diff</a>(&<b>mut</b> new_feature_vec, enable, disable);
@@ -4587,8 +4304,8 @@ Check whether the feature is enabled.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_is_enabled">is_enabled</a>(feature: u64): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
-    <b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)
-        && <a href="features.md#0x1_features_contains">contains</a>(&<a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a>, feature)
+    <b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std) &&
+        <a href="features.md#0x1_features_contains">contains</a>(&<a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a>, feature)
 }
 </code></pre>
 
@@ -4615,10 +4332,14 @@ Helper to include or exclude a feature flag.
 <pre><code><b>fun</b> <a href="features.md#0x1_features_set">set</a>(<a href="features.md#0x1_features">features</a>: &<b>mut</b> <a href="vector.md#0x1_vector">vector</a>&lt;u8&gt;, feature: u64, <b>include</b>: bool) {
     <b>let</b> byte_index = feature / 8;
     <b>let</b> bit_mask = 1 &lt;&lt; ((feature % 8) <b>as</b> u8);
-    <b>while</b> (<a href="features.md#0x1_features">features</a>.length() &lt;= byte_index) { <a href="features.md#0x1_features">features</a>.push_back(0) };
+    <b>while</b> (<a href="features.md#0x1_features">features</a>.length() &lt;= byte_index) {
+        <a href="features.md#0x1_features">features</a>.push_back(0)
+    };
 
-    <b>if</b> (<b>include</b>) <a href="features.md#0x1_features">features</a>[byte_index] |= bit_mask
-    <b>else</b> <a href="features.md#0x1_features">features</a>[byte_index] &= (0xff ^ bit_mask)
+    <b>if</b> (<b>include</b>)
+        <a href="features.md#0x1_features">features</a>[byte_index] |= bit_mask
+    <b>else</b>
+        <a href="features.md#0x1_features">features</a>[byte_index] &= (0xff ^ bit_mask)
 }
 </code></pre>
 
@@ -4645,8 +4366,7 @@ Helper to check whether a feature flag is enabled.
 <pre><code><b>fun</b> <a href="features.md#0x1_features_contains">contains</a>(<a href="features.md#0x1_features">features</a>: &<a href="vector.md#0x1_vector">vector</a>&lt;u8&gt;, feature: u64): bool {
     <b>let</b> byte_index = feature / 8;
     <b>let</b> bit_mask = 1 &lt;&lt; ((feature % 8) <b>as</b> u8);
-    byte_index &lt; <a href="features.md#0x1_features">features</a>.length()
-        && (<a href="features.md#0x1_features">features</a>[byte_index] & bit_mask) != 0
+    byte_index &lt; <a href="features.md#0x1_features">features</a>.length() && (<a href="features.md#0x1_features">features</a>[byte_index] & bit_mask) != 0
 }
 </code></pre>
 

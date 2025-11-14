@@ -39,18 +39,13 @@ module supra_framework::aggregator_factory {
 
     /// Creates a new aggregator instance which overflows on exceeding a `limit`.
     public(friend) fun create_aggregator_internal(): Aggregator acquires AggregatorFactory {
-        create_aggregator_internal_with_limit(MAX_U128)
-    }
-
-    /// Creates a new aggregator instance which overflows on exceeding a `limit`.
-    public(friend) fun create_aggregator_internal_with_limit(limit: u128): Aggregator acquires AggregatorFactory {
         assert!(
             exists<AggregatorFactory>(@supra_framework),
             error::not_found(EAGGREGATOR_FACTORY_NOT_FOUND)
         );
 
         let aggregator_factory = borrow_global_mut<AggregatorFactory>(@supra_framework);
-        new_aggregator(aggregator_factory, limit)
+        new_aggregator(aggregator_factory, MAX_U128)
     }
 
     #[deprecated]

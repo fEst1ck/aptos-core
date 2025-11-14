@@ -96,7 +96,15 @@ impl PersistentSafetyStorage {
         Ok(self.internal_store.get(OWNER_ACCOUNT).map(|v| v.value)?)
     }
 
-    pub fn consensus_key_for_version(
+    pub fn default_consensus_sk(
+        &self,
+    ) -> Result<bls12381::PrivateKey, aptos_secure_storage::Error> {
+        self.internal_store
+            .get::<bls12381::PrivateKey>(CONSENSUS_KEY)
+            .map(|v| v.value)
+    }
+
+    pub fn consensus_sk_by_pk(
         &self,
         version: ed25519::PublicKey,
     ) -> Result<ed25519::PrivateKey, Error> {
@@ -104,8 +112,8 @@ impl PersistentSafetyStorage {
         let key: ed25519::PrivateKey = self.internal_store.get(CONSENSUS_KEY).map(|v| v.value)?;
         if key.public_key() != version {
             return Err(Error::SecureStorageMissingDataError(format!(
-                "PrivateKey for {:?} not found",
-                version
+                "Incorrect sk saved for {:?} the expected pk",
+                pk
             )));
         }
         Ok(key)
@@ -164,7 +172,6 @@ impl PersistentSafetyStorage {
         Ok(())
     }
 
-    #[cfg(any(test, feature = "testing"))]
     pub fn internal_store(&mut self) -> &mut Storage {
         &mut self.internal_store
     }

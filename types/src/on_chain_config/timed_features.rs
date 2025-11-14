@@ -77,9 +77,6 @@ impl TimedFeatureFlag {
             (_LimitTypeTagSize, TESTNET) => BEGINNING_OF_TIME,
             (_LimitTypeTagSize, MAINNET) => BEGINNING_OF_TIME,
 
-            // TODO clarify whether it is June 21 or June 25 for supra, below is the old code from our branch
-            // (_ModuleComplexityCheck, TESTNET) => 1719356400000, /* Tuesday, June 21, 2024 16:00:00 AM GMT-07:00 */
-            // (_ModuleComplexityCheck, MAINNET) => 1720033200000, /* Wednesday, July 3, 2024 12:00:00 AM GMT-07:00 */
             (_ModuleComplexityCheck, TESTNET) => Los_Angeles
                 .with_ymd_and_hms(2024, 6, 25, 16, 0, 0)
                 .unwrap()

@@ -130,6 +130,36 @@ impl TransactionMetadata {
                 &bcs::to_bytes(&txn).expect("Unable to serialize SignedTransaction"),
             )
             .to_vec(),
+            entry_function_payload: if txn.payload().is_multisig() {
+                None
+            } else if let Ok(TransactionExecutableRef::EntryFunction(e)) =
+                txn.payload().executable_ref()
+            {
+                Some(e.clone())
+            } else {
+                None
+            },
+            multisig_payload: match txn.payload() {
+                TransactionPayload::Multisig(m) => Some(m.clone()),
+                TransactionPayload::Payload(TransactionPayloadInner::V1 {
+                    executable,
+                    extra_config:
+                        TransactionExtraConfig::V1 {
+                            multisig_address: Some(multisig_address),
+                            ..
+                        },
+                }) => Some(Multisig {
+                    multisig_address: *multisig_address,
+                    transaction_payload: match executable {
+                        TransactionExecutable::EntryFunction(e) => {
+                            // TODO[Orderless]: How to avoid the clone operation here.
+                            Some(MultisigTransactionPayload::EntryFunction(e.clone()))
+                        },
+                        _ => None,
+                    },
+                }),
+                _ => None,
+            },
         }
     }
 

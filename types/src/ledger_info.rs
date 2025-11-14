@@ -13,7 +13,7 @@ use crate::{
     validator_verifier::{ValidatorVerifier, VerifyError},
 };
 use aptos_crypto::{
-    bls12381,
+    ed25519,
     hash::{CryptoHash, HashValue},
 };
 use aptos_crypto_derive::{BCSCryptoHash, CryptoHasher};
@@ -385,7 +385,7 @@ impl LedgerInfoWithVerifiedSignatures {
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq, Eq)]
 pub struct SignatureWithStatus {
-    signature: bls12381::Signature,
+    signature: ed25519::Signature,
     #[derivative(PartialEq = "ignore")]
     // false if the signature not verified.
     // true if the signature is verified.
@@ -397,11 +397,11 @@ impl SignatureWithStatus {
         self.verification_status.store(true, Ordering::SeqCst);
     }
 
-    pub fn signature(&self) -> &bls12381::Signature {
+    pub fn signature(&self) -> &ed25519::Signature {
         &self.signature
     }
 
-    pub fn from(signature: bls12381::Signature) -> Self {
+    pub fn from(signature: ed25519::Signature) -> Self {
         Self {
             signature,
             verification_status: Arc::new(AtomicBool::new(false)),
@@ -427,7 +427,7 @@ impl<'de> Deserialize<'de> for SignatureWithStatus {
     where
         D: serde::Deserializer<'de>,
     {
-        let signature = bls12381::Signature::deserialize(deserializer)?;
+        let signature = ed25519::Signature::deserialize(deserializer)?;
         Ok(SignatureWithStatus::from(signature))
     }
 }

@@ -17,7 +17,13 @@ This is the reference documentation of the Supra framework.
 -  [`0x1::aggregator`](aggregator.md#0x1_aggregator)
 -  [`0x1::aggregator_factory`](aggregator_factory.md#0x1_aggregator_factory)
 -  [`0x1::aggregator_v2`](aggregator_v2.md#0x1_aggregator_v2)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/overview.md
 -  [`0x1::automation_registry`](automation_registry.md#0x1_automation_registry)
+=======
+-  [`0x1::aptos_account`](aptos_account.md#0x1_aptos_account)
+-  [`0x1::aptos_coin`](aptos_coin.md#0x1_aptos_coin)
+-  [`0x1::aptos_governance`](aptos_governance.md#0x1_aptos_governance)
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/overview.md
 -  [`0x1::auth_data`](auth_data.md#0x1_auth_data)
 -  [`0x1::base16`](base16.md#0x1_base16)
 -  [`0x1::big_ordered_map`](big_ordered_map.md#0x1_big_ordered_map)
@@ -26,7 +32,10 @@ This is the reference documentation of the Supra framework.
 -  [`0x1::chain_status`](chain_status.md#0x1_chain_status)
 -  [`0x1::code`](code.md#0x1_code)
 -  [`0x1::coin`](coin.md#0x1_coin)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/overview.md
 -  [`0x1::committee_map`](committee_map.md#0x1_committee_map)
+=======
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/overview.md
 -  [`0x1::common_account_abstractions_utils`](common_account_abstractions_utils.md#0x1_common_account_abstractions_utils)
 -  [`0x1::config_buffer`](config_buffer.md#0x1_config_buffer)
 -  [`0x1::consensus_config`](consensus_config.md#0x1_consensus_config)
@@ -48,12 +57,18 @@ This is the reference documentation of the Supra framework.
 -  [`0x1::keyless_account`](keyless_account.md#0x1_keyless_account)
 -  [`0x1::managed_coin`](managed_coin.md#0x1_managed_coin)
 -  [`0x1::multisig_account`](multisig_account.md#0x1_multisig_account)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/overview.md
 -  [`0x1::multisig_voting`](multisig_voting.md#0x1_multisig_voting)
+=======
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/overview.md
 -  [`0x1::nonce_validation`](nonce_validation.md#0x1_nonce_validation)
 -  [`0x1::object`](object.md#0x1_object)
 -  [`0x1::object_code_deployment`](object_code_deployment.md#0x1_object_code_deployment)
 -  [`0x1::optional_aggregator`](optional_aggregator.md#0x1_optional_aggregator)
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/overview.md
 -  [`0x1::pbo_delegation_pool`](pbo_delegation_pool.md#0x1_pbo_delegation_pool)
+=======
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/overview.md
 -  [`0x1::ordered_map`](ordered_map.md#0x1_ordered_map)
 -  [`0x1::permissioned_delegation`](permissioned_delegation.md#0x1_permissioned_delegation)
 -  [`0x1::permissioned_signer`](permissioned_signer.md#0x1_permissioned_signer)

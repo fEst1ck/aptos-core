@@ -677,7 +677,7 @@ fn run_automated_txn_epilogue(
 
     // Emit the FeeStatement event
     if features.is_emit_fee_statement_enabled() {
-        emit_fee_statement(session, fee_statement, traversal_context)?;
+        emit_fee_statement(session, module_storage, fee_statement, traversal_context)?;
     }
 
     maybe_raise_injected_error(InjectedError::EndOfRunEpilogue)?;
@@ -759,6 +759,7 @@ pub(crate) fn run_automated_txn_success_epilogue(
 
     run_automated_txn_epilogue(
         session,
+        module_storage,
         gas_remaining,
         fee_statement,
         txn_data,
@@ -806,6 +807,7 @@ pub(crate) fn run_failure_epilogue(
 /// stored in the `TRANSACTION_VALIDATION_MODULE` on chain.
 pub(crate) fn run_automated_txn_failure_epilogue(
     session: &mut SessionExt,
+    module_storage: &impl ModuleStorage,
     gas_remaining: Gas,
     fee_statement: FeeStatement,
     features: &Features,
@@ -815,15 +817,16 @@ pub(crate) fn run_automated_txn_failure_epilogue(
 ) -> Result<(), VMStatus> {
     run_automated_txn_epilogue(
         session,
+        module_storage,
         gas_remaining,
         fee_statement,
         txn_data,
         features,
-        traversal_context,
+        traversal_context
     )
-    .or_else(|e| {
+    .or_else(|err| {
         expect_only_successful_execution(
-            e,
+            err,
             APTOS_TRANSACTION_VALIDATION
                 .automated_txn_epilogue_name
                 .as_str(),

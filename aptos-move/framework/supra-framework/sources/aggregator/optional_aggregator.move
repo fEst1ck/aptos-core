@@ -88,21 +88,6 @@ module supra_framework::optional_aggregator {
         }
     }
 
-    /// Creates a new optional aggregator.
-    public(friend) fun new_with_limit(limit: u128, parallelizable: bool): OptionalAggregator {
-        if (parallelizable) {
-            OptionalAggregator {
-                aggregator: option::some(aggregator_factory::create_aggregator_internal_with_limit(limit)),
-                integer: option::none(),
-            }
-        } else {
-            OptionalAggregator {
-                aggregator: option::none(),
-                integer: option::some(new_integer(limit)),
-            }
-        }
-    }
-
     /// Switches between parallelizable and non-parallelizable implementations.
     public fun switch(_optional_aggregator: &mut OptionalAggregator) {
         abort error::invalid_state(ESWITCH_DEPRECATED)

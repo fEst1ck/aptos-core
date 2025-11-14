@@ -325,7 +325,7 @@ impl<'m> AutomatedTransactionProcessor<'m> {
     ) -> Result<(VMStatus, VMOutput, G), VMStatus>
     where
         G: AptosGasMeter,
-        F: FnOnce(u64, VMGasParameters, StorageGasParameters, bool, Gas, &'a C) -> G,
+        F: FnOnce(u64, VMGasParameters, StorageGasParameters, bool, Gas) -> G,
     {
         let txn_metadata = TransactionMetadata::from(txn);
 

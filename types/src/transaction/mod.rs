@@ -13,6 +13,7 @@ use crate::{
     keyless::{KeylessPublicKey, KeylessSignature},
     ledger_info::LedgerInfo,
     proof::{TransactionInfoListWithProof, TransactionInfoWithProof},
+    transaction::automation::RegistrationParams,
     transaction::authenticator::{
         AccountAuthenticator, AnyPublicKey, AnySignature, SingleKeyAuthenticator,
         TransactionAuthenticator,
@@ -885,7 +886,7 @@ impl TransactionPayload {
         match self {
             TransactionPayload::Script(_)
             | TransactionPayload::EntryFunction(_)
-            | AutomationRegistration(_)
+            | TransactionPayload::AutomationRegistration(_)
             | TransactionPayload::ModuleBundle(_) => TransactionExtraConfig::V1 {
                 multisig_address: None,
                 replay_protection_nonce: None,
@@ -3026,6 +3027,7 @@ impl Transaction {
             | Transaction::BlockEpilogue(_)
             | Transaction::UserTransaction(_)
             | Transaction::GenesisTransaction(_)
+            | Transaction::AutomatedTransaction(_)
             | Transaction::ValidatorTransaction(_) => false,
         }
     }
@@ -3102,68 +3104,6 @@ impl std::fmt::Display for ViewFunctionError {
     }
 }
 
-/// Call a Move view function.
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub struct ViewFunction {
-    module: ModuleId,
-    function: Identifier,
-    ty_args: Vec<TypeTag>,
-    #[serde(with = "vec_bytes")]
-    args: Vec<Vec<u8>>,
-}
-
-impl ViewFunction {
-    pub fn from_function_name_and_args(
-        function_ref: &'static str,
-        ty_args: Vec<TypeTag>,
-        args: Vec<Vec<u8>>,
-    ) -> Result<Self> {
-        let MemberId {
-            module_id,
-            member_id,
-        } = str::parse(function_ref)?;
-        Ok(Self {
-            module: module_id,
-            function: member_id,
-            ty_args,
-            args,
-        })
-    }
-
-    pub fn new(
-        module: ModuleId,
-        function: Identifier,
-        ty_args: Vec<TypeTag>,
-        args: Vec<Vec<u8>>,
-    ) -> Self {
-        Self {
-            module,
-            function,
-            ty_args,
-            args,
-        }
-    }
-
-    pub fn module(&self) -> &ModuleId {
-        &self.module
-    }
-
-    pub fn function(&self) -> &IdentStr {
-        &self.function
-    }
-
-    pub fn ty_args(&self) -> &[TypeTag] {
-        &self.ty_args
-    }
-
-    pub fn args(&self) -> &[Vec<u8>] {
-        &self.args
-    }
-
-    pub fn into_inner(self) -> (ModuleId, Identifier, Vec<TypeTag>, Vec<Vec<u8>>) {
-        (self.module, self.function, self.ty_args, self.args)
-    }
-}
 pub struct ViewFunctionOutput {
     pub values: Result<Vec<Vec<u8>>, ViewFunctionError>,
     pub gas_used: u64,

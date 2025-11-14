@@ -1044,7 +1044,7 @@ module supra_framework::fungible_asset {
         amount: u64
     ) acquires FungibleStore, Supply, ConcurrentSupply, ConcurrentFungibleBalance {
         // ref metadata match is checked in burn() call
-        burn(ref, unchecked_withdraw(store_addr, amount));
+        burn(ref, unchecked_withdraw_with_no_events(store_addr, amount));
     }
 
     /// Withdraw `amount` of the fungible asset from the `store` ignoring `frozen`.

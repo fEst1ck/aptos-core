@@ -26,7 +26,7 @@ use crate::{
     transaction_metadata::TransactionMetadata,
     transaction_validation,
     verifier::{
-        event_validation, native_validation, resource_groups, transaction_arg_validation,
+        self, event_validation, native_validation, resource_groups, transaction_arg_validation,
         view_function,
     },
     VMBlockExecutor, VMValidator,
@@ -38,7 +38,7 @@ use aptos_block_executor::{
 };
 use aptos_crypto::HashValue;
 use aptos_framework::natives::code::PublishRequest;
-use aptos_gas_algebra::{Gas, GasQuantity, NumBytes, Octa};
+use aptos_gas_algebra::{Gas, GasQuantity, NumBytes, Quant};
 use aptos_gas_meter::{AptosGasMeter, GasAlgebra};
 use aptos_gas_schedule::{
     gas_feature_versions,
@@ -833,7 +833,6 @@ impl AptosVM {
         let args = transaction_arg_validation::validate_combine_signer_and_txn_args(
             session,
             code_storage,
-            &mut UnmeteredGasMeter,
             serialized_signers,
             convert_txn_args(serialized_script.args()),
             &func,
@@ -909,7 +908,6 @@ impl AptosVM {
         let args = transaction_arg_validation::validate_combine_signer_and_txn_args(
             session,
             module_storage,
-            &mut UnmeteredGasMeter,
             serialized_signers,
             entry_fn.args().to_vec(),
             &function,
@@ -986,7 +984,7 @@ impl AptosVM {
                         code_storage,
                         gas_meter,
                         serialized_signers,
-                        registration_params.automated_function(),
+                        automation_payload.automated_function(),
                     )
                 })?;
 
@@ -997,12 +995,12 @@ impl AptosVM {
                         gas_meter,
                         traversal_context,
                         txn_data.sender(),
-                        registration_params,
+                        automation_payload,
                         txn_data,
                     )
                 })?;
             },
-
+            
             // Not reachable as this function should only be invoked for entry or script
             // transaction payload.
             _ => unreachable!("Only scripts or entry functions are executed"),
@@ -1100,7 +1098,6 @@ impl AptosVM {
         verifier::transaction_arg_validation::validate_combine_signer_and_txn_args(
             session,
             module_storage,
-            gas_meter,
             senders,
             actual_args,
             &function,
@@ -2009,7 +2006,7 @@ impl AptosVM {
                 log_context,
                 change_set_configs,
             )
-        }  else {
+        } else {
             self.execute_script_or_entry_function(
                 resolver,
                 code_storage,
@@ -2720,7 +2717,7 @@ impl AptosVM {
         )?;
 
 
-        if let Some(task_registration_params) = executable_ref.as_automation_registration_params() {
+        if let Some(task_registration_params) = executable.as_automation_registration_params() {
             check_automation_task_gas(
                 get_or_vm_startup_failure(&self.gas_params, log_context)?,
                 self.gas_feature_version,

@@ -1124,6 +1124,118 @@ Scheme identifier for single key public keys used to derive authentication keys 
 
 
 <a id="0x1_account_check_rotation_permission"></a>
+<<<<<<< HEAD:aptos-move/framework/supra-framework/doc/account.md
+=======
+
+## Function `check_rotation_permission`
+
+Permissions
+
+
+<pre><code><b>fun</b> <a href="account.md#0x1_account_check_rotation_permission">check_rotation_permission</a>(s: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code>inline <b>fun</b> <a href="account.md#0x1_account_check_rotation_permission">check_rotation_permission</a>(s: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>) {
+    <b>assert</b>!(
+        <a href="permissioned_signer.md#0x1_permissioned_signer_check_permission_exists">permissioned_signer::check_permission_exists</a>(s, AccountPermission::KeyRotation {}),
+        <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_permission_denied">error::permission_denied</a>(<a href="account.md#0x1_account_ENO_ACCOUNT_PERMISSION">ENO_ACCOUNT_PERMISSION</a>),
+    );
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_account_check_offering_permission"></a>
+
+## Function `check_offering_permission`
+
+
+
+<pre><code><b>fun</b> <a href="account.md#0x1_account_check_offering_permission">check_offering_permission</a>(s: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code>inline <b>fun</b> <a href="account.md#0x1_account_check_offering_permission">check_offering_permission</a>(s: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>) {
+    <b>assert</b>!(
+        <a href="permissioned_signer.md#0x1_permissioned_signer_check_permission_exists">permissioned_signer::check_permission_exists</a>(s, AccountPermission::Offering {}),
+        <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_permission_denied">error::permission_denied</a>(<a href="account.md#0x1_account_ENO_ACCOUNT_PERMISSION">ENO_ACCOUNT_PERMISSION</a>),
+    );
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_account_grant_key_rotation_permission"></a>
+
+## Function `grant_key_rotation_permission`
+
+Grant permission to perform key rotations on behalf of the master signer.
+
+This is **extremely dangerous** and should be granted only when it's absolutely needed.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="account.md#0x1_account_grant_key_rotation_permission">grant_key_rotation_permission</a>(master: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, <a href="permissioned_signer.md#0x1_permissioned_signer">permissioned_signer</a>: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="account.md#0x1_account_grant_key_rotation_permission">grant_key_rotation_permission</a>(master: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, <a href="permissioned_signer.md#0x1_permissioned_signer">permissioned_signer</a>: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>) {
+    <a href="permissioned_signer.md#0x1_permissioned_signer_authorize_unlimited">permissioned_signer::authorize_unlimited</a>(master, <a href="permissioned_signer.md#0x1_permissioned_signer">permissioned_signer</a>, AccountPermission::KeyRotation {})
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_account_grant_key_offering_permission"></a>
+
+## Function `grant_key_offering_permission`
+
+Grant permission to use offered address's signer on behalf of the master signer.
+
+This is **extremely dangerous** and should be granted only when it's absolutely needed.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="account.md#0x1_account_grant_key_offering_permission">grant_key_offering_permission</a>(master: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, <a href="permissioned_signer.md#0x1_permissioned_signer">permissioned_signer</a>: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="account.md#0x1_account_grant_key_offering_permission">grant_key_offering_permission</a>(master: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, <a href="permissioned_signer.md#0x1_permissioned_signer">permissioned_signer</a>: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>) {
+    <a href="permissioned_signer.md#0x1_permissioned_signer_authorize_unlimited">permissioned_signer::authorize_unlimited</a>(master, <a href="permissioned_signer.md#0x1_permissioned_signer">permissioned_signer</a>, AccountPermission::Offering {})
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_account_initialize"></a>
+>>>>>>> aptos-framework-v1.34.0:aptos-move/framework/aptos-framework/doc/account.md
 
 ## Function `check_rotation_permission`
 
