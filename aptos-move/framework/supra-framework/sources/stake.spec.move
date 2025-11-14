@@ -130,7 +130,7 @@ spec supra_framework::stake {
         include AbortsIfSignerPermissionStake {
             s: account
         };
-        let pubkey_from_pop = bls12381::spec_public_key_from_bytes_with_pop(
+        let pubkey_from_pop = aptos_std::bls12381::spec_public_key_from_bytes_with_pop(
             consensus_pubkey,
         );
         aborts_if !is_public_key_validated;

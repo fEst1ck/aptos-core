@@ -662,7 +662,7 @@ module supra_framework::coin {
                 account_addr,
                 option::destroy_some(paired_metadata<CoinType>())
             );
-            let fa = fungible_asset::withdraw_internal(store_addr, fa_amount_to_collect);
+            let fa = fungible_asset::unchecked_withdraw(store_addr, fa_amount_to_collect);
             merge(&mut coin, fungible_asset_to_coin<CoinType>(fa));
         };
         merge_aggregatable_coin(dst_coin, coin);
@@ -733,6 +733,7 @@ module supra_framework::coin {
         };
     }
 
+
     inline fun assert_signer_has_permission<CoinType>(account: &signer) {
         if(permissioned_signer::is_permissioned_signer(account)) {
             fungible_asset::withdraw_permission_check_by_address(
@@ -746,19 +747,27 @@ module supra_framework::coin {
         }
     }
 
+    /// Voluntarily migrate to fungible store for `CoinType` if not yet.
     public entry fun migrate_to_fungible_store<CoinType>(
         account: &signer
     ) acquires CoinStore, CoinConversionMap, CoinInfo {
-        let account_addr = signer::address_of(account);
-        assert_signer_has_permission<CoinType>(account);
-        maybe_convert_to_fungible_store<CoinType>(account_addr);
+        if (!features::coin_to_fungible_asset_migration_feature_enabled()) {
+            abort error::unavailable(ECOIN_TO_FUNGIBLE_ASSET_FEATURE_NOT_ENABLED)
+        };
+        migrate_to_fungible_store_internal<CoinType>(account)
+    }
+
+    fun migrate_to_fungible_store_internal<CoinType>(
+        account: &signer
+    ) acquires CoinStore, CoinConversionMap, CoinInfo {
+        maybe_convert_to_fungible_store<CoinType>(signer::address_of(account));
     }
 
     /// Migrate to fungible store for `CoinType` if not yet.
     public entry fun migrate_coin_store_to_fungible_store<CoinType>(
         accounts: vector<address>
     ) acquires CoinStore, CoinConversionMap, CoinInfo {
-        if (features::new_accounts_default_to_fa_store_enabled() || features::new_accounts_default_to_fa_apt_store_enabled()) {
+        if (features::new_accounts_default_to_fa_store_enabled() || features::new_accounts_default_to_fa_supra_store_enabled()) {
             std::vector::for_each(accounts, |account| {
                 maybe_convert_to_fungible_store<CoinType>(account);
             });
@@ -1017,7 +1026,7 @@ module supra_framework::coin {
         account_address: address,
         metadata: Object<Metadata>
     ): bool {
-        features::new_accounts_default_to_fa_store_enabled() || (features::new_accounts_default_to_fa_apt_store_enabled() && object::object_address(&metadata) == @0xa) || {
+        features::new_accounts_default_to_fa_store_enabled() || (features::new_accounts_default_to_fa_supra_store_enabled() && object::object_address(&metadata) == @0xa) || {
             let primary_store_address = primary_fungible_store::primary_store_address<Metadata>(
                 account_address,
                 metadata
@@ -2223,12 +2232,12 @@ module supra_framework::coin {
     }
 
     #[deprecated]
-    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
     /// The flag the existence of which indicates the primary fungible store is created by the migration from CoinStore.
     struct MigrationFlag has key {}
 
-    #[test(account = @aptos_framework)]
-    #[expected_failure(abort_code = 0x50024, location = aptos_framework::fungible_asset)]
+    #[test(account = @supra_framework)]
+    #[expected_failure(abort_code = 0x50024, location = supra_framework::fungible_asset)]
     fun test_withdraw_with_permissioned_signer_no_migration(
         account: &signer,
     ) acquires CoinConversionMap, CoinInfo, CoinStore, PairedCoinType {

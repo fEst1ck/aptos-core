@@ -8540,6 +8540,8 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
             "multisigPayload",
             "automation_payload",
             "automationPayload",
+            "automation_payloads",
+            "automationPayloads",
             "extra_config_v1",
             "extraConfigV1",
         ];
@@ -8552,6 +8554,7 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
             WriteSetPayload,
             MultisigPayload,
             AutomationPayload,
+            AutomationPayloads,
             ExtraConfigV1,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -8580,6 +8583,7 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
                             "writeSetPayload" | "write_set_payload" => Ok(GeneratedField::WriteSetPayload),
                             "multisigPayload" | "multisig_payload" => Ok(GeneratedField::MultisigPayload),
                             "automationPayload" | "automation_payload" => Ok(GeneratedField::AutomationPayload),
+                            "automationPayloads" | "automation_payloads" => Ok(GeneratedField::AutomationPayloads),
                             "extraConfigV1" | "extra_config_v1" => Ok(GeneratedField::ExtraConfigV1),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
@@ -8644,6 +8648,13 @@ impl<'de> serde::Deserialize<'de> for TransactionPayload {
                                 return Err(serde::de::Error::duplicate_field("automationPayload"));
                             }
                             payload__ = map.next_value::<::std::option::Option<_>>()?.map(transaction_payload::Payload::AutomationPayload)
+;
+                        }
+                        GeneratedField::AutomationPayloads => {
+                            if payload__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("automationPayloads"));
+                            }
+                            payload__ = map.next_value::<::std::option::Option<_>>()?.map(transaction_payload::Payload::AutomationPayloads)
 ;
                         }
                         GeneratedField::ExtraConfigV1 => {

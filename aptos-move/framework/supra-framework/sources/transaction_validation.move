@@ -57,8 +57,8 @@ module supra_framework::transaction_validation {
     const EOUT_OF_GAS: u64 = 6;
 
     /// Constants representing automation task type. Should match the values in scope of automation_registry module.
-    const UST:u8 = 1;
-    const GST:u8 = 2;
+    const UST: u8 = 1;
+    const GST: u8 = 2;
 
     /// Prologue errors. These are separated out from the other errors in this
     /// module since they are mapped separately to major VM statuses, and are
@@ -126,7 +126,9 @@ module supra_framework::transaction_validation {
     inline fun allow_missing_txn_authentication_key(transaction_sender: address): bool {
         // aa verifies authentication itself
         features::is_derivable_account_abstraction_enabled()
-            || (features::is_account_abstraction_enabled() && account_abstraction::using_dispatchable_authenticator(transaction_sender))
+            || (features::is_account_abstraction_enabled() && account_abstraction::using_dispatchable_authenticator(
+            transaction_sender
+        ))
     }
 
     fun prologue_common(
@@ -156,8 +158,8 @@ module supra_framework::transaction_validation {
             if (option::is_some(&txn_authentication_key)) {
                 if (
                     sender_address == gas_payer_address ||
-                    account::exists_at(sender_address) ||
-                    !features::sponsored_automatic_account_creation_enabled()
+                        account::exists_at(sender_address) ||
+                        !features::sponsored_automatic_account_creation_enabled()
                 ) {
                     assert!(
                         txn_authentication_key == option::some(account::get_authentication_key(sender_address)),
@@ -265,7 +267,10 @@ module supra_framework::transaction_validation {
             txn_expiration_time <= timestamp::now_seconds() + MAX_EXPIRATION_TIME_SECONDS_FOR_ORDERLESS_TXNS,
             error::invalid_argument(PROLOGUE_ETRANSACTION_EXPIRATION_TOO_FAR_IN_FUTURE),
         );
-        assert!(nonce_validation::check_and_insert_nonce(sender, nonce, txn_expiration_time), error::invalid_argument(PROLOGUE_ENONCE_ALREADY_USED));
+        assert!(
+            nonce_validation::check_and_insert_nonce(sender, nonce, txn_expiration_time),
+            error::invalid_argument(PROLOGUE_ENONCE_ALREADY_USED)
+        );
     }
 
     fun script_prologue(
@@ -330,8 +335,16 @@ module supra_framework::transaction_validation {
         txn_max_gas_units: u64,
         txn_expiration_time: u64,
         chain_id: u8,
-    )  {
-        automated_transaction_prologue_v2(sender, task_index, txn_gas_price, txn_max_gas_units, txn_expiration_time, chain_id, UST);
+    ) {
+        automated_transaction_prologue_v2(
+            sender,
+            task_index,
+            txn_gas_price,
+            txn_max_gas_units,
+            txn_expiration_time,
+            chain_id,
+            UST
+        );
     }
 
     fun automated_transaction_prologue_v2(
@@ -342,7 +355,7 @@ module supra_framework::transaction_validation {
         txn_expiration_time: u64,
         chain_id: u8,
         task_type: u8,
-    )  {
+    ) {
         let gas_payer = signer::address_of(&sender);
 
         assert!(chain_id::get() == chain_id, error::invalid_argument(PROLOGUE_EBAD_CHAIN_ID));
@@ -359,19 +372,20 @@ module supra_framework::transaction_validation {
         if (task_type != GST) {
             let max_transaction_fee = txn_gas_price * txn_max_gas_units;
 
-        if (features::operations_default_to_fa_supra_store_enabled()) {
-            assert!(
-                supra_account::is_fungible_balance_at_least(gas_payer, max_transaction_fee),
-                error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
-            );
-        } else {
-            assert!(
-                coin::is_balance_at_least<SupraCoin>(gas_payer, max_transaction_fee),
-                error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
-            );
-        };
-        assert!(automation_registry::has_sender_active_task_with_id(signer::address_of(&sender), task_index),
-            error::invalid_state(PROLOGUE_ENO_ACTIVE_AUTOMATED_TASK))
+            if (features::operations_default_to_fa_supra_store_enabled()) {
+                assert!(
+                    supra_account::is_fungible_balance_at_least(gas_payer, max_transaction_fee),
+                    error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
+                );
+            } else {
+                assert!(
+                    coin::is_balance_at_least<SupraCoin>(gas_payer, max_transaction_fee),
+                    error::invalid_argument(PROLOGUE_ECANT_PAY_GAS_DEPOSIT)
+                );
+            };
+            assert!(automation_registry::has_sender_active_task_with_id(signer::address_of(&sender), task_index),
+                error::invalid_state(PROLOGUE_ENO_ACTIVE_AUTOMATED_TASK))
+        }
     }
 
 
@@ -572,10 +586,10 @@ module supra_framework::transaction_validation {
             is_simulation
         );
         if (!skip_auth_key_check(is_simulation, &option::some(fee_payer_public_key_hash))) {
-                assert!(
-                    fee_payer_public_key_hash == account::get_authentication_key(fee_payer_address),
-                    error::invalid_argument(PROLOGUE_EINVALID_ACCOUNT_AUTH_KEY),
-                )
+            assert!(
+                fee_payer_public_key_hash == account::get_authentication_key(fee_payer_address),
+                error::invalid_argument(PROLOGUE_EINVALID_ACCOUNT_AUTH_KEY),
+            )
         }
     }
 
@@ -769,7 +783,6 @@ module supra_framework::transaction_validation {
             txn_expiration_time,
             chain_id,
             is_simulation,
-
         )
     }
 
@@ -858,8 +871,9 @@ module supra_framework::transaction_validation {
         multi_agent_common_prologue(secondary_signer_addresses, secondary_signer_public_key_hashes, is_simulation);
     }
 
-        /// If there is no fee_payer, fee_payer = sender
-    fun unified_prologue_fee_payer_v2(
+    /// If there is no fee_payer, fee_payer = sender
+    fun
+    unified_prologue_fee_payer_v2(
         sender: signer,
         fee_payer: signer,
         txn_sender_public_key: Option<vector<u8>>,
@@ -901,7 +915,8 @@ module supra_framework::transaction_validation {
         }
     }
 
-    fun unified_epilogue_v2(
+    fun
+    unified_epilogue_v2(
         account: signer,
         gas_payer: signer,
         storage_fee_refunded: u64,

@@ -72,52 +72,52 @@ if _descriptor._USE_C_DESCRIPTORS == False:
     _globals["_BLOCK"]._serialized_start = 103
     _globals["_BLOCK"]._serialized_end = 257
     _globals["_TRANSACTION"]._serialized_start = 260
-    _globals["_TRANSACTION"]._serialized_end = 1246
-    _globals["_TRANSACTION_TRANSACTIONTYPE"]._serialized_start = 981
-    _globals["_TRANSACTION_TRANSACTIONTYPE"]._serialized_end = 1234
-    _globals["_BLOCKMETADATATRANSACTION"]._serialized_start = 1249
-    _globals["_BLOCKMETADATATRANSACTION"]._serialized_end = 1439
-    _globals["_GENESISTRANSACTION"]._serialized_start = 1441
-    _globals["_GENESISTRANSACTION"]._serialized_end = 1555
-    _globals["_STATECHECKPOINTTRANSACTION"]._serialized_start = 1557
-    _globals["_STATECHECKPOINTTRANSACTION"]._serialized_end = 1585
-    _globals["_VALIDATORTRANSACTION"]._serialized_start = 1588
-    _globals["_VALIDATORTRANSACTION"]._serialized_end = 2990
-    _globals["_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE"]._serialized_start = 1827
-    _globals["_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE"]._serialized_end = 2791
+    _globals["_TRANSACTION"]._serialized_end = 1343
+    _globals["_TRANSACTION_TRANSACTIONTYPE"]._serialized_start = 1046
+    _globals["_TRANSACTION_TRANSACTIONTYPE"]._serialized_end = 1331
+    _globals["_BLOCKMETADATATRANSACTION"]._serialized_start = 1346
+    _globals["_BLOCKMETADATATRANSACTION"]._serialized_end = 1536
+    _globals["_GENESISTRANSACTION"]._serialized_start = 1538
+    _globals["_GENESISTRANSACTION"]._serialized_end = 1652
+    _globals["_STATECHECKPOINTTRANSACTION"]._serialized_start = 1654
+    _globals["_STATECHECKPOINTTRANSACTION"]._serialized_end = 1682
+    _globals["_VALIDATORTRANSACTION"]._serialized_start = 1685
+    _globals["_VALIDATORTRANSACTION"]._serialized_end = 3087
+    _globals["_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE"]._serialized_start = 1924
+    _globals["_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE"]._serialized_end = 2888
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS"
-    ]._serialized_start = 1966
+    ]._serialized_start = 2063
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS"
-    ]._serialized_end = 2491
+    ]._serialized_end = 2588
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS_JWK"
-    ]._serialized_start = 2125
+    ]._serialized_start = 2222
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS_JWK"
-    ]._serialized_end = 2491
+    ]._serialized_end = 2588
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS_JWK_RSA"
-    ]._serialized_start = 2367
+    ]._serialized_start = 2464
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS_JWK_RSA"
-    ]._serialized_end = 2433
+    ]._serialized_end = 2530
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS_JWK_UNSUPPORTEDJWK"
-    ]._serialized_start = 2435
+    ]._serialized_start = 2532
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDPROVIDERJWKS_JWK_UNSUPPORTEDJWK"
-    ]._serialized_end = 2480
+    ]._serialized_end = 2577
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDAGGREGATESIGNATURE"
-    ]._serialized_start = 2493
+    ]._serialized_start = 2590
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_EXPORTEDAGGREGATESIGNATURE"
-    ]._serialized_end = 2558
+    ]._serialized_end = 2655
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_QUORUMCERTIFIEDUPDATE"
-    ]._serialized_start = 2561
+    ]._serialized_start = 2658
     _globals[
         "_VALIDATORTRANSACTION_OBSERVEDJWKUPDATE_QUORUMCERTIFIEDUPDATE"
     ]._serialized_end = 2888

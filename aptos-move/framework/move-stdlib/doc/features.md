@@ -141,6 +141,24 @@ return true.
 -  [Function `is_account_abstraction_enabled`](#0x1_features_is_account_abstraction_enabled)
 -  [Function `get_bulletproofs_batch_feature`](#0x1_features_get_bulletproofs_batch_feature)
 -  [Function `bulletproofs_batch_enabled`](#0x1_features_bulletproofs_batch_enabled)
+-  [Function `get_supra_native_automation_feature`](#0x1_features_get_supra_native_automation_feature)
+-  [Function `supra_native_automation_enabled`](#0x1_features_supra_native_automation_enabled)
+-  [Function `get_supra_eth_trie_feature`](#0x1_features_get_supra_eth_trie_feature)
+-  [Function `supra_eth_trie_enabled`](#0x1_features_supra_eth_trie_enabled)
+-  [Function `get_supra_automation_payload_gas_check_feature`](#0x1_features_get_supra_automation_payload_gas_check_feature)
+-  [Function `supra_automation_payload_gas_check_enabled`](#0x1_features_supra_automation_payload_gas_check_enabled)
+-  [Function `get_supra_private_poll_feature`](#0x1_features_get_supra_private_poll_feature)
+-  [Function `supra_private_poll_enabled`](#0x1_features_supra_private_poll_enabled)
+-  [Function `get_supra_automation_task_sync_feature`](#0x1_features_get_supra_automation_task_sync_feature)
+-  [Function `supra_automation_task_sync_enabled`](#0x1_features_supra_automation_task_sync_enabled)
+-  [Function `get_supra_count_failed_proposals_feature`](#0x1_features_get_supra_count_failed_proposals_feature)
+-  [Function `supra_count_failed_proposals_enabled`](#0x1_features_supra_count_failed_proposals_enabled)
+-  [Function `get_supra_rlp_feature`](#0x1_features_get_supra_rlp_feature)
+-  [Function `supra_rlp_enabled`](#0x1_features_supra_rlp_enabled)
+-  [Function `get_supra_delegation_pool_identity_feature`](#0x1_features_get_supra_delegation_pool_identity_feature)
+-  [Function `supra_delegation_pool_identity_enabled`](#0x1_features_supra_delegation_pool_identity_enabled)
+-  [Function `get_supra_automation_v2_feature`](#0x1_features_get_supra_automation_v2_feature)
+-  [Function `supra_automation_v2_enabled`](#0x1_features_supra_automation_v2_enabled)
 -  [Function `is_derivable_account_abstraction_enabled`](#0x1_features_is_derivable_account_abstraction_enabled)
 -  [Function `is_domain_account_abstraction_enabled`](#0x1_features_is_domain_account_abstraction_enabled)
 -  [Function `get_new_accounts_default_to_fa_store_feature`](#0x1_features_get_new_accounts_default_to_fa_store_feature)
@@ -171,7 +189,6 @@ return true.
     -  [Function `partial_governance_voting_enabled`](#@Specification_1_partial_governance_voting_enabled)
     -  [Function `module_event_enabled`](#@Specification_1_module_event_enabled)
     -  [Function `abort_if_multisig_payload_mismatch_enabled`](#@Specification_1_abort_if_multisig_payload_mismatch_enabled)
-    -  [Function `is_default_account_resource_enabled`](#@Specification_1_is_default_account_resource_enabled)
     -  [Function `is_default_account_resource_enabled`](#@Specification_1_is_default_account_resource_enabled)
     -  [Function `change_feature_flags_internal`](#@Specification_1_change_feature_flags_internal)
     -  [Function `change_feature_flags_for_next_epoch`](#@Specification_1_change_feature_flags_for_next_epoch)
@@ -276,18 +293,6 @@ Lifetime: transient
 
 
 
-<a id="0x1_features_ACCOUNT_ABSTRACTION"></a>
-
-Whether the account abstraction is enabled.
-
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_ACCOUNT_ABSTRACTION">ACCOUNT_ABSTRACTION</a>: u64 = 85;
-</code></pre>
-
-
-
 <a id="0x1_features_AGGREGATOR_V2_IS_AT_LEAST_API"></a>
 
 
@@ -367,17 +372,6 @@ Lifetime: transient
 
 
 
-<a id="0x1_features_BULLETPROOFS_BATCH_NATIVES"></a>
-
-Whether the batch Bulletproofs native functions are available. This is needed because of the introduction of a new native function.
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_BULLETPROOFS_BATCH_NATIVES">BULLETPROOFS_BATCH_NATIVES</a>: u64 = 87;
-</code></pre>
-
-
-
 <a id="0x1_features_BULLETPROOFS_NATIVES"></a>
 
 Whether the Bulletproofs zero-knowledge range proof module is enabled, and the related native function is
@@ -395,17 +389,7 @@ Lifetime: transient
 Whether to calculate the transaction fee for distribution.
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION">CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION</a>: u64 = 96;
-</code></pre>
-
-
-
-<a id="0x1_features_CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION"></a>
-
-Whether to calculate the transaction fee for distribution.
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION">CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION</a>: u64 = 96;
+<pre><code><b>const</b> <a href="features.md#0x1_features_CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION">CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION</a>: u64 = 105;
 </code></pre>
 
 
@@ -454,18 +438,8 @@ Lifetime: transient
 
 
 
-<a id="0x1_features_COLLECTION_OWNER"></a>
-
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_COLLECTION_OWNER">COLLECTION_OWNER</a>: u64 = 79;
-</code></pre>
-
-
-
 <a id="0x1_features_COLLECT_AND_DISTRIBUTE_GAS_FEES"></a>
 
-Deprecated feature
 Deprecated feature
 Lifetime: transient
 
@@ -527,17 +501,7 @@ Lifetime: transient
 Lifetime: transient
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_DEFAULT_ACCOUNT_RESOURCE">DEFAULT_ACCOUNT_RESOURCE</a>: u64 = 91;
-</code></pre>
-
-
-
-<a id="0x1_features_DEFAULT_ACCOUNT_RESOURCE"></a>
-
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_DEFAULT_ACCOUNT_RESOURCE">DEFAULT_ACCOUNT_RESOURCE</a>: u64 = 91;
+<pre><code><b>const</b> <a href="features.md#0x1_features_DEFAULT_ACCOUNT_RESOURCE">DEFAULT_ACCOUNT_RESOURCE</a>: u64 = 100;
 </code></pre>
 
 
@@ -593,19 +557,7 @@ Whether the account abstraction is enabled.
 Lifetime: transient
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_DERIVABLE_ACCOUNT_ABSTRACTION">DERIVABLE_ACCOUNT_ABSTRACTION</a>: u64 = 88;
-</code></pre>
-
-
-
-<a id="0x1_features_DERIVABLE_ACCOUNT_ABSTRACTION"></a>
-
-Whether the account abstraction is enabled.
-
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_DERIVABLE_ACCOUNT_ABSTRACTION">DERIVABLE_ACCOUNT_ABSTRACTION</a>: u64 = 88;
+<pre><code><b>const</b> <a href="features.md#0x1_features_DERIVABLE_ACCOUNT_ABSTRACTION">DERIVABLE_ACCOUNT_ABSTRACTION</a>: u64 = 97;
 </code></pre>
 
 
@@ -627,17 +579,7 @@ Lifetime: transient
 Whether to distribute transaction fee to validators.
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_DISTRIBUTE_TRANSACTION_FEE">DISTRIBUTE_TRANSACTION_FEE</a>: u64 = 97;
-</code></pre>
-
-
-
-<a id="0x1_features_DISTRIBUTE_TRANSACTION_FEE"></a>
-
-Whether to distribute transaction fee to validators.
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_DISTRIBUTE_TRANSACTION_FEE">DISTRIBUTE_TRANSACTION_FEE</a>: u64 = 97;
+<pre><code><b>const</b> <a href="features.md#0x1_features_DISTRIBUTE_TRANSACTION_FEE">DISTRIBUTE_TRANSACTION_FEE</a>: u64 = 106;
 </code></pre>
 
 
@@ -699,20 +641,7 @@ Lifetime: transient
 We do not expect use from Move, so for now only for documentation purposes here
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_ENABLE_FUNCTION_VALUES">ENABLE_FUNCTION_VALUES</a>: u64 = 89;
-</code></pre>
-
-
-
-<a id="0x1_features_ENABLE_FUNCTION_VALUES"></a>
-
-Whether function values are enabled.
-Lifetime: transient
-
-We do not expect use from Move, so for now only for documentation purposes here
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_ENABLE_FUNCTION_VALUES">ENABLE_FUNCTION_VALUES</a>: u64 = 89;
+<pre><code><b>const</b> <a href="features.md#0x1_features_ENABLE_FUNCTION_VALUES">ENABLE_FUNCTION_VALUES</a>: u64 = 98;
 </code></pre>
 
 
@@ -758,23 +687,7 @@ For simplicity, it is represented by type <code>ProviderJWKs</code> (used to rep
 in JWK Consensus messages, in validator transactions, and in Move.
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_JWK_CONSENSUS_PER_KEY_MODE">JWK_CONSENSUS_PER_KEY_MODE</a>: u64 = 92;
-</code></pre>
-
-
-
-<a id="0x1_features_JWK_CONSENSUS_PER_KEY_MODE"></a>
-
-If enabled, JWK consensus should run in per-key mode, where:
-- The consensus is for key-level updates
-(e.g., "issuer A key 1 should be deleted", "issuer B key 2 should be upserted");
-- transaction type <code>ValidatorTransaction::ObservedJWKUpdate</code> is reused;
-- while a key-level update is mostly represented by a new type <code>KeyLevelUpdate</code> locally,
-For simplicity, it is represented by type <code>ProviderJWKs</code> (used to represent issuer-level update)
-in JWK Consensus messages, in validator transactions, and in Move.
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_JWK_CONSENSUS_PER_KEY_MODE">JWK_CONSENSUS_PER_KEY_MODE</a>: u64 = 92;
+<pre><code><b>const</b> <a href="features.md#0x1_features_JWK_CONSENSUS_PER_KEY_MODE">JWK_CONSENSUS_PER_KEY_MODE</a>: u64 = 101;
 </code></pre>
 
 
@@ -901,29 +814,13 @@ Lifetime: transient
 
 
 
-<a id="0x1_features_NATIVE_MEMORY_OPERATIONS"></a>
+<a id="0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_STORE"></a>
+
+Whether new accounts default to the Fungible Asset store.
+Lifetime: transient
 
 
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_NATIVE_MEMORY_OPERATIONS">NATIVE_MEMORY_OPERATIONS</a>: u64 = 80;
-</code></pre>
-
-
-
-<a id="0x1_features_NATIVE_MEMORY_OPERATIONS"></a>
-
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_NATIVE_MEMORY_OPERATIONS">NATIVE_MEMORY_OPERATIONS</a>: u64 = 80;
-</code></pre>
-
-
-
-<a id="0x1_features_NATIVE_MEMORY_OPERATIONS"></a>
-
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_NATIVE_MEMORY_OPERATIONS">NATIVE_MEMORY_OPERATIONS</a>: u64 = 80;
+<pre><code><b>const</b> <a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_STORE</a>: u64 = 99;
 </code></pre>
 
 
@@ -933,18 +830,7 @@ Lifetime: transient
 Lifetime: transient
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE</a>: u64 = 64;
-</code></pre>
-
-
-
-<a id="0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_STORE"></a>
-
-Whether new accounts default to the Fungible Asset store.
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_STORE</a>: u64 = 90;
+<pre><code><b>const</b> <a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE</a>: u64 = 64;
 </code></pre>
 
 
@@ -996,18 +882,7 @@ Whether orderless transactions are enabled.
 Lifetime: transient
 
 
-<pre><code><b>const</b> <a href="features.md#0x1_features_ORDERLESS_TRANSACTIONS">ORDERLESS_TRANSACTIONS</a>: u64 = 94;
-</code></pre>
-
-
-
-<a id="0x1_features_ORDERLESS_TRANSACTIONS"></a>
-
-Whether orderless transactions are enabled.
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_ORDERLESS_TRANSACTIONS">ORDERLESS_TRANSACTIONS</a>: u64 = 94;
+<pre><code><b>const</b> <a href="features.md#0x1_features_ORDERLESS_TRANSACTIONS">ORDERLESS_TRANSACTIONS</a>: u64 = 103;
 </code></pre>
 
 
@@ -1030,15 +905,6 @@ Lifetime: transient
 
 
 <pre><code><b>const</b> <a href="features.md#0x1_features_PERIODICAL_REWARD_RATE_DECREASE">PERIODICAL_REWARD_RATE_DECREASE</a>: u64 = 16;
-</code></pre>
-
-
-
-<a id="0x1_features_PERMISSIONED_SIGNER"></a>
-
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_PERMISSIONED_SIGNER">PERMISSIONED_SIGNER</a>: u64 = 84;
 </code></pre>
 
 
@@ -1313,20 +1179,6 @@ Lifetime: transient
 
 
 
-<a id="0x1_features_TRANSACTION_SIMULATION_ENHANCEMENT"></a>
-
-Whether the simulation enhancement is enabled. This enables the simulation without an authentication check,
-the sponsored transaction simulation when the fee payer is set to 0x0, and the multisig transaction
-simulation consistnet with the execution.
-
-Lifetime: transient
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_TRANSACTION_SIMULATION_ENHANCEMENT">TRANSACTION_SIMULATION_ENHANCEMENT</a>: u64 = 78;
-</code></pre>
-
-
-
 <a id="0x1_features_TREAT_FRIEND_AS_PRIVATE"></a>
 
 Whether during upgrade compatibility checking, friend functions should be treated similar like
@@ -1355,19 +1207,6 @@ Lifetime: transient
 
 
 <pre><code><b>const</b> <a href="features.md#0x1_features_VM_BINARY_FORMAT_V7">VM_BINARY_FORMAT_V7</a>: u64 = 40;
-</code></pre>
-
-
-
-<a id="0x1_features_VM_BINARY_FORMAT_V8"></a>
-
-Whether bytecode version v8 is enabled.
-Lifetime: transient
-
-We do not expect use from Move, so for now only for documentation purposes here
-
-
-<pre><code><b>const</b> <a href="features.md#0x1_features_VM_BINARY_FORMAT_V8">VM_BINARY_FORMAT_V8</a>: u64 = 86;
 </code></pre>
 
 
@@ -1582,11 +1421,8 @@ We do not expect use from Move, so for now only for documentation purposes here
 ## Function `get_collect_and_distribute_gas_fees_feature`
 
 Deprecated feature
-Deprecated feature
 
 
-<pre><code>#[deprecated]
-<b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_collect_and_distribute_gas_fees_feature">get_collect_and_distribute_gas_fees_feature</a>(): u64
 <pre><code>#[deprecated]
 <b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_collect_and_distribute_gas_fees_feature">get_collect_and_distribute_gas_fees_feature</a>(): u64
 </code></pre>
@@ -1597,9 +1433,7 @@ Deprecated feature
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_collect_and_distribute_gas_fees_feature">get_collect_and_distribute_gas_fees_feature</a>(): u64 {
-    <a href="features.md#0x1_features_COLLECT_AND_DISTRIBUTE_GAS_FEES">COLLECT_AND_DISTRIBUTE_GAS_FEES</a>
-}
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_collect_and_distribute_gas_fees_feature">get_collect_and_distribute_gas_fees_feature</a>(): u64 { <a href="features.md#0x1_features_COLLECT_AND_DISTRIBUTE_GAS_FEES">COLLECT_AND_DISTRIBUTE_GAS_FEES</a> }
 </code></pre>
 
 
@@ -1614,8 +1448,6 @@ Deprecated feature
 
 <pre><code>#[deprecated]
 <b>public</b> <b>fun</b> <a href="features.md#0x1_features_collect_and_distribute_gas_fees">collect_and_distribute_gas_fees</a>(): bool
-<pre><code>#[deprecated]
-<b>public</b> <b>fun</b> <a href="features.md#0x1_features_collect_and_distribute_gas_fees">collect_and_distribute_gas_fees</a>(): bool
 </code></pre>
 
 
@@ -1624,8 +1456,6 @@ Deprecated feature
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_collect_and_distribute_gas_fees">collect_and_distribute_gas_fees</a>(): bool {
-    <b>false</b>
 <pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_collect_and_distribute_gas_fees">collect_and_distribute_gas_fees</a>(): bool {
     <b>false</b>
 }
@@ -4005,6 +3835,439 @@ Deprecated feature
 
 </details>
 
+<a id="0x1_features_get_supra_native_automation_feature"></a>
+
+## Function `get_supra_native_automation_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_native_automation_feature">get_supra_native_automation_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_native_automation_feature">get_supra_native_automation_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_NATIVE_AUTOMATION">SUPRA_NATIVE_AUTOMATION</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_native_automation_enabled"></a>
+
+## Function `supra_native_automation_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_native_automation_enabled">supra_native_automation_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_native_automation_enabled">supra_native_automation_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_NATIVE_AUTOMATION">SUPRA_NATIVE_AUTOMATION</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_eth_trie_feature"></a>
+
+## Function `get_supra_eth_trie_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_eth_trie_feature">get_supra_eth_trie_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_eth_trie_feature">get_supra_eth_trie_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_ETH_TRIE">SUPRA_ETH_TRIE</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_eth_trie_enabled"></a>
+
+## Function `supra_eth_trie_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_eth_trie_enabled">supra_eth_trie_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_eth_trie_enabled">supra_eth_trie_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_ETH_TRIE">SUPRA_ETH_TRIE</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_automation_payload_gas_check_feature"></a>
+
+## Function `get_supra_automation_payload_gas_check_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_payload_gas_check_feature">get_supra_automation_payload_gas_check_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_payload_gas_check_feature">get_supra_automation_payload_gas_check_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK">SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_automation_payload_gas_check_enabled"></a>
+
+## Function `supra_automation_payload_gas_check_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_payload_gas_check_enabled">supra_automation_payload_gas_check_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_payload_gas_check_enabled">supra_automation_payload_gas_check_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK">SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_private_poll_feature"></a>
+
+## Function `get_supra_private_poll_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_private_poll_feature">get_supra_private_poll_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_private_poll_feature">get_supra_private_poll_feature</a>(): u64 {
+    <a href="features.md#0x1_features_PRIVATE_POLL">PRIVATE_POLL</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_private_poll_enabled"></a>
+
+## Function `supra_private_poll_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_private_poll_enabled">supra_private_poll_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_private_poll_enabled">supra_private_poll_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_PRIVATE_POLL">PRIVATE_POLL</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_automation_task_sync_feature"></a>
+
+## Function `get_supra_automation_task_sync_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_task_sync_feature">get_supra_automation_task_sync_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_task_sync_feature">get_supra_automation_task_sync_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_AUTOMATION_TASK_SYNC">SUPRA_AUTOMATION_TASK_SYNC</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_automation_task_sync_enabled"></a>
+
+## Function `supra_automation_task_sync_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_task_sync_enabled">supra_automation_task_sync_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_task_sync_enabled">supra_automation_task_sync_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_AUTOMATION_TASK_SYNC">SUPRA_AUTOMATION_TASK_SYNC</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_count_failed_proposals_feature"></a>
+
+## Function `get_supra_count_failed_proposals_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_count_failed_proposals_feature">get_supra_count_failed_proposals_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_count_failed_proposals_feature">get_supra_count_failed_proposals_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_COUNT_FAILED_PROPOSALS">SUPRA_COUNT_FAILED_PROPOSALS</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_count_failed_proposals_enabled"></a>
+
+## Function `supra_count_failed_proposals_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_count_failed_proposals_enabled">supra_count_failed_proposals_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_count_failed_proposals_enabled">supra_count_failed_proposals_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_COUNT_FAILED_PROPOSALS">SUPRA_COUNT_FAILED_PROPOSALS</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_rlp_feature"></a>
+
+## Function `get_supra_rlp_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_rlp_feature">get_supra_rlp_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_rlp_feature">get_supra_rlp_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_RLP_ENCODE">SUPRA_RLP_ENCODE</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_rlp_enabled"></a>
+
+## Function `supra_rlp_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_rlp_enabled">supra_rlp_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_rlp_enabled">supra_rlp_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_RLP_ENCODE">SUPRA_RLP_ENCODE</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_delegation_pool_identity_feature"></a>
+
+## Function `get_supra_delegation_pool_identity_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_delegation_pool_identity_feature">get_supra_delegation_pool_identity_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_delegation_pool_identity_feature">get_supra_delegation_pool_identity_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_DELEGATION_POOL_IDENTITY">SUPRA_DELEGATION_POOL_IDENTITY</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_delegation_pool_identity_enabled"></a>
+
+## Function `supra_delegation_pool_identity_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_delegation_pool_identity_enabled">supra_delegation_pool_identity_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_delegation_pool_identity_enabled">supra_delegation_pool_identity_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_DELEGATION_POOL_IDENTITY">SUPRA_DELEGATION_POOL_IDENTITY</a>)
+    // We could <b>update</b> supra_delegation_pool_identity_enabled <b>to</b> always <b>return</b> <b>true</b> after the feature <b>has</b> been rolled out.
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_get_supra_automation_v2_feature"></a>
+
+## Function `get_supra_automation_v2_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_v2_feature">get_supra_automation_v2_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_supra_automation_v2_feature">get_supra_automation_v2_feature</a>(): u64 {
+    <a href="features.md#0x1_features_SUPRA_AUTOMATION_V2">SUPRA_AUTOMATION_V2</a>
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_features_supra_automation_v2_enabled"></a>
+
+## Function `supra_automation_v2_enabled`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_v2_enabled">supra_automation_v2_enabled</a>(): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_supra_automation_v2_enabled">supra_automation_v2_enabled</a>(): bool <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+    <a href="features.md#0x1_features_is_enabled">is_enabled</a>(<a href="features.md#0x1_features_SUPRA_AUTOMATION_V2">SUPRA_AUTOMATION_V2</a>)
+}
+</code></pre>
+
+
+
+</details>
+
 <a id="0x1_features_is_derivable_account_abstraction_enabled"></a>
 
 ## Function `is_derivable_account_abstraction_enabled`
@@ -4432,7 +4695,7 @@ Enable and disable features for the next epoch.
         <a href="features.md#0x1_features">features</a>
     } <b>else</b> <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)) {
         // Otherwise, <b>use</b> the currently effective feature flag vec <b>as</b> the baseline, <b>if</b> it <b>exists</b>.
-        <b>borrow_global</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std).<a href="features.md#0x1_features">features</a>
+        <a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a>
     } <b>else</b> {
         // Otherwise, <b>use</b> an empty feature vec.
         <a href="vector.md#0x1_vector">vector</a>[]
@@ -4472,7 +4735,6 @@ who have permission to set the flag that's checked in <code>extract()</code>.
     <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a>&gt;(@std)) {
         <b>let</b> <a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a> { <a href="features.md#0x1_features">features</a> } = <b>move_from</b>&lt;<a href="features.md#0x1_features_PendingFeatures">PendingFeatures</a>&gt;(@std);
         <b>if</b> (<b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)) {
-            <a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a> = <a href="features.md#0x1_features">features</a>;
             <a href="features.md#0x1_features_Features">Features</a>[@std].<a href="features.md#0x1_features">features</a> = <a href="features.md#0x1_features">features</a>;
         } <b>else</b> {
             <b>move_to</b>(framework, <a href="features.md#0x1_features_Features">Features</a> { <a href="features.md#0x1_features">features</a> })
@@ -4595,13 +4857,6 @@ Helper to check whether a feature flag is enabled.
     disable.for_each(|feature| {
         <a href="features.md#0x1_features_set">set</a>(<a href="features.md#0x1_features">features</a>, feature, <b>false</b>);
     });
-<pre><code><b>fun</b> <a href="features.md#0x1_features_apply_diff">apply_diff</a>(<a href="features.md#0x1_features">features</a>: &<b>mut</b> <a href="vector.md#0x1_vector">vector</a>&lt;u8&gt;, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;) {
-    enable.for_each(|feature| {
-        <a href="features.md#0x1_features_set">set</a>(<a href="features.md#0x1_features">features</a>, feature, <b>true</b>);
-    });
-    disable.for_each(|feature| {
-        <a href="features.md#0x1_features_set">set</a>(<a href="features.md#0x1_features">features</a>, feature, <b>false</b>);
-    });
 }
 </code></pre>
 
@@ -4661,7 +4916,6 @@ Helper to check whether a feature flag is enabled.
 
 
 <pre><code><b>pragma</b> bv = b"0";
-<pre><code><b>pragma</b> bv = b"0";
 </code></pre>
 
 
@@ -4687,7 +4941,6 @@ Helper to check whether a feature flag is enabled.
 
 
 
-<pre><code><b>pragma</b> bv = b"0";
 <pre><code><b>pragma</b> bv = b"0";
 </code></pre>
 
@@ -4770,44 +5023,11 @@ Helper to check whether a feature flag is enabled.
 
 
 
-<a id="0x1_features_spec_new_accounts_default_to_fa_apt_store_enabled"></a>
+<a id="0x1_features_spec_new_accounts_default_to_fa_supra_store_enabled"></a>
 
 
-<pre><code><b>fun</b> <a href="features.md#0x1_features_spec_new_accounts_default_to_fa_apt_store_enabled">spec_new_accounts_default_to_fa_apt_store_enabled</a>(): bool {
-   <a href="features.md#0x1_features_spec_is_enabled">spec_is_enabled</a>(<a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE</a>)
-}
-</code></pre>
-
-
-
-
-<a id="0x1_features_spec_new_accounts_default_to_fa_store_enabled"></a>
-
-
-<pre><code><b>fun</b> <a href="features.md#0x1_features_spec_new_accounts_default_to_fa_store_enabled">spec_new_accounts_default_to_fa_store_enabled</a>(): bool {
-   <a href="features.md#0x1_features_spec_is_enabled">spec_is_enabled</a>(<a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_STORE</a>)
-}
-</code></pre>
-
-
-
-
-<a id="0x1_features_spec_simulation_enhancement_enabled"></a>
-
-
-<pre><code><b>fun</b> <a href="features.md#0x1_features_spec_simulation_enhancement_enabled">spec_simulation_enhancement_enabled</a>(): bool {
-   <a href="features.md#0x1_features_spec_is_enabled">spec_is_enabled</a>(<a href="features.md#0x1_features_TRANSACTION_SIMULATION_ENHANCEMENT">TRANSACTION_SIMULATION_ENHANCEMENT</a>)
-}
-</code></pre>
-
-
-
-
-<a id="0x1_features_spec_new_accounts_default_to_fa_apt_store_enabled"></a>
-
-
-<pre><code><b>fun</b> <a href="features.md#0x1_features_spec_new_accounts_default_to_fa_apt_store_enabled">spec_new_accounts_default_to_fa_apt_store_enabled</a>(): bool {
-   <a href="features.md#0x1_features_spec_is_enabled">spec_is_enabled</a>(<a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE</a>)
+<pre><code><b>fun</b> <a href="features.md#0x1_features_spec_new_accounts_default_to_fa_supra_store_enabled">spec_new_accounts_default_to_fa_supra_store_enabled</a>(): bool {
+   <a href="features.md#0x1_features_spec_is_enabled">spec_is_enabled</a>(<a href="features.md#0x1_features_NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE">NEW_ACCOUNTS_DEFAULT_TO_FA_SUPRA_STORE</a>)
 }
 </code></pre>
 
@@ -4849,24 +5069,6 @@ Helper to check whether a feature flag is enabled.
 <pre><code><b>pragma</b> opaque;
 <b>aborts_if</b> [abstract] <b>false</b>;
 <b>ensures</b> [abstract] result == <a href="features.md#0x1_features_spec_abort_if_multisig_payload_mismatch_enabled">spec_abort_if_multisig_payload_mismatch_enabled</a>();
-</code></pre>
-
-
-
-<a id="@Specification_1_is_default_account_resource_enabled"></a>
-
-### Function `is_default_account_resource_enabled`
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_is_default_account_resource_enabled">is_default_account_resource_enabled</a>(): bool
-</code></pre>
-
-
-
-
-<pre><code><b>pragma</b> opaque;
-<b>aborts_if</b> [abstract] <b>false</b>;
-<b>ensures</b> [abstract] result == <a href="features.md#0x1_features_spec_is_enabled">spec_is_enabled</a>(<a href="features.md#0x1_features_DEFAULT_ACCOUNT_RESOURCE">DEFAULT_ACCOUNT_RESOURCE</a>);
 </code></pre>
 
 
@@ -4931,9 +5133,6 @@ Helper to check whether a feature flag is enabled.
 
 
 <pre><code><b>fun</b> <a href="features.md#0x1_features_spec_contains">spec_contains</a>(<a href="features.md#0x1_features">features</a>: <a href="vector.md#0x1_vector">vector</a>&lt;u8&gt;, feature: u64): bool {
-   ((int2bv(
-       (((1 <b>as</b> u8) &lt;&lt; ((feature % (8 <b>as</b> u64)) <b>as</b> u64)) <b>as</b> u8)
-   ) <b>as</b> u8) & <a href="features.md#0x1_features">features</a>[feature / 8] <b>as</b> u8) &gt; (0 <b>as</b> u8)
    ((int2bv(
        (((1 <b>as</b> u8) &lt;&lt; ((feature % (8 <b>as</b> u64)) <b>as</b> u64)) <b>as</b> u8)
    ) <b>as</b> u8) & <a href="features.md#0x1_features">features</a>[feature / 8] <b>as</b> u8) &gt; (0 <b>as</b> u8)
@@ -5047,7 +5246,6 @@ Helper to check whether a feature flag is enabled.
 
 
 <pre><code><b>pragma</b> bv = b"0";
-<pre><code><b>pragma</b> bv = b"0";
 <b>aborts_if</b> <b>false</b>;
 <b>ensures</b> feature / 8 &lt; len(<a href="features.md#0x1_features">features</a>);
 <b>ensures</b> <b>include</b> == <a href="features.md#0x1_features_spec_contains">spec_contains</a>(<a href="features.md#0x1_features">features</a>, feature);
@@ -5066,7 +5264,6 @@ Helper to check whether a feature flag is enabled.
 
 
 
-<pre><code><b>pragma</b> bv = b"0";
 <pre><code><b>pragma</b> bv = b"0";
 <b>aborts_if</b> <b>false</b>;
 <b>ensures</b> result == <a href="features.md#0x1_features_spec_contains">spec_contains</a>(<a href="features.md#0x1_features">features</a>, feature);

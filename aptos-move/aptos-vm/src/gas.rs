@@ -11,7 +11,7 @@ use aptos_gas_schedule::{
 };
 use aptos_logger::{enabled, Level};
 use aptos_memory_usage_tracker::MemoryTrackedGasMeter;
-use aptos_types::on_chain_config::{ConfigStorage, FeatureFlag, Features, GasSchedule, GasScheduleV2, OnChainConfig};
+use aptos_types::on_chain_config::{FeatureFlag, Features};
 use aptos_types::transaction::{RawTransaction, TransactionPayload};
 use aptos_types::transaction::automation::RegistrationParams;
 use aptos_vm_logging::{log_schema::AdapterLogSchema, speculative_log, speculative_warn};
@@ -56,7 +56,7 @@ pub (crate) struct TransactionGasCheckInvariants {
     pub(crate) max_gas_amount: Gas,
     pub(crate) transaction_size: NumBytes,
     pub(crate) script_size: NumBytes,
-    pub(crate) is_keyless: bool,    
+    pub(crate) is_keyless: bool,
 }
 
 pub(crate) fn check_gas(
@@ -76,7 +76,7 @@ pub(crate) fn check_gas(
         script_size: txn_metadata.script_size,
         is_keyless: txn_metadata.is_keyless(),
     };
-    check_gas_for_parameters(gas_params, gas_feature_version, features, txn_gas_metadata, is_approved_gov_script, log_context)?;
+    check_gas_for_parameters(gas_params, gas_feature_version, txn_gas_metadata, is_approved_gov_script, log_context)?;
     let txn_gas_params = &gas_params.vm.txn;
     // If this is for a potentially new account, ensure there's enough gas to cover storage, execution, and IO costs.
     // TODO: This isn't the cleaning code, thus we localize it just here and will remove it
@@ -147,7 +147,6 @@ pub(crate) fn check_automation_task_gas(
     let results = check_gas_for_parameters(
         gas_params,
         gas_feature_version,
-        features,
         gas_check_invariants,
         false,
         log_context,
@@ -188,7 +187,6 @@ pub(crate) fn check_automation_task_gas(
 pub(crate) fn check_gas_for_parameters(
     gas_params: &AptosGasParameters,
     gas_feature_version: u64,
-    features: &Features,
     txn_gas_metadata: TransactionGasCheckInvariants,
     is_approved_gov_script: bool,
     log_context: &AdapterLogSchema,

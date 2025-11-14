@@ -363,6 +363,11 @@ impl AptosVM {
         self.move_vm.env.clone()
     }
 
+    #[inline(always)]
+    pub fn environment_ref(&self) -> &AptosEnvironment {
+        &self.move_vm.env
+    }
+
     /// Sets execution concurrency level when invoked the first time.
     pub fn set_concurrency_level_once(mut concurrency_level: usize) {
         concurrency_level = min(concurrency_level, num_cpus::get());
@@ -2657,40 +2662,51 @@ impl AptosVM {
         match execution_result {
             Ok(result) => ViewFunctionOutput::new(Ok(result), gas_used),
             Err(e) => {
-                let vm_status = e.clone().into_vm_status();
-                match vm_status {
-                    VMStatus::MoveAbort(_, _) => {},
-                    _ => {
-                        let message = e
-                            .message()
-                            .map(|m| m.to_string())
-                            .unwrap_or_else(|| e.to_string());
-                        return ViewFunctionOutput::new_error_message(
-                            message,
-                            Some(vm_status.status_code()),
-                            gas_used,
-                        );
-                    },
-                }
-                let txn_status =
-                    TransactionStatus::from_vm_status(vm_status.clone(), vm.features());
-                let execution_status = match txn_status {
-                    TransactionStatus::Keep(status) => status,
-                    _ => ExecutionStatus::MiscellaneousError(Some(vm_status.status_code())),
-                };
-                let status_with_abort_info = vm.inject_abort_info_if_available(
-                    &module_storage,
-                    &traversal_context,
-                    &log_context,
-                    execution_status,
-                );
-                ViewFunctionOutput::new_move_abort_error(
-                    status_with_abort_info,
-                    Some(vm_status.status_code()),
-                    gas_used,
-                )
+                vm.view_function_output_from_error(e, gas_used, &module_storage, &traversal_context, &log_context)
             },
         }
+    }
+
+    pub(crate) fn view_function_output_from_error(&self,
+                                  e: VMError,
+                                  gas_used: u64,
+                                  module_storage: &impl AptosModuleStorage,
+                                  traversal_context: &TraversalContext,
+                                  log_context: &AdapterLogSchema,
+    ) -> ViewFunctionOutput {
+        let vm_status = e.clone().into_vm_status();
+        match vm_status {
+            VMStatus::MoveAbort(_, _) => {},
+            _ => {
+                let message = e
+                    .message()
+                    .map(|m| m.to_string())
+                    .unwrap_or_else(|| e.to_string());
+                return ViewFunctionOutput::new_error_message(
+                    message,
+                    Some(vm_status.status_code()),
+                    gas_used,
+                );
+            },
+        }
+        let txn_status =
+            TransactionStatus::from_vm_status(vm_status.clone(), self.features());
+        let execution_status = match txn_status {
+            TransactionStatus::Keep(status) => status,
+            _ => ExecutionStatus::MiscellaneousError(Some(vm_status.status_code())),
+        };
+        let status_with_abort_info = self.inject_abort_info_if_available(
+            module_storage,
+            traversal_context,
+            log_context,
+            execution_status,
+        );
+        ViewFunctionOutput::new_move_abort_error(
+            status_with_abort_info,
+            Some(vm_status.status_code()),
+            gas_used,
+        )
+
     }
 
     pub(crate) fn gas_used(max_gas_amount: Gas, gas_meter: &impl AptosGasMeter) -> u64 {

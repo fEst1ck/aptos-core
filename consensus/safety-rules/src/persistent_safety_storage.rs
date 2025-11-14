@@ -8,7 +8,7 @@ use crate::{
     Error,
 };
 use aptos_consensus_types::{common::Author, safety_data::SafetyData};
-use aptos_crypto::{ed25519, PrivateKey};
+use aptos_crypto::{bls12381, ed25519, PrivateKey};
 use aptos_global_constants::{CONSENSUS_KEY, OWNER_ACCOUNT, SAFETY_DATA, WAYPOINT};
 use aptos_logger::prelude::*;
 use aptos_secure_storage::{KVStorage, Storage};
@@ -98,9 +98,9 @@ impl PersistentSafetyStorage {
 
     pub fn default_consensus_sk(
         &self,
-    ) -> Result<bls12381::PrivateKey, aptos_secure_storage::Error> {
+    ) -> Result<ed25519::PrivateKey, aptos_secure_storage::Error> {
         self.internal_store
-            .get::<bls12381::PrivateKey>(CONSENSUS_KEY)
+            .get::<ed25519::PrivateKey>(CONSENSUS_KEY)
             .map(|v| v.value)
     }
 
@@ -113,7 +113,7 @@ impl PersistentSafetyStorage {
         if key.public_key() != version {
             return Err(Error::SecureStorageMissingDataError(format!(
                 "Incorrect sk saved for {:?} the expected pk",
-                pk
+                version
             )));
         }
         Ok(key)

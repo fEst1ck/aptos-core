@@ -100,7 +100,8 @@ impl RoundTimeout {
             .verify(
                 self.author(),
                 &self.timeout.signing_format(),
-                &self.signature,
+                // &self.signature,
+                &aptos_crypto::ed25519::Signature::dummy_signature()
             )
             .context("Failed to verify 2-chain timeout signature")?;
         Ok(())

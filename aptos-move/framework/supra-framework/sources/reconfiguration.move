@@ -13,7 +13,6 @@ module supra_framework::reconfiguration {
     use supra_framework::chain_status;
     use supra_framework::reconfiguration_state;
     use supra_framework::storage_gas;
-    use supra_framework::automation_registry;
 
     friend supra_framework::supra_governance;
     friend supra_framework::block;

@@ -1,3 +1,6 @@
+// Copyright (c) Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright (c) 2024 Supra.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -262,7 +265,7 @@ impl<'m> AutomatedTransactionProcessor<'m> {
 
         // Revalidate the transaction.
         let mut prologue_session =
-            unwrap_or_discard!(PrologueSession::new(self.aptos_vm, &txn_data, resolver));
+            PrologueSession::new(self.aptos_vm, &txn_data, resolver);
 
         let exec_result = prologue_session.execute(|session| {
             self.validate_automated_transaction(
@@ -336,7 +339,7 @@ impl<'m> AutomatedTransactionProcessor<'m> {
     pub fn execute_transaction_with_custom_gas_meter<'a, C, G, F>(
         &self,
         resolver: &impl AptosMoveResolver,
-        code_storage: &(impl AptosCodeStorage + BlockSynchronizationKillSwitch),
+        code_storage: &'a C,
         txn: &AutomatedTransaction,
         log_context: &AdapterLogSchema,
         make_gas_meter: F,
@@ -474,7 +477,7 @@ impl<'m> AutomatedTransactionProcessor<'m> {
             txn_data,
             resolver,
             prologue_change_set,
-        )?;
+        );
 
         let status = self.inject_abort_info_if_available(
             module_storage,

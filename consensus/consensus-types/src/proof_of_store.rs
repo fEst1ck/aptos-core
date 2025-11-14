@@ -3,7 +3,7 @@
 
 use crate::{payload::TDataInfo, utils::PayloadTxnsSize};
 use anyhow::{bail, ensure, Context};
-use aptos_crypto::{ed25519, CryptoMaterialError, HashValue};
+use aptos_crypto::{bls12381, ed25519, CryptoMaterialError, HashValue};
 use aptos_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use aptos_types::{
     aggregate_signature::AggregateSignature, ledger_info::SignatureWithStatus,
@@ -190,7 +190,7 @@ impl SignedBatchInfo {
     pub fn new_with_signature(
         batch_info: BatchInfo,
         signer: PeerId,
-        signature: bls12381::Signature,
+        signature: ed25519::Signature,
     ) -> Self {
         Self {
             info: batch_info,
@@ -201,7 +201,7 @@ impl SignedBatchInfo {
 
     #[cfg(any(test, feature = "fuzzing"))]
     pub fn dummy(batch_info: BatchInfo, signer: PeerId) -> Self {
-        Self::new_with_signature(batch_info, signer, bls12381::Signature::dummy_signature())
+        Self::new_with_signature(batch_info, signer, ed25519::Signature::dummy_signature())
     }
 
     pub fn signer(&self) -> PeerId {

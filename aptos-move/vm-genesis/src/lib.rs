@@ -1204,11 +1204,11 @@ fn create_multiple_multisig_accounts_with_schema(
 }
 
 fn create_multisig_accounts_with_balance(
-    
+
     session: &mut SessionExt<impl AptosMoveResolver>,
     module_storage: &impl AptosModuleStorage,
     traversal_context: &mut TraversalContext,
-   
+
     multisig_accounts: &[MultiSigAccountWithBalance],
 ,
 ) {

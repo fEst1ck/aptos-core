@@ -75,8 +75,6 @@ pub struct TransactionMetadata {
     pub is_keyless: bool,
     pub payload_type_reference: PayloadTypeReferenceMeta,
     pub txn_app_hash: Vec<u8>,
-    pub entry_function_payload: Option<EntryFunction>,
-    pub multisig_payload: Option<Multisig>,
 }
 
 impl TransactionMetadata {
@@ -132,36 +130,6 @@ impl TransactionMetadata {
                 &bcs::to_bytes(&txn).expect("Unable to serialize SignedTransaction"),
             )
             .to_vec(),
-            entry_function_payload: if txn.payload().is_multisig() {
-                None
-            } else if let Ok(TransactionExecutableRef::EntryFunction(e)) =
-                txn.payload().executable_ref()
-            {
-                Some(e.clone())
-            } else {
-                None
-            },
-            multisig_payload: match txn.payload() {
-                TransactionPayload::Multisig(m) => Some(m.clone()),
-                TransactionPayload::Payload(TransactionPayloadInner::V1 {
-                    executable,
-                    extra_config:
-                        TransactionExtraConfig::V1 {
-                            multisig_address: Some(multisig_address),
-                            ..
-                        },
-                }) => Some(Multisig {
-                    multisig_address: *multisig_address,
-                    transaction_payload: match executable {
-                        TransactionExecutable::EntryFunction(e) => {
-                            // TODO[Orderless]: How to avoid the clone operation here.
-                            Some(MultisigTransactionPayload::EntryFunction(e.clone()))
-                        },
-                        _ => None,
-                    },
-                }),
-                _ => None,
-            },
         }
     }
 
@@ -267,12 +235,12 @@ impl From<&AutomatedTransaction> for TransactionMetadata {
     fn from(txn: &AutomatedTransaction) -> Self {
         Self {
             sender: txn.sender(),
-            authentication_key: AuthenticationProof::Key(txn.authenticator().to_vec()),
+            authentication_proof: AuthenticationProof::Key(txn.authenticator().to_vec()),
             secondary_signers: vec![],
-            secondary_authentication_keys: vec![],
-            sequence_number: txn.sequence_number(),
+            secondary_authentication_proofs: vec![],
+            replay_protector: txn.replay_protector(),
             fee_payer: None,
-            fee_payer_authentication_key: None,
+            fee_payer_authentication_proof: None,
             max_gas_amount: txn.max_gas_amount().into(),
             gas_unit_price: txn.gas_unit_price().into(),
             transaction_size: (txn.raw_txn_bytes_len() as u64).into(),
