@@ -584,6 +584,90 @@ module supra_framework::coin {
         *allow_upgrades = allowed;
     }
 
+    //
+    //  Aggregatable coin functions
+    //
+
+    /// Creates a new aggregatable coin with value overflowing on `limit`. Note that this function can
+    /// only be called by Supra Framework (0x1) account for now because of `create_aggregator`.
+    public(friend) fun initialize_aggregatable_coin<CoinType>(supra_framework: &signer): AggregatableCoin<CoinType> {
+        let aggregator = aggregator_factory::create_aggregator(supra_framework, MAX_U64);
+        AggregatableCoin<CoinType> {
+            value: aggregator,
+        }
+    }
+
+    /// Returns true if the value of aggregatable coin is zero.
+    public(friend) fun is_aggregatable_coin_zero<CoinType>(coin: &AggregatableCoin<CoinType>): bool {
+        let amount = aggregator::read(&coin.value);
+        amount == 0
+    }
+
+    /// Drains the aggregatable coin, setting it to zero and returning a standard coin.
+    public(friend) fun drain_aggregatable_coin<CoinType>(coin: &mut AggregatableCoin<CoinType>): Coin<CoinType> {
+        spec {
+            // TODO: The data invariant is not properly assumed from CollectedFeesPerBlock.
+            assume aggregator::spec_get_limit(coin.value) == MAX_U64;
+        };
+        let amount = aggregator::read(&coin.value);
+        assert!(amount <= MAX_U64, error::out_of_range(EAGGREGATABLE_COIN_VALUE_TOO_LARGE));
+        spec {
+            update aggregate_supply<CoinType> = aggregate_supply<CoinType> - amount;
+        };
+        aggregator::sub(&mut coin.value, amount);
+        spec {
+            update supply<CoinType> = supply<CoinType> + amount;
+        };
+        Coin<CoinType> {
+            value: (amount as u64),
+        }
+    }
+
+    /// Merges `coin` into aggregatable coin (`dst_coin`).
+    public(friend) fun merge_aggregatable_coin<CoinType>(dst_coin: &mut AggregatableCoin<CoinType>, coin: Coin<CoinType>) {
+        spec {
+            update supply<CoinType> = supply<CoinType> - coin.value;
+        };
+        let Coin { value } = coin;
+        let amount = (value as u128);
+        spec {
+            update aggregate_supply<CoinType> = aggregate_supply<CoinType> + amount;
+        };
+        aggregator::add(&mut dst_coin.value, amount);
+    }
+
+    /// Collects a specified amount of coin form an account into aggregatable coin.
+    public(friend) fun collect_into_aggregatable_coin<CoinType>(
+        account_addr: address,
+        amount: u64,
+        dst_coin: &mut AggregatableCoin<CoinType>,
+    ) acquires CoinStore, CoinConversionMap, CoinInfo, PairedCoinType {
+        // Skip collecting if amount is zero.
+        if (amount == 0) {
+            return
+        };
+
+        let (coin_amount_to_collect, fa_amount_to_collect) = calculate_amount_to_withdraw<CoinType>(
+            account_addr,
+            amount
+        );
+        let coin = if (coin_amount_to_collect != 0) {
+            let coin_store = borrow_global_mut<CoinStore<CoinType>>(account_addr);
+            extract(&mut coin_store.coin, coin_amount_to_collect)
+        } else {
+            zero()
+        };
+        if (fa_amount_to_collect != 0) {
+            let store_addr = primary_fungible_store::primary_store_address(
+                account_addr,
+                option::destroy_some(paired_metadata<CoinType>())
+            );
+            let fa = fungible_asset::withdraw_internal(store_addr, fa_amount_to_collect);
+            merge(&mut coin, fungible_asset_to_coin<CoinType>(fa));
+        };
+        merge_aggregatable_coin(dst_coin, coin);
+    }
+
     inline fun calculate_amount_to_withdraw<CoinType>(
         account_addr: address,
         amount: u64

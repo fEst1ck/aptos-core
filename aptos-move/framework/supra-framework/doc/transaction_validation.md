@@ -17,6 +17,8 @@
 -  [Function `check_for_replay_protection_regular_txn`](#0x1_transaction_validation_check_for_replay_protection_regular_txn)
 -  [Function `check_for_replay_protection_orderless_txn`](#0x1_transaction_validation_check_for_replay_protection_orderless_txn)
 -  [Function `script_prologue`](#0x1_transaction_validation_script_prologue)
+-  [Function `automated_transaction_prologue`](#0x1_transaction_validation_automated_transaction_prologue)
+-  [Function `automated_transaction_prologue_v2`](#0x1_transaction_validation_automated_transaction_prologue_v2)
 -  [Function `script_prologue_extended`](#0x1_transaction_validation_script_prologue_extended)
 -  [Function `multi_agent_script_prologue`](#0x1_transaction_validation_multi_agent_script_prologue)
 -  [Function `multi_agent_script_prologue_extended`](#0x1_transaction_validation_multi_agent_script_prologue_extended)
@@ -45,6 +47,7 @@
     -  [Function `check_for_replay_protection_regular_txn`](#@Specification_1_check_for_replay_protection_regular_txn)
     -  [Function `check_for_replay_protection_orderless_txn`](#@Specification_1_check_for_replay_protection_orderless_txn)
     -  [Function `script_prologue`](#@Specification_1_script_prologue)
+    -  [Function `automated_transaction_prologue`](#@Specification_1_automated_transaction_prologue)
     -  [Function `script_prologue_extended`](#@Specification_1_script_prologue_extended)
     -  [Function `multi_agent_script_prologue`](#@Specification_1_multi_agent_script_prologue)
     -  [Function `multi_agent_script_prologue_extended`](#@Specification_1_multi_agent_script_prologue_extended)
@@ -52,6 +55,8 @@
     -  [Function `fee_payer_script_prologue`](#@Specification_1_fee_payer_script_prologue)
     -  [Function `fee_payer_script_prologue_extended`](#@Specification_1_fee_payer_script_prologue_extended)
     -  [Function `epilogue`](#@Specification_1_epilogue)
+    -  [Function `automated_transaction_epilogue`](#@Specification_1_automated_transaction_epilogue)
+    -  [Function `epilogue_gas_payer_only`](#@Specification_1_epilogue_gas_payer_only)
     -  [Function `epilogue_extended`](#@Specification_1_epilogue_extended)
     -  [Function `epilogue_gas_payer`](#@Specification_1_epilogue_gas_payer)
     -  [Function `epilogue_gas_payer_extended`](#@Specification_1_epilogue_gas_payer_extended)
@@ -258,6 +263,21 @@ Transaction exceeded its allocated max gas
 
 
 
+<a id="0x1_transaction_validation_GST"></a>
+
+
+
+<pre><code><b>const</b> <a href="transaction_validation.md#0x1_transaction_validation_GST">GST</a>: u8 = 2;
+</code></pre>
+
+
+
+<a id="0x1_transaction_validation_UST"></a>
+
+Constants representing automation task type. Should match the values in scope of automation_registry module.
+
+
+<pre><code><b>const</b> <a href="transaction_validation.md#0x1_transaction_validation_UST">UST</a>: u8 = 1;
 <a id="0x1_transaction_validation_MAX_EXPIRATION_TIME_SECONDS_FOR_ORDERLESS_TXNS"></a>
 
 
@@ -851,6 +871,10 @@ Only called during genesis to initialize system resources for this module.
 
 ## Function `automated_transaction_prologue`
 
+Deprecated after Automation V2 release.
+<code>automated_transaction_prologue_v2</code> should be favored instead.
+May be removed at any time after Automation V2 release. Kept for smooth transitioning from
+V1 to V2 on active chains
 
 
 <pre><code><b>fun</b> <a href="transaction_validation.md#0x1_transaction_validation_automated_transaction_prologue">automated_transaction_prologue</a>(sender: <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, task_index: u64, txn_gas_price: u64, txn_max_gas_units: u64, txn_expiration_time: u64, <a href="chain_id.md#0x1_chain_id">chain_id</a>: u8)
@@ -870,6 +894,38 @@ Only called during genesis to initialize system resources for this module.
     txn_expiration_time: u64,
     <a href="chain_id.md#0x1_chain_id">chain_id</a>: u8,
 )  {
+    <a href="transaction_validation.md#0x1_transaction_validation_automated_transaction_prologue_v2">automated_transaction_prologue_v2</a>(sender, task_index, txn_gas_price, txn_max_gas_units, txn_expiration_time, <a href="chain_id.md#0x1_chain_id">chain_id</a>, <a href="transaction_validation.md#0x1_transaction_validation_UST">UST</a>);
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_transaction_validation_automated_transaction_prologue_v2"></a>
+
+## Function `automated_transaction_prologue_v2`
+
+
+
+<pre><code><b>fun</b> <a href="transaction_validation.md#0x1_transaction_validation_automated_transaction_prologue_v2">automated_transaction_prologue_v2</a>(sender: <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, task_index: u64, txn_gas_price: u64, txn_max_gas_units: u64, txn_expiration_time: u64, <a href="chain_id.md#0x1_chain_id">chain_id</a>: u8, task_type: u8)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>fun</b> <a href="transaction_validation.md#0x1_transaction_validation_automated_transaction_prologue_v2">automated_transaction_prologue_v2</a>(
+    sender: <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>,
+    task_index: u64,
+    txn_gas_price: u64,
+    txn_max_gas_units: u64,
+    txn_expiration_time: u64,
+    <a href="chain_id.md#0x1_chain_id">chain_id</a>: u8,
+    task_type: u8,
+)  {
     <b>let</b> gas_payer = <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(&sender);
 
     <b>assert</b>!(<a href="chain_id.md#0x1_chain_id_get">chain_id::get</a>() == <a href="chain_id.md#0x1_chain_id">chain_id</a>, <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_EBAD_CHAIN_ID">PROLOGUE_EBAD_CHAIN_ID</a>));
@@ -879,20 +935,24 @@ Only called during genesis to initialize system resources for this module.
         <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_ETRANSACTION_EXPIRED">PROLOGUE_ETRANSACTION_EXPIRED</a>),
     );
 
-    <b>let</b> max_transaction_fee = txn_gas_price * txn_max_gas_units;
+    // Task is not gas-less/<a href="transaction_validation.md#0x1_transaction_validation_GST">GST</a>,
+    // gas-less automated transactions are not charged so no need <b>to</b> check eligability <b>to</b> pay the gas-fee.
+    <b>if</b> (task_type != <a href="transaction_validation.md#0x1_transaction_validation_GST">GST</a>) {
+        <b>let</b> max_transaction_fee = txn_gas_price * txn_max_gas_units;
 
-    <b>if</b> (<a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_operations_default_to_fa_supra_store_enabled">features::operations_default_to_fa_supra_store_enabled</a>()) {
-        <b>assert</b>!(
-            <a href="supra_account.md#0x1_supra_account_is_fungible_balance_at_least">supra_account::is_fungible_balance_at_least</a>(gas_payer, max_transaction_fee),
-            <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_ECANT_PAY_GAS_DEPOSIT">PROLOGUE_ECANT_PAY_GAS_DEPOSIT</a>)
-        );
-    } <b>else</b> {
-        <b>assert</b>!(
-            <a href="coin.md#0x1_coin_is_balance_at_least">coin::is_balance_at_least</a>&lt;SupraCoin&gt;(gas_payer, max_transaction_fee),
-            <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_ECANT_PAY_GAS_DEPOSIT">PROLOGUE_ECANT_PAY_GAS_DEPOSIT</a>)
-        );
+        <b>if</b> (<a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_operations_default_to_fa_supra_store_enabled">features::operations_default_to_fa_supra_store_enabled</a>()) {
+            <b>assert</b>!(
+                <a href="supra_account.md#0x1_supra_account_is_fungible_balance_at_least">supra_account::is_fungible_balance_at_least</a>(gas_payer, max_transaction_fee),
+                <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_ECANT_PAY_GAS_DEPOSIT">PROLOGUE_ECANT_PAY_GAS_DEPOSIT</a>)
+            );
+        } <b>else</b> {
+            <b>assert</b>!(
+                <a href="coin.md#0x1_coin_is_balance_at_least">coin::is_balance_at_least</a>&lt;SupraCoin&gt;(gas_payer, max_transaction_fee),
+                <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_ECANT_PAY_GAS_DEPOSIT">PROLOGUE_ECANT_PAY_GAS_DEPOSIT</a>)
+            );
+        };
     };
-    <b>assert</b>!(<a href="automation_registry.md#0x1_automation_registry_has_sender_active_task_with_id">automation_registry::has_sender_active_task_with_id</a>(address_of(&sender), task_index),
+    <b>assert</b>!(<a href="automation_registry.md#0x1_automation_registry_has_sender_active_task_with_id_and_type">automation_registry::has_sender_active_task_with_id_and_type</a>(address_of(&sender), task_index, task_type),
         <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_state">error::invalid_state</a>(<a href="transaction_validation.md#0x1_transaction_validation_PROLOGUE_ENO_ACTIVE_AUTOMATED_TASK">PROLOGUE_ENO_ACTIVE_AUTOMATED_TASK</a>))
 }
 </code></pre>
@@ -2039,6 +2099,12 @@ Give some constraints that may abort according to the conditions.
 
 
 
+<a id="@Specification_1_automated_transaction_prologue"></a>
+
+### Function `automated_transaction_prologue`
+
+
+<pre><code><b>fun</b> <a href="transaction_validation.md#0x1_transaction_validation_automated_transaction_prologue">automated_transaction_prologue</a>(sender: <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, task_index: u64, txn_gas_price: u64, txn_max_gas_units: u64, txn_expiration_time: u64, <a href="chain_id.md#0x1_chain_id">chain_id</a>: u8)
 
 <a id="0x1_transaction_validation_can_skip"></a>
 
@@ -2198,6 +2264,38 @@ Skip transaction_fee::burn_fee verification.
 
 <pre><code><b>pragma</b> verify = <b>false</b>;
 <b>include</b> <a href="transaction_validation.md#0x1_transaction_validation_EpilogueGasPayerAbortsIf">EpilogueGasPayerAbortsIf</a> { gas_payer: <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(<a href="account.md#0x1_account">account</a>) };
+</code></pre>
+
+
+
+<a id="@Specification_1_automated_transaction_epilogue"></a>
+
+### Function `automated_transaction_epilogue`
+
+
+<pre><code><b>fun</b> <a href="transaction_validation.md#0x1_transaction_validation_automated_transaction_epilogue">automated_transaction_epilogue</a>(<a href="account.md#0x1_account">account</a>: <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, storage_fee_refunded: u64, txn_gas_price: u64, txn_max_gas_units: u64, gas_units_remaining: u64)
+</code></pre>
+
+
+
+
+<pre><code><b>pragma</b> verify = <b>false</b>;
+</code></pre>
+
+
+
+<a id="@Specification_1_epilogue_gas_payer_only"></a>
+
+### Function `epilogue_gas_payer_only`
+
+
+<pre><code><b>fun</b> <a href="transaction_validation.md#0x1_transaction_validation_epilogue_gas_payer_only">epilogue_gas_payer_only</a>(gas_payer: <b>address</b>, storage_fee_refunded: u64, txn_gas_price: u64, txn_max_gas_units: u64, gas_units_remaining: u64)
+</code></pre>
+
+
+
+
+<pre><code><b>pragma</b> verify = <b>false</b>;
 </code></pre>
 
 

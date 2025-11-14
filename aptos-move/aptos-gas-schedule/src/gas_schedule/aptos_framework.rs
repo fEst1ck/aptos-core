@@ -8,7 +8,7 @@ use crate::{
     gas_feature_versions::{RELEASE_V1_14, RELEASE_V1_8, RELEASE_V1_9_SKIPPED},
     gas_schedule::NativeGasParameters,
     ver::gas_feature_versions::{
-        RELEASE_V1_12, RELEASE_V1_13, RELEASE_V1_16_SUPRA_V1_6_0, RELEASE_V1_23, RELEASE_V1_26, RELEASE_V1_28,
+        RELEASE_V1_12, RELEASE_V1_13, RELEASE_V1_16_SUPRA_V1_6_0, RELEASE_V1_23, RELEASE_V1_26, RELEASE_V1_28, RELEASE_V1_16_SUPRA_V1_7_14
     },
 };
 use aptos_gas_algebra::{
@@ -244,6 +244,9 @@ crate::gas_schedule::macros::define_gas_parameters!(
         [eth_trie_proof_decode_base: InternalGasPerArg, { RELEASE_V1_16_SUPRA_V1_6_0.. => "eth.trie.proof.decode.base" }, 1102],
         [eth_trie_proof_decode_per_byte: InternalGasPerByte, { RELEASE_V1_16_SUPRA_V1_6_0.. => "eth.trie.proof.decode.per_byte"}, 18],
 
+        [rlp_encode_decode_base: InternalGas, { RELEASE_V1_16_SUPRA_V1_7_14.. => "rlp.encode.decode.base" }, 1102],
+        [rlp_encode_decode_per_byte: InternalGasPerByte, { RELEASE_V1_16_SUPRA_V1_7_14.. => "rlp.encode.decode.per_byte"}, 18],
+
         // Bulletproofs gas parameters begin.
         // Generated at time 1683148919.0628748 by `scripts/algebra-gas/update_bulletproofs_gas_params.py` with gas_per_ns=10.0.
         [bulletproofs_base: InternalGas, { 11.. => "bulletproofs.base" }, 11794651],
@@ -362,6 +365,8 @@ crate::gas_schedule::macros::define_gas_parameters!(
         [string_utils_base: InternalGas, { 8.. => "string_utils.format.base" }, 1102],
         [string_utils_per_byte: InternalGasPerByte, { 8.. =>"string_utils.format.per_byte" }, 3],
 
+        // Gas for vector utils. Referenced the value of vector_swap_base from instr.rs
+        [vector_utils_per_swap: InternalGasPerByte, { RELEASE_V1_16_SUPRA_V1_7_14.. => "vector_utils.per_swap" }, 1102],
         [randomness_fetch_and_inc_counter: InternalGas, { RELEASE_V1_23.. => "randomness.fetch_and_inc_counter" }, 1],
     ]
 );

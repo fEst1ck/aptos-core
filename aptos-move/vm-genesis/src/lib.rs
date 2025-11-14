@@ -316,7 +316,7 @@ pub fn encode_genesis_change_set_for_testnet(
     evm_genesis_config: Option<OnChainEvmGenesisConfig>,
 ) -> ChangeSet {
     validate_genesis_config(genesis_config);
-
+    // Create a Move VM session so we can invoke on-chain genesis initializations.
     let mut state_view = GenesisStateView::new();
     for (module_bytes, module) in framework.code_and_compiled_modules() {
         state_view.add_module(&module.self_id(), module_bytes);
@@ -708,7 +708,7 @@ fn initialize_supra_native_automation(
         module_storage,
         traversal_context,
         GENESIS_MODULE_NAME,
-        "initialize_supra_native_automation",
+        "initialize_supra_native_automation_v2",
         vec![],
         config.serialize_into_move_values_with_signer(CORE_CODE_ADDRESS),
     );

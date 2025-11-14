@@ -552,7 +552,7 @@ spec supra_framework::stake {
         aborts_if !exists<ValidatorConfig>(pool_address);
         aborts_if global<ValidatorConfig>(pool_address).validator_index >= len(validator_perf.validators);
 
-        let aptos_addr = type_info::type_of<SupraCoin>().account_address;
+        let aptos_addr = type_info::type_of<AptosCoin>().account_address;
         aborts_if !exists<ValidatorFees>(aptos_addr);
 
         let stake_pool = global<StakePool>(pool_address);

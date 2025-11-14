@@ -13,6 +13,7 @@ use crate::{
     keyless::{KeylessPublicKey, KeylessSignature},
     ledger_info::LedgerInfo,
     proof::{TransactionInfoListWithProof, TransactionInfoWithProof},
+    serde_helper::vec_bytes,
     transaction::automation::RegistrationParams,
     transaction::authenticator::{
         AccountAuthenticator, AnyPublicKey, AnySignature, SingleKeyAuthenticator,
@@ -59,6 +60,7 @@ pub mod user_transaction_context;
 pub mod webauthn;
 
 use crate::transaction::automated_transaction::AutomatedTransaction;
+use crate::transaction::automation::AutomationRegistryRecord;
 pub use self::block_epilogue::{BlockEndInfo, BlockEpiloguePayload, FeeDistribution};
 use crate::{
     block_metadata_ext::BlockMetadataExt,
@@ -76,6 +78,7 @@ use crate::{
 pub use block_output::BlockOutput;
 pub use change_set::ChangeSet;
 pub use module::{Module, ModuleBundle};
+use crate::move_utils::MemberId;
 use move_core_types::identifier::{IdentStr, Identifier};
 use move_core_types::language_storage::{ModuleId, TypeTag};
 pub use move_core_types::transaction_argument::TransactionArgument;
@@ -2924,6 +2927,14 @@ pub enum Transaction {
     /// Verification is skipped for this type of transaction as it is auto-generated from state
     /// and is considered as `SignatureVerifiedTransaction::Valid` by default
     AutomatedTransaction(AutomatedTransaction),
+
+    /// An automation registry function/action to be executed on cycle state transition.
+    AutomationRegistryTransaction(AutomationRegistryRecord),
+
+    /// Transaction corresponding to system automation tasks from automation registry.
+    /// Verification is skipped for this type of transaction as it is auto-generated from state
+    /// and is considered as `SignatureVerifiedTransaction::Valid` by default
+    SystemAutomatedTransaction(AutomatedTransaction),
 }
 
 impl From<BlockMetadataExt> for Transaction {
@@ -2985,7 +2996,8 @@ impl Transaction {
 
     pub fn try_as_automated_txn(&self) -> Option<&AutomatedTransaction> {
         match self {
-            Transaction::AutomatedTransaction(txn) => Some(txn),
+            Transaction::AutomatedTransaction(txn)
+            | Transaction::SystemAutomatedTransaction(txn) => Some(txn),
             _ => None,
         }
     }
@@ -3000,6 +3012,8 @@ impl Transaction {
             Transaction::ValidatorTransaction(vt) => vt.type_name(),
             Transaction::BlockMetadataExt(bmet) => bmet.type_name(),
             Transaction::AutomatedTransaction(_) => "automated_transaction",
+            Transaction::AutomationRegistryTransaction(_) => "automation_registry_transaction",
+            Transaction::SystemAutomatedTransaction(_) => "system_automated_transaction"
         }
     }
 
@@ -3016,7 +3030,9 @@ impl Transaction {
             | Transaction::BlockMetadata(_)
             | Transaction::BlockMetadataExt(_)
             | Transaction::AutomatedTransaction(_)
-            | Transaction::ValidatorTransaction(_) => false,
+            | Transaction::AutomationRegistryTransaction(_)
+            | Transaction::ValidatorTransaction(_)
+            | Transaction::SystemAutomatedTransaction(_) => false,
         }
     }
 
@@ -3028,7 +3044,9 @@ impl Transaction {
             | Transaction::UserTransaction(_)
             | Transaction::GenesisTransaction(_)
             | Transaction::AutomatedTransaction(_)
-            | Transaction::ValidatorTransaction(_) => false,
+            | Transaction::AutomationRegistryTransaction(_)
+            | Transaction::ValidatorTransaction(_)
+            | Transaction::SystemAutomatedTransaction(_) => false,
         }
     }
 }
@@ -3101,6 +3119,68 @@ impl std::fmt::Display for ViewFunctionError {
                 write!(f, "Error: {}, VM status: {:?}", msg, vm_status)
             },
         }
+    }
+}
+
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ViewFunction {
+    module: ModuleId,
+    function: Identifier,
+    ty_args: Vec<TypeTag>,
+    #[serde(with = "vec_bytes")]
+    args: Vec<Vec<u8>>,
+}
+
+impl ViewFunction {
+    pub fn from_function_name_and_args(
+        function_ref: &'static str,
+        ty_args: Vec<TypeTag>,
+        args: Vec<Vec<u8>>,
+    ) -> Result<Self> {
+        let MemberId {
+            module_id,
+            member_id,
+        } = str::parse(function_ref)?;
+        Ok(Self {
+            module: module_id,
+            function: member_id,
+            ty_args,
+            args,
+        })
+    }
+
+    pub fn new(
+        module: ModuleId,
+        function: Identifier,
+        ty_args: Vec<TypeTag>,
+        args: Vec<Vec<u8>>,
+    ) -> Self {
+        Self {
+            module,
+            function,
+            ty_args,
+            args,
+        }
+    }
+
+    pub fn module(&self) -> &ModuleId {
+        &self.module
+    }
+
+    pub fn function(&self) -> &IdentStr {
+        &self.function
+    }
+
+    pub fn ty_args(&self) -> &[TypeTag] {
+        &self.ty_args
+    }
+
+    pub fn args(&self) -> &[Vec<u8>] {
+        &self.args
+    }
+
+    pub fn into_inner(self) -> (ModuleId, Identifier, Vec<TypeTag>, Vec<Vec<u8>>) {
+        (self.module, self.function, self.ty_args, self.args)
     }
 }
 

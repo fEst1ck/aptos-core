@@ -20,7 +20,6 @@ use aptos_types::{account_address::AccountAddress, chain_id::ChainId};
 use futures::future::BoxFuture;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashSet, convert::Infallible, fmt::LowerHex, future::Future, str::FromStr};
-use std::{collections::HashSet, convert::Infallible, fmt::LowerHex, future::Future, str::FromStr};
 use warp::Filter;
 
 /// The year 2000 in milliseconds, as this is the lower limit for Rosetta API implementations

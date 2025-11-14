@@ -24,6 +24,9 @@ pub mod string_utils;
 pub mod transaction_context;
 pub mod type_info;
 pub mod util;
+pub mod rlp;
+mod automation_registry_callbacks;
+pub mod vector_utils;
 
 use crate::natives::cryptography::multi_ed25519;
 use aggregator_natives::{aggregator, aggregator_factory, aggregator_v2};
@@ -100,6 +103,9 @@ pub fn all_natives(
         "dispatchable_fungible_asset",
         dispatchable_fungible_asset::make_all(builder)
     );
+    add_natives_from_module!("rlp", rlp::make_all(builder));
+    add_natives_from_module!("automation_registry", automation_registry_callbacks::make_all(builder));
+    add_natives_from_module!("vector_utils", vector_utils::make_all(builder));
     add_natives_from_module!(
         "permissioned_signer",
         permissioned_signer::make_all(builder)

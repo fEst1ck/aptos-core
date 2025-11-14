@@ -894,6 +894,7 @@ pub enum TransactionType {
     Validator,
     BlockEpilogue,
     Automated,
+    AutomationRegistration,
 }
 
 impl Display for TransactionType {
@@ -908,6 +909,7 @@ impl Display for TransactionType {
             Validator => "Validator",
             BlockEpilogue => "BlockEpilogue",
             Automated => "Automated",
+            AutomationRegistration => "AutomationRegistration",
         })
     }
 }
@@ -955,13 +957,21 @@ impl Transaction {
                 (TransactionType::Validator, None, None, txn.info, txn.events)
             },
             BlockEpilogue(_) => (TransactionType::BlockEpilogue, None, None, txn.info, vec![]),
-            AutomatedTransaction(automated_txn) => (
+            AutomatedTransaction(automated_txn)
+            | SystemAutomatedTransaction(automated_txn)=> (
                 TransactionType::Automated,
                 None,
                 Some(automated_txn),
                 txn.info,
                 txn.events,
             ),
+            AutomationRegistryTransaction(_) => (
+                TransactionType::AutomationRegistration,
+                None,
+                None,
+                txn.info,
+                txn.events,
+            )
         };
 
         // Operations must be sequential and operation index must always be in the same order

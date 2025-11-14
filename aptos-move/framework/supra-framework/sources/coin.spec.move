@@ -120,8 +120,8 @@ spec supra_framework::coin {
         ensures [abstract] result == type_info::type_of<CoinType>().account_address;
     }
 
-    /// Can only be updated by `@aptos_framework`.
-    spec allow_supply_upgrades(_aptos_framework: &signer, _allowed: bool) {
+    /// Can only be updated by `@supra_framework`.
+    spec allow_supply_upgrades(_supra_framework: &signer, _allowed: bool) {
         aborts_if true;
     }
 

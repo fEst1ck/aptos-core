@@ -73,6 +73,7 @@ once_cell = { workspace = true }
 rand = { workspace = true }
 rand_core = { workspace = true }
 ripemd = { workspace = true }
+rlp = { workspace = true }
 serde = { workspace = true }
 serde_bytes = { workspace = true }
 sha2 = { workspace = true }
@@ -98,7 +99,12 @@ move-vm-types = { workspace = true, features = ["testing"] }
 [features]
 default = []
 fuzzing = ["aptos-types/fuzzing"]
-testing = ["aptos-move-stdlib/testing", "aptos-crypto/fuzzing"]
+testing = [
+    "aptos-move-stdlib/testing",
+    "aptos-crypto/fuzzing",
+    "build_test_framework",
+]
+build_test_framework = []
 
 [lib]
 doctest = false

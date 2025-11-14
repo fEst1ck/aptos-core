@@ -26,7 +26,7 @@ use crate::{
     transaction_metadata::TransactionMetadata,
     transaction_validation,
     verifier::{
-        self, event_validation, native_validation, resource_groups, transaction_arg_validation,
+        event_validation, native_validation, resource_groups, transaction_arg_validation,
         view_function,
     },
     VMBlockExecutor, VMValidator,
@@ -48,7 +48,7 @@ use aptos_gas_schedule::{
 use aptos_logger::{enabled, prelude::*, Level};
 #[cfg(any(test, feature = "testing"))]
 use aptos_types::state_store::StateViewId;
-use aptos_types::transaction::automation::RegistrationParams;
+use aptos_types::transaction::automation::{AutomationTaskType, RegistrationParams};
 use aptos_types::{
     account_config::{self, new_block_event_key, AccountResource},
     block_executor::{
@@ -184,6 +184,9 @@ macro_rules! unwrap_or_discard {
     };
 }
 
+use crate::automation_registry_transaction_processor::AutomationRegistryTransactionProcessor;
+pub(crate) use unwrap_or_discard;
+
 pub(crate) struct SerializedSigners {
     senders: Vec<Vec<u8>>,
     fee_payer: Option<Vec<u8>>,
@@ -211,6 +214,17 @@ pub(crate) fn serialized_signer(account_address: &AccountAddress) -> Vec<u8> {
     MoveValue::Signer(*account_address)
         .simple_serialize()
         .unwrap()
+}
+
+impl From<(Vec<AccountAddress>, Option<AccountAddress>)> for SerializedSigners {
+    fn from((senders, fee_payer): (Vec<AccountAddress>, Option<AccountAddress>)) -> Self {
+        let raw_signers = senders.iter().map(serialized_signer).collect();
+        let maybe_fee_payer = fee_payer.as_ref().map(serialized_signer);
+        Self {
+            senders: raw_signers,
+            fee_payer: maybe_fee_payer,
+        }
+    }
 }
 
 pub(crate) fn get_system_transaction_output(
@@ -461,7 +475,19 @@ impl AptosVM {
         gas_meter: &impl AptosGasMeter,
         storage_fee_refund: u64,
     ) -> FeeStatement {
-        let gas_used = Self::gas_used(txn_data.max_gas_amount(), gas_meter);
+        Self::fee_statement_from_gas_meter_for_gas(
+            txn_data.max_gas_amount,
+            gas_meter,
+            storage_fee_refund,
+        )
+    }
+
+    pub(crate) fn fee_statement_from_gas_meter_for_gas(
+        max_gas: Gas,
+        gas_meter: &impl AptosGasMeter,
+        storage_fee_refund: u64,
+    ) -> FeeStatement {
+        let gas_used = Self::gas_used(max_gas, gas_meter);
         FeeStatement::new(
             gas_used,
             u64::from(gas_meter.execution_gas_used()),
@@ -977,30 +1003,21 @@ impl AptosVM {
                     )
                 })?;
             }
-            TransactionExecutableRef::AutomationRegistration(automation_payload) => {
+            TransactionExecutableRef::AutomationRegistration(registration_params) => {
                 session.execute(|session| {
-                    self.validate_automated_function(
-                        session,
-                        code_storage,
-                        gas_meter,
-                        serialized_signers,
-                        automation_payload.automated_function(),
-                    )
-                })?;
-
-                session.execute(|session| {
-                    self.execute_automation_registration(
+                    self.validate_and_execute_automation_registration(
                         session,
                         code_storage,
                         gas_meter,
                         traversal_context,
-                        txn_data.sender(),
-                        automation_payload,
                         txn_data,
+                        serialized_signers,
+                        txn_data.sender(),
+                        registration_params,
                     )
                 })?;
             },
-            
+
             // Not reachable as this function should only be invoked for entry or script
             // transaction payload.
             _ => unreachable!("Only scripts or entry functions are executed"),
@@ -1037,6 +1054,36 @@ impl AptosVM {
         )
     }
 
+    fn validate_and_execute_automation_registration(
+        &self,
+        session: &mut SessionExt<impl AptosMoveResolver>,
+        code_storage: &impl AptosModuleStorage,
+        gas_meter: &mut impl AptosGasMeter,
+        traversal_context: &mut TraversalContext,
+        txn_data: &TransactionMetadata,
+        serialized_signers: &SerializedSigners,
+        sender: AccountAddress,
+        registration_params: &RegistrationParams,
+    ) -> Result<(), VMStatus> {
+            self.validate_automated_function(
+                session,
+                code_storage,
+                serialized_signers,
+                registration_params.automated_function(),
+            )?;
+
+            self.execute_automation_registration(
+                session,
+                code_storage,
+                gas_meter,
+                traversal_context,
+                sender,
+                registration_params,
+                txn_data,
+            )?;
+        Ok(())
+    }
+
     fn execute_automation_registration(
         &self,
         session: &mut SessionExt<impl AptosMoveResolver>,
@@ -1062,7 +1109,7 @@ impl AptosVM {
 
 
         let args = registration_params
-            .serialized_args_with_sender_and_parent_hash(sender, txn_metadata.txn_app_hash.clone());
+            .serialized_args_with_sender_and_parent_hash(sender, txn_metadata.txn_app_hash.clone(), self.features());
 
         session.execute_function_bypass_visibility(
             registration_params.module_id(),
@@ -1081,11 +1128,10 @@ impl AptosVM {
         &self,
         session: &mut SessionExt<impl AptosMoveResolver>,
         module_storage: &impl AptosModuleStorage,
-        gas_meter: &mut impl AptosGasMeter,
-        senders: SerializedSigners,
+        senders: &SerializedSigners,
         inner_entry_function: &EntryFunction,
     ) -> Result<(), VMStatus> {
-        let function = session.load_function(
+        let function = module_storage.load_function(
             inner_entry_function.module(),
             inner_entry_function.function(),
             inner_entry_function.ty_args(),
@@ -1095,7 +1141,7 @@ impl AptosVM {
         let actual_args = inner_entry_function.args().to_vec();
         // By constructing args we are making sure that function execution in scope of automated
         // task will not fail due to invalid arguments passed
-        verifier::transaction_arg_validation::validate_combine_signer_and_txn_args(
+        transaction_arg_validation::validate_combine_signer_and_txn_args(
             session,
             module_storage,
             senders,
@@ -1170,6 +1216,7 @@ impl AptosVM {
         ))
     }
 
+
     // Execute a multisig transaction:
     // 1. Obtain the payload of the transaction to execute. This could have been stored on chain
     // when the multisig transaction was created.
@@ -1237,6 +1284,10 @@ impl AptosVM {
                 );
                 return Ok((s, discarded_output(StatusCode::FEATURE_UNDER_GATING)));
             },
+            TransactionExecutableRef::AutomationRegistration(registration_params) => {
+            bcs::to_bytes(&MultisigTransactionPayload::AutomationRegistration(registration_params.clone()))
+            .map_err(|_| invariant_violation_error())?
+            }
         };
         // Failures here will be propagated back.
         let payload_bytes: Vec<Vec<u8>> = session
@@ -1285,19 +1336,17 @@ impl AptosVM {
         // failures, we'll discard the session and start a new one. This ensures that any data
         // changes are not persisted.
         // The multisig transaction would still be considered executed even if execution fails.
-        let execution_result = match payload {
-            MultisigTransactionPayload::EntryFunction(entry_function) => self
-                .execute_multisig_entry_function(
-                    resolver,
-                    module_storage,
-                    session,
-                    gas_meter,
-                    traversal_context,
-                    multisig_address,
-                    &entry_function,
-                    change_set_configs,
-                ),
-        };
+        let execution_result = self.execute_multisig_payload(
+            resolver,
+            module_storage,
+            session,
+            gas_meter,
+            traversal_context,
+            txn_data,
+            multisig_address,
+            &payload,
+            change_set_configs,
+        );
 
         // Step 3: Call post transaction cleanup function in multisig account module with the result
         // from Step 2.
@@ -1360,29 +1409,52 @@ impl AptosVM {
         )
     }
 
-    fn execute_multisig_entry_function(
+    fn execute_multisig_payload(
         &self,
         resolver: &impl AptosMoveResolver,
         module_storage: &impl AptosModuleStorage,
         mut session: UserSession,
         gas_meter: &mut impl AptosGasMeter,
         traversal_context: &mut TraversalContext,
+        txn_data: &TransactionMetadata,
         multisig_address: AccountAddress,
-        payload: &EntryFunction,
+        payload: &MultisigTransactionPayload,
         change_set_configs: &ChangeSetConfigs,
     ) -> Result<UserSessionChangeSet, VMStatus> {
+
+        let multisig_serialized_signer = SerializedSigners::new(vec![serialized_signer(&multisig_address)], None);
+        match payload {
+            MultisigTransactionPayload::EntryFunction(entry_function) =>{
+                session.execute(|session| {
+                    self.validate_and_execute_entry_function(
+                        module_storage,
+                        session,
+                        &multisig_serialized_signer,
+                        gas_meter,
+                        traversal_context,
+                        entry_function,
+                    )
+                })?
+            },
+            MultisigTransactionPayload::AutomationRegistration(params) => {
+                session.execute(|session| {
+                    self.check_multisig_task_registration_support()?;
+                    self.validate_and_execute_automation_registration(
+                        session,
+                        module_storage,
+                        gas_meter,
+                        traversal_context,
+                        txn_data,
+                        &multisig_serialized_signer,
+                        multisig_address,
+                        &params,
+                    )
+                })?
+            },
+        };
+
         // If txn args are not valid, we'd still consider the transaction as executed but
         // failed. This is primarily because it's unrecoverable at this point.
-        session.execute(|session| {
-            self.validate_and_execute_entry_function(
-                module_storage,
-                session,
-                &SerializedSigners::new(vec![serialized_signer(&multisig_address)], None),
-                gas_meter,
-                traversal_context,
-                payload,
-            )
-        })?;
 
         // Resolve any pending module publishes in case the multisig transaction is deploying
         // modules.
@@ -2006,7 +2078,7 @@ impl AptosVM {
                 log_context,
                 change_set_configs,
             )
-        } else {
+        }  else {
             self.execute_script_or_entry_function(
                 resolver,
                 code_storage,
@@ -2719,12 +2791,12 @@ impl AptosVM {
 
         if let Some(task_registration_params) = executable.as_automation_registration_params() {
             check_automation_task_gas(
-                get_or_vm_startup_failure(&self.gas_params, log_context)?,
-                self.gas_feature_version,
+                self.gas_params(log_context)?,
+                self.gas_feature_version(),
                 self.features(),
                 task_registration_params,
                 log_context,
-            )
+            )?;
         }
 
         if let Some(multisig_address) = extra_config.multisig_address() {
@@ -2898,21 +2970,43 @@ impl AptosVM {
                 )?;
                 (vm_status, output)
             },
-            Transaction::AutomatedTransaction(txn) => AutomatedTransactionProcessor::new(self)
-                .execute_transaction(resolver, code_storage, txn, log_context),
+            Transaction::AutomatedTransaction(txn) => AutomatedTransactionProcessor::new(
+                self, AutomationTaskType::User,
+            )
+            .execute_transaction(resolver, code_storage, txn, log_context),
+            Transaction::SystemAutomatedTransaction(txn) => AutomatedTransactionProcessor::new(
+                self, AutomationTaskType::System,
+            )
+            .execute_transaction(resolver, code_storage, txn, log_context),
+            Transaction::AutomationRegistryTransaction(txn) => {
+                AutomationRegistryTransactionProcessor::new(self).execute_transaction(
+                    resolver,
+                    code_storage,
+                    txn,
+                    log_context,
+                )?
+            },
         })
-    }
-
-    pub(crate) fn gas_params_internal(&self) -> &Result<AptosGasParameters, String> {
-        &self.gas_params
     }
 
     pub(crate) fn move_vm(&self) -> &MoveVmExt {
         &self.move_vm
     }
 
-    pub(crate) fn gas_feature_version(&self) -> u64 {
-        self.gas_feature_version
+    fn check_multisig_task_registration_support(&self) -> Result<(), VMStatus> {
+        if !self
+            .features()
+            .is_enabled(FeatureFlag::SUPRA_AUTOMATION_V2)
+        {
+            return Err(VMStatus::Error {
+                status_code: StatusCode::FEATURE_UNDER_GATING,
+                sub_status: None,
+                message: Some(
+                    "The system automation task registration is not enabled yet.".to_string(),
+                ),
+            });
+        }
+        Ok(())
     }
 }
 
@@ -3197,6 +3291,7 @@ impl AptosSimulationVM {
             .expect("Materializing aggregator V1 deltas should never fail");
         (vm_status, txn_output)
     }
+
 }
 
 fn create_account_if_does_not_exist(

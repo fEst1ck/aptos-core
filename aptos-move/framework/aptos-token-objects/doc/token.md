@@ -22,16 +22,22 @@ token are:
 -  [Function `create_common_with_collection`](#0x4_token_create_common_with_collection)
 -  [Function `create_common_with_collection_as_owner`](#0x4_token_create_common_with_collection_as_owner)
 -  [Function `create_common_with_collection_internal`](#0x4_token_create_common_with_collection_internal)
+-  [Function `create_common_with_collection_as_owner`](#0x4_token_create_common_with_collection_as_owner)
+-  [Function `create_common_with_collection_internal`](#0x4_token_create_common_with_collection_internal)
 -  [Function `create_token`](#0x4_token_create_token)
 -  [Function `create`](#0x4_token_create)
+-  [Function `create_token_as_collection_owner`](#0x4_token_create_token_as_collection_owner)
 -  [Function `create_token_as_collection_owner`](#0x4_token_create_token_as_collection_owner)
 -  [Function `create_numbered_token_object`](#0x4_token_create_numbered_token_object)
 -  [Function `create_numbered_token`](#0x4_token_create_numbered_token)
 -  [Function `create_numbered_token_as_collection_owner`](#0x4_token_create_numbered_token_as_collection_owner)
+-  [Function `create_numbered_token_as_collection_owner`](#0x4_token_create_numbered_token_as_collection_owner)
 -  [Function `create_named_token_object`](#0x4_token_create_named_token_object)
 -  [Function `create_named_token`](#0x4_token_create_named_token)
 -  [Function `create_named_token_as_collection_owner`](#0x4_token_create_named_token_as_collection_owner)
+-  [Function `create_named_token_as_collection_owner`](#0x4_token_create_named_token_as_collection_owner)
 -  [Function `create_named_token_from_seed`](#0x4_token_create_named_token_from_seed)
+-  [Function `create_named_token_from_seed_as_collection_owner`](#0x4_token_create_named_token_from_seed_as_collection_owner)
 -  [Function `create_named_token_from_seed_as_collection_owner`](#0x4_token_create_named_token_from_seed_as_collection_owner)
 -  [Function `create_from_account`](#0x4_token_create_from_account)
 -  [Function `create_token_address`](#0x4_token_create_token_address)
@@ -406,6 +412,26 @@ The collection owner feature is not supported
 
 
 
+<a id="0x4_token_ENOT_OWNER"></a>
+
+The calling signer is not the owner
+
+
+<pre><code><b>const</b> <a href="token.md#0x4_token_ENOT_OWNER">ENOT_OWNER</a>: u64 = 8;
+</code></pre>
+
+
+
+<a id="0x4_token_ECOLLECTION_OWNER_NOT_SUPPORTED"></a>
+
+The collection owner feature is not supported
+
+
+<pre><code><b>const</b> <a href="token.md#0x4_token_ECOLLECTION_OWNER_NOT_SUPPORTED">ECOLLECTION_OWNER_NOT_SUPPORTED</a>: u64 = 9;
+</code></pre>
+
+
+
 <a id="0x4_token_EDESCRIPTION_TOO_LONG"></a>
 
 The description is over the maximum length
@@ -709,10 +735,15 @@ The token name is over the maximum length
         <b>assert</b>!(
             name_prefix.length() + 20 + name_with_index_suffix.<a href="token.md#0x4_token_borrow">borrow</a>().length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>,
             <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>)
+            name_prefix.length() + 20 + name_with_index_suffix.<a href="token.md#0x4_token_borrow">borrow</a>().length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>,
+            <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>)
         );
     } <b>else</b> {
         <b>assert</b>!(name_prefix.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>));
+        <b>assert</b>!(name_prefix.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>));
     };
+    <b>assert</b>!(description.length() &lt;= <a href="token.md#0x4_token_MAX_DESCRIPTION_LENGTH">MAX_DESCRIPTION_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EDESCRIPTION_TOO_LONG">EDESCRIPTION_TOO_LONG</a>));
+    <b>assert</b>!(uri.length() &lt;= <a href="token.md#0x4_token_MAX_URI_LENGTH">MAX_URI_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EURI_TOO_LONG">EURI_TOO_LONG</a>));
     <b>assert</b>!(description.length() &lt;= <a href="token.md#0x4_token_MAX_DESCRIPTION_LENGTH">MAX_DESCRIPTION_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EDESCRIPTION_TOO_LONG">EDESCRIPTION_TOO_LONG</a>));
     <b>assert</b>!(uri.length() &lt;= <a href="token.md#0x4_token_MAX_URI_LENGTH">MAX_URI_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EURI_TOO_LONG">EURI_TOO_LONG</a>));
 
@@ -720,9 +751,13 @@ The token name is over the maximum length
 
     <b>let</b> index = <a href="collection.md#0x4_collection_increment_supply">collection::increment_supply</a>(&<a href="collection.md#0x4_collection">collection</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(&object_signer)).destroy_with_default(
         <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_create_snapshot">aggregator_v2::create_snapshot</a>&lt;u64&gt;(0)
+    <b>let</b> index = <a href="collection.md#0x4_collection_increment_supply">collection::increment_supply</a>(&<a href="collection.md#0x4_collection">collection</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(&object_signer)).destroy_with_default(
+        <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_create_snapshot">aggregator_v2::create_snapshot</a>&lt;u64&gt;(0)
     );
 
     // If create_numbered_token called us, add index <b>to</b> the name.
+    <b>let</b> name = <b>if</b> (name_with_index_suffix.is_some()) {
+        <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_derive_string_concat">aggregator_v2::derive_string_concat</a>(name_prefix, &index, name_with_index_suffix.extract())
     <b>let</b> name = <b>if</b> (name_with_index_suffix.is_some()) {
         <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_derive_string_concat">aggregator_v2::derive_string_concat</a>(name_prefix, &index, name_with_index_suffix.extract())
     } <b>else</b> {
@@ -748,6 +783,8 @@ The token name is over the maximum length
     };
     <b>move_to</b>(&object_signer, <a href="token.md#0x4_token">token</a>);
 
+    <b>if</b> (<a href="royalty.md#0x4_royalty">royalty</a>.is_some()) {
+        <a href="royalty.md#0x4_royalty_init">royalty::init</a>(constructor_ref, <a href="royalty.md#0x4_royalty">royalty</a>.extract())
     <b>if</b> (<a href="royalty.md#0x4_royalty">royalty</a>.is_some()) {
         <a href="royalty.md#0x4_royalty_init">royalty::init</a>(constructor_ref, <a href="royalty.md#0x4_royalty">royalty</a>.extract())
     };
@@ -1595,6 +1632,7 @@ This function must be called if the collection name has been previously changed.
 
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_create_named_token_from_seed">create_named_token_from_seed</a>(
     creator: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>,
+    creator: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>,
     <a href="collection.md#0x4_collection">collection</a>: Object&lt;Collection&gt;,
     description: String,
     name: String,
@@ -1603,6 +1641,53 @@ This function must be called if the collection name has been previously changed.
     uri: String,
 ): ConstructorRef {
     <b>let</b> seed = <a href="token.md#0x4_token_create_token_name_with_seed">create_token_name_with_seed</a>(&<a href="collection.md#0x4_collection_name">collection::name</a>(<a href="collection.md#0x4_collection">collection</a>), &name, &seed);
+    <b>let</b> constructor_ref = <a href="../../aptos-framework/doc/object.md#0x1_object_create_named_object">object::create_named_object</a>(creator, seed);
+    <a href="token.md#0x4_token_create_common_with_collection">create_common_with_collection</a>(creator, &constructor_ref, <a href="collection.md#0x4_collection">collection</a>, description, name, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_none">option::none</a>(), <a href="royalty.md#0x4_royalty">royalty</a>, uri);
+    constructor_ref
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x4_token_create_named_token_from_seed_as_collection_owner"></a>
+
+## Function `create_named_token_from_seed_as_collection_owner`
+
+Same functionality as <code>create_named_token_from_seed</code>, but the token can only be created by the collection owner.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_create_named_token_from_seed_as_collection_owner">create_named_token_from_seed_as_collection_owner</a>(creator: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, <a href="collection.md#0x4_collection">collection</a>: <a href="../../aptos-framework/doc/object.md#0x1_object_Object">object::Object</a>&lt;<a href="collection.md#0x4_collection_Collection">collection::Collection</a>&gt;, description: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_String">string::String</a>, name: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_String">string::String</a>, seed: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_String">string::String</a>, <a href="royalty.md#0x4_royalty">royalty</a>: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_Option">option::Option</a>&lt;<a href="royalty.md#0x4_royalty_Royalty">royalty::Royalty</a>&gt;, uri: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_String">string::String</a>): <a href="../../aptos-framework/doc/object.md#0x1_object_ConstructorRef">object::ConstructorRef</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_create_named_token_from_seed_as_collection_owner">create_named_token_from_seed_as_collection_owner</a>(
+    creator: &<a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>,
+    <a href="collection.md#0x4_collection">collection</a>: Object&lt;Collection&gt;,
+    description: String,
+    name: String,
+    seed: String,
+    <a href="royalty.md#0x4_royalty">royalty</a>: Option&lt;Royalty&gt;,
+    uri: String,
+): ConstructorRef {
+    <b>let</b> seed = <a href="token.md#0x4_token_create_token_name_with_seed">create_token_name_with_seed</a>(&<a href="collection.md#0x4_collection_name">collection::name</a>(<a href="collection.md#0x4_collection">collection</a>), &name, &seed);
+    <b>let</b> constructor_ref = <a href="../../aptos-framework/doc/object.md#0x1_object_create_named_object">object::create_named_object</a>(creator, seed);
+    <a href="token.md#0x4_token_create_common_with_collection_as_owner">create_common_with_collection_as_owner</a>(
+        creator,
+        &constructor_ref,
+        <a href="collection.md#0x4_collection">collection</a>,
+        description,
+        name,
+        <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_none">option::none</a>(),
+        <a href="royalty.md#0x4_royalty">royalty</a>,
+        uri
+    );
     <b>let</b> constructor_ref = <a href="../../aptos-framework/doc/object.md#0x1_object_create_named_object">object::create_named_object</a>(creator, seed);
     <a href="token.md#0x4_token_create_common_with_collection">create_common_with_collection</a>(creator, &constructor_ref, <a href="collection.md#0x4_collection">collection</a>, description, name, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_none">option::none</a>(), <a href="royalty.md#0x4_royalty">royalty</a>, uri);
     constructor_ref
@@ -1778,6 +1863,11 @@ Named objects are derived from a seed, the token's seed is its name appended to 
     <b>let</b> seed = *<a href="collection.md#0x4_collection">collection</a>.bytes();
     seed.append(b"::");
     seed.append(*name.bytes());
+<pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_create_token_seed">create_token_seed</a>(<a href="collection.md#0x4_collection">collection</a>: &String, name: &String): <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>&lt;u8&gt; {
+    <b>assert</b>!(name.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>));
+    <b>let</b> seed = *<a href="collection.md#0x4_collection">collection</a>.bytes();
+    seed.append(b"::");
+    seed.append(*name.bytes());
     seed
 }
 </code></pre>
@@ -1803,7 +1893,10 @@ Named objects are derived from a seed, the token's seed is its name appended to 
 
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_create_token_name_with_seed">create_token_name_with_seed</a>(<a href="collection.md#0x4_collection">collection</a>: &String, name: &String, seed: &String): <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>&lt;u8&gt; {
     <b>assert</b>!(seed.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_SEED_LENGTH">MAX_TOKEN_SEED_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ESEED_TOO_LONG">ESEED_TOO_LONG</a>));
+<pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_create_token_name_with_seed">create_token_name_with_seed</a>(<a href="collection.md#0x4_collection">collection</a>: &String, name: &String, seed: &String): <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>&lt;u8&gt; {
+    <b>assert</b>!(seed.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_SEED_LENGTH">MAX_TOKEN_SEED_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ESEED_TOO_LONG">ESEED_TOO_LONG</a>));
     <b>let</b> seeds = <a href="token.md#0x4_token_create_token_seed">create_token_seed</a>(<a href="collection.md#0x4_collection">collection</a>, name);
+    seeds.append(*seed.bytes());
     seeds.append(*seed.bytes());
     seeds
 }
@@ -1890,7 +1983,10 @@ Extracts the tokens address from a BurnRef.
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_address_from_burn_ref">address_from_burn_ref</a>(ref: &<a href="token.md#0x4_token_BurnRef">BurnRef</a>): <b>address</b> {
     <b>if</b> (ref.inner.is_some()) {
         <a href="../../aptos-framework/doc/object.md#0x1_object_address_from_delete_ref">object::address_from_delete_ref</a>(ref.inner.<a href="token.md#0x4_token_borrow">borrow</a>())
+    <b>if</b> (ref.inner.is_some()) {
+        <a href="../../aptos-framework/doc/object.md#0x1_object_address_from_delete_ref">object::address_from_delete_ref</a>(ref.inner.<a href="token.md#0x4_token_borrow">borrow</a>())
     } <b>else</b> {
+        *ref.self.<a href="token.md#0x4_token_borrow">borrow</a>()
         *ref.self.<a href="token.md#0x4_token_borrow">borrow</a>()
     }
 }
@@ -1921,6 +2017,7 @@ Extracts the tokens address from a BurnRef.
         <b>exists</b>&lt;<a href="token.md#0x4_token_Token">Token</a>&gt;(token_address),
         <a href="../../move-stdlib/doc/error.md#0x1_error_not_found">error::not_found</a>(<a href="token.md#0x4_token_ETOKEN_DOES_NOT_EXIST">ETOKEN_DOES_NOT_EXIST</a>),
     );
+    &<a href="token.md#0x4_token_Token">Token</a>[token_address]
     &<a href="token.md#0x4_token_Token">Token</a>[token_address]
 }
 </code></pre>
@@ -2051,6 +2148,7 @@ as that would prohibit transactions to be executed in parallel.
     <b>let</b> token_address = <a href="../../supra-framework/doc/object.md#0x1_object_object_address">object::object_address</a>(&<a href="token.md#0x4_token">token</a>);
     <b>if</b> (<b>exists</b>&lt;<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>&gt;(token_address)) {
         <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_read_derived_string">aggregator_v2::read_derived_string</a>(&<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>[token_address].name)
+        <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_read_derived_string">aggregator_v2::read_derived_string</a>(&<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>[token_address].name)
     } <b>else</b> {
         <a href="token.md#0x4_token_borrow">borrow</a>(&<a href="token.md#0x4_token">token</a>).name
     }
@@ -2106,6 +2204,7 @@ as that would prohibit transactions to be executed in parallel.
     <a href="token.md#0x4_token_borrow">borrow</a>(&<a href="token.md#0x4_token">token</a>);
     <b>let</b> <a href="royalty.md#0x4_royalty">royalty</a> = <a href="royalty.md#0x4_royalty_get">royalty::get</a>(<a href="token.md#0x4_token">token</a>);
     <b>if</b> (<a href="royalty.md#0x4_royalty">royalty</a>.is_some()) {
+    <b>if</b> (<a href="royalty.md#0x4_royalty">royalty</a>.is_some()) {
         <a href="royalty.md#0x4_royalty">royalty</a>
     } <b>else</b> {
         <b>let</b> creator = <a href="token.md#0x4_token_creator">creator</a>(<a href="token.md#0x4_token">token</a>);
@@ -2143,6 +2242,7 @@ as that would prohibit transactions to be executed in parallel.
     <b>let</b> token_address = <a href="../../supra-framework/doc/object.md#0x1_object_object_address">object::object_address</a>(&<a href="token.md#0x4_token">token</a>);
     <b>if</b> (<b>exists</b>&lt;<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>&gt;(token_address)) {
         <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_read_snapshot">aggregator_v2::read_snapshot</a>(&<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>[token_address].index)
+        <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_read_snapshot">aggregator_v2::read_snapshot</a>(&<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>[token_address].index)
     } <b>else</b> {
         <a href="token.md#0x4_token_borrow">borrow</a>(&<a href="token.md#0x4_token">token</a>).index
     }
@@ -2174,6 +2274,7 @@ as that would prohibit transactions to be executed in parallel.
         <a href="../../move-stdlib/doc/error.md#0x1_error_not_found">error::not_found</a>(<a href="token.md#0x4_token_ETOKEN_DOES_NOT_EXIST">ETOKEN_DOES_NOT_EXIST</a>),
     );
     &<b>mut</b> <a href="token.md#0x4_token_Token">Token</a>[mutator_ref.self]
+    &<b>mut</b> <a href="token.md#0x4_token_Token">Token</a>[mutator_ref.self]
 }
 </code></pre>
 
@@ -2202,8 +2303,15 @@ as that would prohibit transactions to be executed in parallel.
         <b>let</b> addr = <a href="../../aptos-framework/doc/object.md#0x1_object_address_from_delete_ref">object::address_from_delete_ref</a>(&delete_ref);
         <b>let</b> previous_owner = <a href="../../aptos-framework/doc/object.md#0x1_object_owner">object::owner</a>(<a href="../../aptos-framework/doc/object.md#0x1_object_address_to_object">object::address_to_object</a>&lt;<a href="token.md#0x4_token_Token">Token</a>&gt;(addr));
         <a href="../../aptos-framework/doc/object.md#0x1_object_delete">object::delete</a>(delete_ref);
+    <b>let</b> (addr, previous_owner) = <b>if</b> (burn_ref.inner.is_some()) {
+        <b>let</b> delete_ref = burn_ref.inner.extract();
+        <b>let</b> addr = <a href="../../aptos-framework/doc/object.md#0x1_object_address_from_delete_ref">object::address_from_delete_ref</a>(&delete_ref);
+        <b>let</b> previous_owner = <a href="../../aptos-framework/doc/object.md#0x1_object_owner">object::owner</a>(<a href="../../aptos-framework/doc/object.md#0x1_object_address_to_object">object::address_to_object</a>&lt;<a href="token.md#0x4_token_Token">Token</a>&gt;(addr));
+        <a href="../../aptos-framework/doc/object.md#0x1_object_delete">object::delete</a>(delete_ref);
         (addr, previous_owner)
     } <b>else</b> {
+        <b>let</b> addr = burn_ref.self.extract();
+        <b>let</b> previous_owner = <a href="../../aptos-framework/doc/object.md#0x1_object_owner">object::owner</a>(<a href="../../aptos-framework/doc/object.md#0x1_object_address_to_object">object::address_to_object</a>&lt;<a href="token.md#0x4_token_Token">Token</a>&gt;(addr));
         <b>let</b> addr = burn_ref.self.extract();
         <b>let</b> previous_owner = <a href="../../aptos-framework/doc/object.md#0x1_object_owner">object::owner</a>(<a href="../../aptos-framework/doc/object.md#0x1_object_address_to_object">object::address_to_object</a>&lt;<a href="token.md#0x4_token_Token">Token</a>&gt;(addr));
         (addr, previous_owner)
@@ -2258,6 +2366,7 @@ as that would prohibit transactions to be executed in parallel.
 
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_set_description">set_description</a>(mutator_ref: &<a href="token.md#0x4_token_MutatorRef">MutatorRef</a>, description: String) <b>acquires</b> <a href="token.md#0x4_token_Token">Token</a> {
     <b>assert</b>!(description.length() &lt;= <a href="token.md#0x4_token_MAX_DESCRIPTION_LENGTH">MAX_DESCRIPTION_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EDESCRIPTION_TOO_LONG">EDESCRIPTION_TOO_LONG</a>));
+    <b>assert</b>!(description.length() &lt;= <a href="token.md#0x4_token_MAX_DESCRIPTION_LENGTH">MAX_DESCRIPTION_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EDESCRIPTION_TOO_LONG">EDESCRIPTION_TOO_LONG</a>));
     <b>let</b> <a href="token.md#0x4_token">token</a> = <a href="token.md#0x4_token_borrow_mut">borrow_mut</a>(mutator_ref);
     <b>if</b> (std::features::module_event_migration_enabled()) {
         <a href="../../supra-framework/doc/event.md#0x1_event_emit">event::emit</a>(<a href="token.md#0x4_token_Mutation">Mutation</a> {
@@ -2266,6 +2375,16 @@ as that would prohibit transactions to be executed in parallel.
             old_value: <a href="token.md#0x4_token">token</a>.description,
             new_value: description
         })
+    } <b>else</b> {
+        <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
+            &<b>mut</b> <a href="token.md#0x4_token">token</a>.mutation_events,
+            <a href="token.md#0x4_token_MutationEvent">MutationEvent</a> {
+                mutated_field_name: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_utf8">string::utf8</a>(b"description"),
+                old_value: <a href="token.md#0x4_token">token</a>.description,
+                new_value: description
+            },
+        );
+    };
     } <b>else</b> {
         <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
             &<b>mut</b> <a href="token.md#0x4_token">token</a>.mutation_events,
@@ -2301,10 +2420,14 @@ as that would prohibit transactions to be executed in parallel.
 
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_set_name">set_name</a>(mutator_ref: &<a href="token.md#0x4_token_MutatorRef">MutatorRef</a>, name: String) <b>acquires</b> <a href="token.md#0x4_token_Token">Token</a>, <a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a> {
     <b>assert</b>!(name.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>));
+    <b>assert</b>!(name.length() &lt;= <a href="token.md#0x4_token_MAX_TOKEN_NAME_LENGTH">MAX_TOKEN_NAME_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_ETOKEN_NAME_TOO_LONG">ETOKEN_NAME_TOO_LONG</a>));
 
     <b>let</b> <a href="token.md#0x4_token">token</a> = <a href="token.md#0x4_token_borrow_mut">borrow_mut</a>(mutator_ref);
 
     <b>let</b> old_name = <b>if</b> (<b>exists</b>&lt;<a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>&gt;(mutator_ref.self)) {
+        <b>let</b> token_concurrent = &<b>mut</b> <a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>[mutator_ref.self];
+        <b>let</b> old_name = <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_read_derived_string">aggregator_v2::read_derived_string</a>(&token_concurrent.name);
+        token_concurrent.name = <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_create_derived_string">aggregator_v2::create_derived_string</a>(name);
         <b>let</b> token_concurrent = &<b>mut</b> <a href="token.md#0x4_token_TokenIdentifiers">TokenIdentifiers</a>[mutator_ref.self];
         <b>let</b> old_name = <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_read_derived_string">aggregator_v2::read_derived_string</a>(&token_concurrent.name);
         token_concurrent.name = <a href="../../aptos-framework/doc/aggregator_v2.md#0x1_aggregator_v2_create_derived_string">aggregator_v2::create_derived_string</a>(name);
@@ -2322,6 +2445,16 @@ as that would prohibit transactions to be executed in parallel.
             old_value: old_name,
             new_value: name
         })
+    } <b>else</b> {
+        <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
+            &<b>mut</b> <a href="token.md#0x4_token">token</a>.mutation_events,
+            <a href="token.md#0x4_token_MutationEvent">MutationEvent</a> {
+                mutated_field_name: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_utf8">string::utf8</a>(b"name"),
+                old_value: old_name,
+                new_value: name
+            },
+        );
+    };
     } <b>else</b> {
         <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
             &<b>mut</b> <a href="token.md#0x4_token">token</a>.mutation_events,
@@ -2356,6 +2489,7 @@ as that would prohibit transactions to be executed in parallel.
 
 <pre><code><b>public</b> <b>fun</b> <a href="token.md#0x4_token_set_uri">set_uri</a>(mutator_ref: &<a href="token.md#0x4_token_MutatorRef">MutatorRef</a>, uri: String) <b>acquires</b> <a href="token.md#0x4_token_Token">Token</a> {
     <b>assert</b>!(uri.length() &lt;= <a href="token.md#0x4_token_MAX_URI_LENGTH">MAX_URI_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EURI_TOO_LONG">EURI_TOO_LONG</a>));
+    <b>assert</b>!(uri.length() &lt;= <a href="token.md#0x4_token_MAX_URI_LENGTH">MAX_URI_LENGTH</a>, <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_out_of_range">error::out_of_range</a>(<a href="token.md#0x4_token_EURI_TOO_LONG">EURI_TOO_LONG</a>));
     <b>let</b> <a href="token.md#0x4_token">token</a> = <a href="token.md#0x4_token_borrow_mut">borrow_mut</a>(mutator_ref);
     <b>if</b> (std::features::module_event_migration_enabled()) {
         <a href="../../supra-framework/doc/event.md#0x1_event_emit">event::emit</a>(<a href="token.md#0x4_token_Mutation">Mutation</a> {
@@ -2364,6 +2498,16 @@ as that would prohibit transactions to be executed in parallel.
             old_value: <a href="token.md#0x4_token">token</a>.uri,
             new_value: uri,
         })
+    } <b>else</b> {
+        <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
+            &<b>mut</b> <a href="token.md#0x4_token">token</a>.mutation_events,
+            <a href="token.md#0x4_token_MutationEvent">MutationEvent</a> {
+                mutated_field_name: <a href="../../aptos-framework/../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string_utf8">string::utf8</a>(b"uri"),
+                old_value: <a href="token.md#0x4_token">token</a>.uri,
+                new_value: uri,
+            },
+        );
+    };
     } <b>else</b> {
         <a href="../../aptos-framework/doc/event.md#0x1_event_emit_event">event::emit_event</a>(
             &<b>mut</b> <a href="token.md#0x4_token">token</a>.mutation_events,

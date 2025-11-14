@@ -88,6 +88,8 @@ impl UseCaseAwareTransaction for SignatureVerifiedTransaction {
                 | Transaction::ValidatorTransaction(_)
                 | Transaction::BlockMetadataExt(_)
                 | Transaction::AutomatedTransaction(_)
+                | Transaction::SystemAutomatedTransaction(_)
+                | Transaction::AutomationRegistryTransaction(_)
                 | Transaction::BlockEpilogue(_) => None,
             },
             // TODO I don't think we want invalid transactions during shuffling, but double check this logic...

@@ -56,6 +56,10 @@ module supra_framework::transaction_validation {
     /// Transaction exceeded its allocated max gas
     const EOUT_OF_GAS: u64 = 6;
 
+    /// Constants representing automation task type. Should match the values in scope of automation_registry module.
+    const UST:u8 = 1;
+    const GST:u8 = 2;
+
     /// Prologue errors. These are separated out from the other errors in this
     /// module since they are mapped separately to major VM statuses, and are
     /// important to the semantics of the system.
@@ -315,6 +319,10 @@ module supra_framework::transaction_validation {
         )
     }
 
+    /// Deprecated after Automation V2 release.
+    /// `automated_transaction_prologue_v2` should be favored instead.
+    /// May be removed at any time after Automation V2 release. Kept for smooth transitioning from
+    /// V1 to V2 on active chains
     fun automated_transaction_prologue(
         sender: signer,
         task_index: u64,
@@ -322,6 +330,18 @@ module supra_framework::transaction_validation {
         txn_max_gas_units: u64,
         txn_expiration_time: u64,
         chain_id: u8,
+    )  {
+        automated_transaction_prologue_v2(sender, task_index, txn_gas_price, txn_max_gas_units, txn_expiration_time, chain_id, UST);
+    }
+
+    fun automated_transaction_prologue_v2(
+        sender: signer,
+        task_index: u64,
+        txn_gas_price: u64,
+        txn_max_gas_units: u64,
+        txn_expiration_time: u64,
+        chain_id: u8,
+        task_type: u8,
     )  {
         let gas_payer = signer::address_of(&sender);
 
@@ -334,7 +354,10 @@ module supra_framework::transaction_validation {
         // TODO check whether is makes sense to do authenthicator key check as it was done in scope of common
         // prologue. It might not be necessary as automated transactions are system created.
 
-        let max_transaction_fee = txn_gas_price * txn_max_gas_units;
+        // Task is not gas-less/GST,
+        // gas-less automated transactions are not charged so no need to check eligability to pay the gas-fee.
+        if (task_type != GST) {
+            let max_transaction_fee = txn_gas_price * txn_max_gas_units;
 
         if (features::operations_default_to_fa_supra_store_enabled()) {
             assert!(

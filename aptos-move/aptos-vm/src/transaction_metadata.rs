@@ -32,7 +32,7 @@ fn convert_to_payload_type_reference_meta(payload: &TransactionPayloadInner) -> 
     match multisig_address {
         Some(address) => {
             PayloadTypeReferenceMeta::Multisig(Multisig {
-                multisig_address: address,
+                multisig_address: *address,
                 transaction_payload: match executable {
                     TransactionExecutable::EntryFunction(e) => {
                         // TODO[Orderless]: How to avoid the clone operation here.
@@ -75,6 +75,8 @@ pub struct TransactionMetadata {
     pub is_keyless: bool,
     pub payload_type_reference: PayloadTypeReferenceMeta,
     pub txn_app_hash: Vec<u8>,
+    pub entry_function_payload: Option<EntryFunction>,
+    pub multisig_payload: Option<Multisig>,
 }
 
 impl TransactionMetadata {

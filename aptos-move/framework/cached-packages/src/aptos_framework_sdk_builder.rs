@@ -110,6 +110,7 @@ pub enum EntryFunctionCall {
     /// Alice has rotated her account `addr_a` to `new_addr_a`. As a result, the following entry is created, to help Alice when recovering her wallet:
     /// `OriginatingAddress[new_addr_a]` -> `addr_a`
     /// Alice has had a bad day: her laptop blew up and she needs to reset her account on a new one.
+    /// Alice has had a bad day: her laptop blew up and she needs to reset her account on a new one.
     /// (Fortunately, she still has her secret key `new_sk_a` associated with her new address `new_addr_a`, so she can do this.)
     ///
     /// But Bob likes to mess with Alice.
@@ -139,8 +140,20 @@ pub enum EntryFunctionCall {
     ///
     /// If you'd like to followup with updating the `OriginatingAddress` table, you can call
     /// `set_originating_address()`.
+    ///
+    /// If you'd like to followup with updating the `OriginatingAddress` table, you can call
+    /// `set_originating_address()`.
     AccountRotateAuthenticationKeyCall {
         new_auth_key: Vec<u8>,
+    },
+
+    /// Private entry function for key rotation that allows the signer to update their authentication key from a given public key.
+    /// This function will abort if the scheme is not recognized or if new_public_key_bytes is not a valid public key for the given scheme.
+    ///
+    /// Note: This function does not update the `OriginatingAddress` table.
+    AccountRotateAuthenticationKeyFromPublicKey {
+        scheme: u8,
+        new_public_key_bytes: Vec<u8>,
     },
 
     /// Private entry function for key rotation that allows the signer to update their authentication key from a given public key.
@@ -361,6 +374,12 @@ pub enum EntryFunctionCall {
     /// Create SUPRA pairing by passing `SupraCoin`.
     CoinCreatePairing {
         coin_type: TypeTag,
+    },
+
+    /// Migrate to fungible store for `CoinType` if not yet.
+    CoinMigrateCoinStoreToFungibleStore {
+        coin_type: TypeTag,
+        accounts: Vec<AccountAddress>,
     },
 
     /// Migrate to fungible store for `CoinType` if not yet.
@@ -906,6 +925,12 @@ pub enum EntryFunctionCall {
         sequence_number: u64,
         approved: bool,
     },
+
+    NonceValidationAddNonceBuckets {
+        count: u64,
+    },
+
+    NonceValidationInitializeNonceTable {},
 
     NonceValidationAddNonceBuckets {
         count: u64,
@@ -1510,6 +1535,10 @@ impl EntryFunctionCall {
                 scheme,
                 new_public_key_bytes,
             } => account_rotate_authentication_key_from_public_key(scheme, new_public_key_bytes),
+            AccountRotateAuthenticationKeyFromPublicKey {
+                scheme,
+                new_public_key_bytes,
+            } => account_rotate_authentication_key_from_public_key(scheme, new_public_key_bytes),
             AccountRotateAuthenticationKeyWithRotationCapability {
                 rotation_cap_offerer_address,
                 new_scheme,
@@ -1673,6 +1702,10 @@ impl EntryFunctionCall {
                 coin_type,
                 accounts,
             } => coin_migrate_coin_store_to_fungible_store(coin_type, accounts),
+            CoinMigrateCoinStoreToFungibleStore {
+                coin_type,
+                accounts,
+            } => coin_migrate_coin_store_to_fungible_store(coin_type, accounts),
             CoinMigrateToFungibleStore { coin_type } => coin_migrate_to_fungible_store(coin_type),
             CoinTransfer {
                 coin_type,
@@ -1767,6 +1800,7 @@ impl EntryFunctionCall {
                 n_vec,
             } => jwks_update_federated_jwk_set(iss, kid_vec, alg_vec, e_vec, n_vec),
             ManagedCoinBurn { coin_type, amount } => managed_coin_burn(coin_type, amount),
+            ManagedCoinDestroyCaps { coin_type } => managed_coin_destroy_caps(coin_type),
             ManagedCoinDestroyCaps { coin_type } => managed_coin_destroy_caps(coin_type),
             ManagedCoinInitialize {
                 coin_type,
@@ -1992,6 +2026,8 @@ impl EntryFunctionCall {
                 sequence_number,
                 approved,
             } => multisig_account_vote_transanction(multisig_account, sequence_number, approved),
+            NonceValidationAddNonceBuckets { count } => nonce_validation_add_nonce_buckets(count),
+            NonceValidationInitializeNonceTable {} => nonce_validation_initialize_nonce_table(),
             NonceValidationAddNonceBuckets { count } => nonce_validation_add_nonce_buckets(count),
             NonceValidationInitializeNonceTable {} => nonce_validation_initialize_nonce_table(),
             ObjectTransferCall { object, to } => object_transfer_call(object, to),
@@ -2503,6 +2539,7 @@ pub fn account_revoke_signer_capability(
 /// Alice has rotated her account `addr_a` to `new_addr_a`. As a result, the following entry is created, to help Alice when recovering her wallet:
 /// `OriginatingAddress[new_addr_a]` -> `addr_a`
 /// Alice has had a bad day: her laptop blew up and she needs to reset her account on a new one.
+/// Alice has had a bad day: her laptop blew up and she needs to reset her account on a new one.
 /// (Fortunately, she still has her secret key `new_sk_a` associated with her new address `new_addr_a`, so she can do this.)
 ///
 /// But Bob likes to mess with Alice.
@@ -2552,6 +2589,9 @@ pub fn account_rotate_authentication_key(
 ///
 /// If you'd like to followup with updating the `OriginatingAddress` table, you can call
 /// `set_originating_address()`.
+///
+/// If you'd like to followup with updating the `OriginatingAddress` table, you can call
+/// `set_originating_address()`.
 pub fn account_rotate_authentication_key_call(new_auth_key: Vec<u8>) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
         ModuleId::new(
@@ -2564,6 +2604,31 @@ pub fn account_rotate_authentication_key_call(new_auth_key: Vec<u8>) -> Transact
         ident_str!("rotate_authentication_key_call").to_owned(),
         vec![],
         vec![bcs::to_bytes(&new_auth_key).unwrap()],
+    ))
+}
+
+/// Private entry function for key rotation that allows the signer to update their authentication key from a given public key.
+/// This function will abort if the scheme is not recognized or if new_public_key_bytes is not a valid public key for the given scheme.
+///
+/// Note: This function does not update the `OriginatingAddress` table.
+pub fn account_rotate_authentication_key_from_public_key(
+    scheme: u8,
+    new_public_key_bytes: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("account").to_owned(),
+        ),
+        ident_str!("rotate_authentication_key_from_public_key").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&scheme).unwrap(),
+            bcs::to_bytes(&new_public_key_bytes).unwrap(),
+        ],
     ))
 }
 
@@ -3139,6 +3204,26 @@ pub fn automation_registry_cancel_task(task_index: u64) -> TransactionPayload {
     ))
 }
 
+/// Immediately stops system automation tasks for the specified `task_indexes`.
+/// Only tasks that exist and are owned by the sender can be stopped.
+/// If any of the specified tasks are not owned by the sender, the transaction will abort.
+/// When a task is stopped, the committed gas for the next epoch is reduced
+/// by the max gas amount of the stopped task.
+pub fn automation_registry_stop_system_tasks(task_indexes: Vec<u64>) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("automation_registry").to_owned(),
+        ),
+        ident_str!("stop_system_tasks").to_owned(),
+        vec![],
+        vec![bcs::to_bytes(&task_indexes).unwrap()],
+    ))
+}
+
 /// Immediately stops automation tasks for the specified `task_indexes`.
 /// Only tasks that exist and are owned by the sender can be stopped.
 /// If any of the specified tasks are not owned by the sender, the transaction will abort.
@@ -3574,6 +3659,25 @@ pub fn coin_create_pairing(coin_type: TypeTag) -> TransactionPayload {
         ident_str!("create_pairing").to_owned(),
         vec![coin_type],
         vec![],
+    ))
+}
+
+/// Migrate to fungible store for `CoinType` if not yet.
+pub fn coin_migrate_coin_store_to_fungible_store(
+    coin_type: TypeTag,
+    accounts: Vec<AccountAddress>,
+) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("coin").to_owned(),
+        ),
+        ident_str!("migrate_coin_store_to_fungible_store").to_owned(),
+        vec![coin_type],
+        vec![bcs::to_bytes(&accounts).unwrap()],
     ))
 }
 
@@ -4968,6 +5072,7 @@ pub fn multisig_account_vote_transanction(
 }
 
 pub fn nonce_validation_add_nonce_buckets(count: u64) -> TransactionPayload {
+pub fn nonce_validation_add_nonce_buckets(count: u64) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
         ModuleId::new(
             AccountAddress::new([
@@ -4975,13 +5080,17 @@ pub fn nonce_validation_add_nonce_buckets(count: u64) -> TransactionPayload {
                 0, 0, 0, 1,
             ]),
             ident_str!("nonce_validation").to_owned(),
+            ident_str!("nonce_validation").to_owned(),
         ),
         ident_str!("add_nonce_buckets").to_owned(),
+        ident_str!("add_nonce_buckets").to_owned(),
         vec![],
+        vec![bcs::to_bytes(&count).unwrap()],
         vec![bcs::to_bytes(&count).unwrap()],
     ))
 }
 
+pub fn nonce_validation_initialize_nonce_table() -> TransactionPayload {
 pub fn nonce_validation_initialize_nonce_table() -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
         ModuleId::new(
@@ -4990,13 +5099,18 @@ pub fn nonce_validation_initialize_nonce_table() -> TransactionPayload {
                 0, 0, 0, 1,
             ]),
             ident_str!("nonce_validation").to_owned(),
+            ident_str!("nonce_validation").to_owned(),
         ),
+        ident_str!("initialize_nonce_table").to_owned(),
         ident_str!("initialize_nonce_table").to_owned(),
         vec![],
         vec![],
     ))
+    ))
 }
 
+/// Entry function that can be used to transfer, if allow_ungated_transfer is set true.
+pub fn object_transfer_call(object: AccountAddress, to: AccountAddress) -> TransactionPayload {
 /// Entry function that can be used to transfer, if allow_ungated_transfer is set true.
 pub fn object_transfer_call(object: AccountAddress, to: AccountAddress) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
@@ -5006,13 +5120,23 @@ pub fn object_transfer_call(object: AccountAddress, to: AccountAddress) -> Trans
                 0, 0, 0, 1,
             ]),
             ident_str!("object").to_owned(),
+            ident_str!("object").to_owned(),
         ),
         ident_str!("transfer_call").to_owned(),
+        ident_str!("transfer_call").to_owned(),
         vec![],
+        vec![bcs::to_bytes(&object).unwrap(), bcs::to_bytes(&to).unwrap()],
         vec![bcs::to_bytes(&object).unwrap(), bcs::to_bytes(&to).unwrap()],
     ))
 }
 
+/// Creates a new object with a unique address derived from the publisher address and the object seed.
+/// Publishes the code passed in the function to the newly created object.
+/// The caller must provide package metadata describing the package via `metadata_serialized` and
+/// the code to be published via `code`. This contains a vector of modules to be deployed on-chain.
+pub fn object_code_deployment_publish(
+    metadata_serialized: Vec<u8>,
+    code: Vec<Vec<u8>>,
 /// Creates a new object with a unique address derived from the publisher address and the object seed.
 /// Publishes the code passed in the function to the newly created object.
 /// The caller must provide package metadata describing the package via `metadata_serialized` and
@@ -5028,7 +5152,9 @@ pub fn object_code_deployment_publish(
                 0, 0, 0, 1,
             ]),
             ident_str!("object_code_deployment").to_owned(),
+            ident_str!("object_code_deployment").to_owned(),
         ),
+        ident_str!("publish").to_owned(),
         ident_str!("publish").to_owned(),
         vec![],
         vec![
@@ -7277,6 +7403,19 @@ mod decoder {
         }
     }
 
+    pub fn coin_migrate_coin_store_to_fungible_store(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::CoinMigrateCoinStoreToFungibleStore {
+                coin_type: script.ty_args().get(0)?.clone(),
+                accounts: bcs::from_bytes(script.args().get(0)?).ok()?,
+            })
+        } else {
+            None
+        }
+    }
+
     pub fn coin_migrate_to_fungible_store(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
@@ -7531,6 +7670,16 @@ mod decoder {
             Some(EntryFunctionCall::ManagedCoinBurn {
                 coin_type: script.ty_args().get(0)?.clone(),
                 amount: bcs::from_bytes(script.args().get(0)?).ok()?,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn managed_coin_destroy_caps(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::ManagedCoinDestroyCaps {
+                coin_type: script.ty_args().get(0)?.clone(),
             })
         } else {
             None
@@ -8005,9 +8154,12 @@ mod decoder {
     }
 
     pub fn nonce_validation_add_nonce_buckets(
+    pub fn nonce_validation_add_nonce_buckets(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
         if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::NonceValidationAddNonceBuckets {
+                count: bcs::from_bytes(script.args().get(0)?).ok()?,
             Some(EntryFunctionCall::NonceValidationAddNonceBuckets {
                 count: bcs::from_bytes(script.args().get(0)?).ok()?,
             })
@@ -8017,8 +8169,11 @@ mod decoder {
     }
 
     pub fn nonce_validation_initialize_nonce_table(
+    pub fn nonce_validation_initialize_nonce_table(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(_script) = payload {
+            Some(EntryFunctionCall::NonceValidationInitializeNonceTable {})
         if let TransactionPayload::EntryFunction(_script) = payload {
             Some(EntryFunctionCall::NonceValidationInitializeNonceTable {})
         } else {
@@ -8027,7 +8182,11 @@ mod decoder {
     }
 
     pub fn object_transfer_call(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
+    pub fn object_transfer_call(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
         if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::ObjectTransferCall {
+                object: bcs::from_bytes(script.args().get(0)?).ok()?,
+                to: bcs::from_bytes(script.args().get(1)?).ok()?,
             Some(EntryFunctionCall::ObjectTransferCall {
                 object: bcs::from_bytes(script.args().get(0)?).ok()?,
                 to: bcs::from_bytes(script.args().get(1)?).ok()?,
@@ -8037,6 +8196,7 @@ mod decoder {
         }
     }
 
+    pub fn object_code_deployment_publish(
     pub fn object_code_deployment_publish(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
@@ -9131,6 +9291,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
             Box::new(decoder::account_rotate_authentication_key_from_public_key),
         );
         map.insert(
+            "account_rotate_authentication_key_from_public_key".to_string(),
+            Box::new(decoder::account_rotate_authentication_key_from_public_key),
+        );
+        map.insert(
             "account_rotate_authentication_key_with_rotation_capability".to_string(),
             Box::new(decoder::account_rotate_authentication_key_with_rotation_capability),
         );
@@ -9311,6 +9475,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
             Box::new(decoder::coin_migrate_coin_store_to_fungible_store),
         );
         map.insert(
+            "coin_migrate_coin_store_to_fungible_store".to_string(),
+            Box::new(decoder::coin_migrate_coin_store_to_fungible_store),
+        );
+        map.insert(
             "coin_migrate_to_fungible_store".to_string(),
             Box::new(decoder::coin_migrate_to_fungible_store),
         );
@@ -9371,6 +9539,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
             Box::new(decoder::managed_coin_destroy_caps),
         );
         map.insert(
+            "managed_coin_destroy_caps".to_string(),
+            Box::new(decoder::managed_coin_destroy_caps),
+        );
+        map.insert(
             "managed_coin_initialize".to_string(),
             Box::new(decoder::managed_coin_initialize),
         );
@@ -9417,6 +9589,16 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "multisig_account_create_with_existing_account_and_revoke_auth_key".to_string(),
             Box::new(decoder::multisig_account_create_with_existing_account_and_revoke_auth_key),
+        );
+        map.insert(
+            "multisig_account_create_with_existing_account_and_revoke_auth_key_call".to_string(),
+            Box::new(
+                decoder::multisig_account_create_with_existing_account_and_revoke_auth_key_call,
+            ),
+        );
+        map.insert(
+            "multisig_account_create_with_existing_account_call".to_string(),
+            Box::new(decoder::multisig_account_create_with_existing_account_call),
         );
         map.insert(
             "multisig_account_create_with_existing_account_and_revoke_auth_key_call".to_string(),
@@ -9491,6 +9673,14 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "multisig_account_vote_transanction".to_string(),
             Box::new(decoder::multisig_account_vote_transanction),
+        );
+        map.insert(
+            "nonce_validation_add_nonce_buckets".to_string(),
+            Box::new(decoder::nonce_validation_add_nonce_buckets),
+        );
+        map.insert(
+            "nonce_validation_initialize_nonce_table".to_string(),
+            Box::new(decoder::nonce_validation_initialize_nonce_table),
         );
         map.insert(
             "nonce_validation_add_nonce_buckets".to_string(),
