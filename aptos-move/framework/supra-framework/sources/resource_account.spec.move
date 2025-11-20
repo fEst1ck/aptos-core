@@ -72,7 +72,6 @@ spec supra_framework::resource_account {
         let source_addr = signer::address_of(origin);
         let resource_addr = account::spec_create_resource_address(source_addr, seed);
         let resource = create_signer::spec_create_signer(resource_addr);
-        let resource = create_signer::spec_create_signer(resource_addr);
         include RotateAccountAuthenticationKeyAndStoreCapabilityAbortsIfWithoutAccountLimit;
     }
 

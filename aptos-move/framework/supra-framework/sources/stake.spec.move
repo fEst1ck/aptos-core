@@ -130,7 +130,7 @@ spec supra_framework::stake {
         include AbortsIfSignerPermissionStake {
             s: account
         };
-        let pubkey_from_pop = aptos_std::bls12381::spec_public_key_from_bytes_with_pop(
+        let is_public_key_validated = aptos_std::ed25519::spec_public_key_validate_internal(
             consensus_pubkey,
         );
         aborts_if !is_public_key_validated;
@@ -552,7 +552,7 @@ spec supra_framework::stake {
         aborts_if !exists<ValidatorConfig>(pool_address);
         aborts_if global<ValidatorConfig>(pool_address).validator_index >= len(validator_perf.validators);
 
-        let aptos_addr = type_info::type_of<AptosCoin>().account_address;
+        let aptos_addr = type_info::type_of<SupraCoin>().account_address;
         aborts_if !exists<ValidatorFees>(aptos_addr);
 
         let stake_pool = global<StakePool>(pool_address);

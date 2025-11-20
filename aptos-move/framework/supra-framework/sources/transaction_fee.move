@@ -116,7 +116,7 @@ module supra_framework::transaction_fee {
         }
     }
 
-    public entry fun convert_to_aptos_fa_burn_ref(supra_framework: &signer) acquires SupraCoinCapabilities {
+    public entry fun convert_to_supra_fa_burn_ref(supra_framework: &signer) acquires SupraCoinCapabilities {
         assert!(features::operations_default_to_fa_supra_store_enabled(), EFA_GAS_CHARGING_NOT_ENABLED);
         system_addresses::assert_supra_framework(supra_framework);
         let SupraCoinCapabilities {
@@ -127,7 +127,7 @@ module supra_framework::transaction_fee {
     }
 
     /// Only called during genesis.
-    public(friend) fun store_aptos_coin_mint_cap(supra_framework: &signer, mint_cap: MintCapability<SupraCoin>) {
+    public(friend) fun store_supra_coin_mint_cap(supra_framework: &signer, mint_cap: MintCapability<SupraCoin>) {
         system_addresses::assert_supra_framework(supra_framework);
         move_to(supra_framework, SupraCoinMintCapability { mint_cap })
     }

@@ -1476,7 +1476,7 @@ module supra_framework::account {
     public entry fun mock_sequence_numbers_source_code()
     acquires Account {
         let addr: address = @0x1234; // Define test address
-        create_account(addr); // Initialize account resource
+        create_account_unchecked(addr); // Initialize account resource
         // Assert sequence number intializes to 0
         assert!(Account[addr].sequence_number == 0, 0);
         increment_sequence_number_for_test_using_source_code(addr); // Increment sequence number

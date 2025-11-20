@@ -346,7 +346,7 @@ module supra_framework::supra_account {
         let (resource_account, _) = account::create_resource_account(alice, vector[]);
         let resource_acc_addr = signer::address_of(&resource_account);
         let (burn_cap, mint_cap) = supra_framework::supra_coin::initialize_for_test(core);
-        assert!(coin::is_account_registered<SupraCoin>(resource_acc_addr), 0);
+        assert!(!coin::is_account_registered<SupraCoin>(resource_acc_addr), 0);
 
         create_account(signer::address_of(alice));
         coin::deposit(signer::address_of(alice), coin::mint(10000, &mint_cap));

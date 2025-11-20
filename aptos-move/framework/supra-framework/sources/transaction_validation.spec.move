@@ -328,16 +328,6 @@ spec supra_framework::transaction_validation {
         pragma verify = false;
     }
 
-    spec epilogue_gas_payer_only(
-        gas_payer: address,
-        storage_fee_refunded: u64,
-        txn_gas_price: u64,
-        txn_max_gas_units: u64,
-        gas_units_remaining: u64
-    ) {
-        pragma verify = false;
-    }
-
     spec epilogue(
         account: signer,
         storage_fee_refunded: u64,
