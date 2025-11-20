@@ -994,7 +994,6 @@ module supra_framework::coin {
         account_addr: address,
         coin: Coin<CoinType>
     ) acquires CoinStore, CoinConversionMap, CoinInfo {
-        spec { assume exists<CoinStore<CoinType>>(account_addr); };
         if (exists<CoinStore<CoinType>>(account_addr)) {
             let coin_store = borrow_global_mut<CoinStore<CoinType>>(account_addr);
             assert!(

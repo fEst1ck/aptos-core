@@ -209,7 +209,7 @@ impl FeatureFlag {
             FeatureFlag::WEBAUTHN_SIGNATURE,
             // FeatureFlag::RECONFIGURE_WITH_DKG, //TODO: re-enable once randomness is ready.
             FeatureFlag::KEYLESS_ACCOUNTS,
-            FeatureFlag::FEDERATED_KEYLESS, // new
+            // FeatureFlag::FEDERATED_KEYLESS, // new
             FeatureFlag::KEYLESS_BUT_ZKLESS_ACCOUNTS,
             FeatureFlag::JWK_CONSENSUS,
             FeatureFlag::REFUNDABLE_BYTES,
@@ -224,7 +224,8 @@ impl FeatureFlag {
             FeatureFlag::COIN_TO_FUNGIBLE_ASSET_MIGRATION,
             FeatureFlag::OBJECT_NATIVE_DERIVED_ADDRESS,
             FeatureFlag::DISPATCHABLE_FUNGIBLE_ASSET,
-            FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE, // new
+            FeatureFlag::_DEPRECATED_REMOVE_DETAILED_ERROR_FROM_HASH,
+            // FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_APT_STORE, // new
             // FeatureFlag::OPERATIONS_DEFAULT_TO_FA_APT_STORE, // new 
             FeatureFlag::CONCURRENT_FUNGIBLE_ASSETS,
             FeatureFlag::AGGREGATOR_V2_IS_AT_LEAST_API,
@@ -249,13 +250,13 @@ impl FeatureFlag {
             FeatureFlag::DERIVABLE_ACCOUNT_ABSTRACTION,
             FeatureFlag::VM_BINARY_FORMAT_V8,
             FeatureFlag::ENABLE_FUNCTION_VALUES,
-            FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_STORE,
-            FeatureFlag::DEFAULT_ACCOUNT_RESOURCE,
+            // FeatureFlag::NEW_ACCOUNTS_DEFAULT_TO_FA_STORE,
+            // FeatureFlag::DEFAULT_ACCOUNT_RESOURCE,
             FeatureFlag::JWK_CONSENSUS_PER_KEY_MODE,
             FeatureFlag::TRANSACTION_PAYLOAD_V2,
             FeatureFlag::ORDERLESS_TRANSACTIONS,
-            FeatureFlag::CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION,
-            FeatureFlag::DISTRIBUTE_TRANSACTION_FEE,
+            // FeatureFlag::CALCULATE_TRANSACTION_FEE_FOR_DISTRIBUTION,
+            // FeatureFlag::DISTRIBUTE_TRANSACTION_FEE,
             FeatureFlag::SUPRA_AUTOMATION_PAYLOAD_GAS_CHECK,
             FeatureFlag::PRIVATE_POLL,
             FeatureFlag::SUPRA_AUTOMATION_TASK_SYNC,

@@ -1112,9 +1112,9 @@ module supra_framework::vesting_without_staking {
             &accounts,
             |addr| {
                 let addr: address = *addr;
-                // if (!account::exists_at(addr)) {
+                if (!account::exists_at(addr)) {
                     create_account(addr);
-                // };
+                };
             },
         );
     }
@@ -2835,9 +2835,8 @@ module supra_framework::vesting_without_staking {
         setup_vesting_contract(admin, &vector[], &vector[], admin_address);
     }
 
-    // NOTE: as account::exist_at return true even if not created with default feature
     #[test(supra_framework = @0x1, admin = @0x123)]
-    #[expected_failure(abort_code = 0x60002, location = supra_framework::supra_account)]
+    #[expected_failure(abort_code = 0x60001, location = supra_framework::supra_account)]
     public entry fun test_create_vesting_contract_with_invalid_withdrawal_address_should_fail(
         supra_framework: &signer, admin: &signer
     ) acquires AdminStore {
@@ -2846,9 +2845,8 @@ module supra_framework::vesting_without_staking {
         setup_vesting_contract(admin, &vector[@1, @2], &vector[1], @5);
     }
 
-    // NOTE: as account::exist_at return true even if not created with default feature
     #[test(supra_framework = @0x1, admin = @0x123)]
-    #[expected_failure(abort_code = 0x60002, location = supra_framework::supra_account)]
+    #[expected_failure(abort_code = 0x60001, location = supra_framework::supra_account)]
     public entry fun test_create_vesting_contract_with_missing_withdrawal_account_should_fail(
         supra_framework: &signer, admin: &signer
     ) acquires AdminStore {
@@ -3058,9 +3056,8 @@ module supra_framework::vesting_without_staking {
         admin_withdraw(admin, contract_address);
     }
 
-    // NOTE: as account::exist_at return true even if not created with default feature
     #[test(supra_framework = @0x1, admin = @0x123)]
-    #[expected_failure(abort_code = 0x60002, location = supra_framework::supra_account)] 
+    #[expected_failure(abort_code = 0x60001, location = supra_framework::supra_account)] 
     public entry fun test_set_beneficiary_with_missing_account_should_fail(
         supra_framework: &signer, admin: &signer
     ) acquires AdminStore, VestingContract {

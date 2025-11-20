@@ -1999,9 +1999,8 @@ module supra_framework::vesting {
         admin_withdraw(admin, contract_address);
     }
 
-    // NOTE: as account::exist_at return true even if not created with default feature
     #[test(supra_framework = @0x1, admin = @0x123)]
-    #[expected_failure(abort_code = 0x60002, location = supra_framework::supra_account)]
+    #[expected_failure(abort_code = 0x60001, location = supra_framework::supra_account)]
     public entry fun test_set_beneficiary_with_missing_account(
         supra_framework: &signer,
         admin: &signer,
@@ -2013,7 +2012,6 @@ module supra_framework::vesting {
         set_beneficiary(admin, contract_address, @1, @11);
     }
 
-    // NOTE: as account::exist_at return true even if not created with default feature
     #[test(supra_framework = @0x1, admin = @0x123)]
     #[expected_failure(abort_code = 0x60002, location = supra_framework::supra_account)]
     public entry fun test_set_beneficiary_with_unregistered_account(
