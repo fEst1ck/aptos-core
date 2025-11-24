@@ -229,7 +229,7 @@ pub fn encode_supra_mainnet_genesis_transaction(
     // Lock up the remaining available balances of the accounts for TGE
     create_vesting_without_staking_pools(&mut session, &module_storage, &mut traversal_context, initial_unlock_vesting_pools);
 
-    set_genesis_end(&mut session &module_storage, &mut traversal_context);
+    set_genesis_end(&mut session, &module_storage, &mut traversal_context);
 
     // Reconfiguration should happen after all on-chain invocations.
     emit_new_block_and_epoch_event(&mut session, &module_storage, &mut traversal_context);
@@ -412,19 +412,21 @@ pub fn encode_genesis_change_set_for_testnet(
     );
     } else {
         // All PBO delegated validators are initialized here
-        create_pbo_delegation_pools(&mut session, delegation_pools);
+        create_pbo_delegation_pools(&mut session, &module_storage, &mut traversal_context, delegation_pools);
 
         add_owner_stakes_for_delegation_pools(
             &mut session,
+            &module_storage,
+            &mut traversal_context,
             delegation_pools,
             owner_stake_for_pbo_pool,
         );
 
         // PBO vesting accounts, employees, investors etc. are placed in their vesting pools
-        create_vesting_without_staking_pools(&mut session, vesting_pools);
+        create_vesting_without_staking_pools(&mut session, &module_storage, &mut traversal_context, vesting_pools);
 
         // Lock up the remaining available balances of the accounts for TGE
-        create_vesting_without_staking_pools(&mut session, initial_unlock_vesting_pools);
+        create_vesting_without_staking_pools(&mut session, &module_storage, &mut traversal_context, initial_unlock_vesting_pools);
     }
 
     if genesis_config.is_test {
@@ -695,7 +697,7 @@ fn initialize_supra_coin(
 }
 
 fn initialize_supra_native_automation(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
     module_storage: &impl AptosModuleStorage,
     traversal_context: &mut TraversalContext,
     genesis_config: &GenesisConfiguration,
@@ -715,7 +717,7 @@ fn initialize_supra_native_automation(
 }
 
 fn initialize_evm_genesis_config(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
     module_storage: &impl AptosModuleStorage,
     traversal_context: &mut TraversalContext,
     evm_genesis_config: &OnChainEvmGenesisConfig,
@@ -1134,12 +1136,19 @@ fn create_accounts(
 /// Creates and initializes each validator owner and validator operator. This method creates all
 /// the required accounts, sets the validator operators for each validator owner, and sets the
 /// validator config on-chain.
-fn create_and_initialize_validators(session: &mut SessionExt, validators: &[Validator]) {
+fn create_and_initialize_validators(
+    session: &mut SessionExt<impl AptosMoveResolver>, 
+    module_storage: &impl ModuleStorage,
+    traversal_context: &mut TraversalContext,
+    validators: &[Validator],
+) {
     let validators_bytes = bcs::to_bytes(validators).expect("Validators can be serialized");
     let mut serialized_values = serialize_values(&vec![MoveValue::Signer(CORE_CODE_ADDRESS)]);
     serialized_values.push(validators_bytes);
     exec_function(
         session,
+        module_storage,
+        traversal_context,
         GENESIS_MODULE_NAME,
         "create_initialize_validators",
         vec![],
@@ -1210,7 +1219,6 @@ fn create_multisig_accounts_with_balance(
     traversal_context: &mut TraversalContext,
 
     multisig_accounts: &[MultiSigAccountWithBalance],
-,
 ) {
     for account_configuration in multisig_accounts {
         let mut serialized_values = serialize_values(&vec![MoveValue::Signer(CORE_CODE_ADDRESS)]);
@@ -1246,8 +1254,8 @@ fn create_multisig_accounts_with_balance(
         exec_function(
             session,
             module_storage,
-        traversal_context,
-        GENESIS_MODULE_NAME,
+            traversal_context,
+            GENESIS_MODULE_NAME,
             "create_multisig_account_with_balance",
             vec![],
             serialized_values,
@@ -1278,7 +1286,7 @@ fn create_pbo_delegation_pools(
 }
 
 fn add_owner_stakes_for_delegation_pools(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
     module_storage: &impl AptosModuleStorage,
     traversal_context: &mut TraversalContext,
     pbo_delegator_configuration: &[PboDelegatorConfiguration],
@@ -1307,7 +1315,9 @@ fn add_owner_stakes_for_delegation_pools(
 }
 
 fn create_vesting_without_staking_pools(
-    session: &mut SessionExt,
+    session: &mut SessionExt<impl AptosMoveResolver>,
+    module_storage: &impl ModuleStorage,
+    traversal_context: &mut TraversalContext,
     vesting_pools_map: &[VestingPoolsMap],
 ) {
     let serialized_values =
@@ -1769,7 +1779,7 @@ pub struct AccountBalance {
 impl Hash for AccountBalance {
     fn hash<H: Hasher>(&self, state: &mut H) {
         state.write(&self.account_address.to_vec());
-        state.finish();
+        let _ = state.finish();
     }
 }
 
@@ -1856,7 +1866,7 @@ pub struct MultiSigAccountWithBalance {
 impl Hash for MultiSigAccountWithBalance {
     fn hash<H: Hasher>(&self, state: &mut H) {
         state.write(&self.multisig_address.to_vec());
-        state.finish();
+        let _ = state.finish();
     }
 }
 

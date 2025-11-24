@@ -4,8 +4,10 @@
 use crate::MoveHarness;
 use aptos_cached_packages::aptos_stdlib::supra_account_transfer;
 use aptos_language_e2e_tests::account::Account;
+use crate::assert_success;
 
 #[test]
+#[should_panic] // as we disabled the default account feature
 fn non_existent_sender() {
     let mut h = MoveHarness::new();
 

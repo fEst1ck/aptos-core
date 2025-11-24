@@ -220,7 +220,7 @@ impl ReleasePackage {
                 for_address
             );
         } else if !is_multi_step {
-            emitln!(writer, "fun {} (proposal_id: u64) {");
+            emitln!(writer, "fun main(proposal_id: u64) {");
             writer.indent();
             emitln!(
                 writer,
@@ -228,7 +228,7 @@ impl ReleasePackage {
                 for_address
             );
         } else {
-            emitln!(writer, "fun {} (proposal_id: u64) {");
+            emitln!(writer, "fun main(proposal_id: u64) {");
             writer.indent();
             generate_next_execution_hash_blob(&writer, for_address, next_execution_hash);
         }

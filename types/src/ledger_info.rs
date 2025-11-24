@@ -176,7 +176,7 @@ impl Display for LedgerInfoWithSignatures {
     }
 }
 
-// proxy to create LedgerInfoWithbls12381::
+// proxy to create LedgerInfoWithed25519::
 impl LedgerInfoWithSignatures {
     pub fn new(ledger_info: LedgerInfo, signatures: AggregateSignature) -> Self {
         LedgerInfoWithSignatures::V0(LedgerInfoWithV0::new(ledger_info, signatures))
@@ -589,7 +589,7 @@ mod tests {
     // Write a test case to serialize and deserialize SignatureWithStatus
     #[test]
     fn test_signature_with_status_bcs() {
-        let signature = bls12381::Signature::dummy_signature();
+        let signature = ed25519::Signature::dummy_signature();
         let signature_with_status_1 = SignatureWithStatus {
             signature: signature.clone(),
             verification_status: Arc::new(AtomicBool::new(true)),
@@ -613,7 +613,7 @@ mod tests {
 
     #[test]
     fn test_signature_with_status_serde() {
-        let signature = bls12381::Signature::dummy_signature();
+        let signature = ed25519::Signature::dummy_signature();
         let signature_with_status_1 = SignatureWithStatus {
             signature: signature.clone(),
             verification_status: Arc::new(AtomicBool::new(true)),
@@ -767,7 +767,7 @@ mod tests {
 
         signature_aggregator.add_signature(
             validator_signers[4].author(),
-            &SignatureWithStatus::from(bls12381::Signature::dummy_signature()),
+            &SignatureWithStatus::from(ed25519::Signature::dummy_signature()),
         );
 
         assert_eq!(signature_aggregator.all_voters().count(), 5);
@@ -824,7 +824,7 @@ mod tests {
 
         signature_aggregator.add_signature(
             validator_signers[6].author(),
-            &SignatureWithStatus::from(bls12381::Signature::dummy_signature()),
+            &SignatureWithStatus::from(ed25519::Signature::dummy_signature()),
         );
 
         assert_eq!(signature_aggregator.all_voters().count(), 6);
