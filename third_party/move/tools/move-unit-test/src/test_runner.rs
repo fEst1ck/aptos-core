@@ -23,7 +23,7 @@ use move_core_types::{
     account_address::AccountAddress,
     effects::{ChangeSet, Op},
     identifier::IdentStr,
-    value::serialize_values,
+    value::{serialize_values, MoveValue},
     vm_status::StatusCode,
 };
 use move_resource_viewer::MoveValueAnnotator;
@@ -36,8 +36,9 @@ use move_vm_runtime::{
     AsFunctionValueExtension, AsUnsyncModuleStorage, ModuleStorage, RuntimeEnvironment,
 };
 use move_vm_test_utils::InMemoryStorage;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use rayon::prelude::*;
-use std::{io::Write, marker::Send, sync::Mutex, time::Instant};
+use std::{env, io::Write, marker::Send, sync::Mutex, time::Instant};
 
 /// Test state common to all tests
 pub struct SharedTestingConfig {
@@ -242,7 +243,7 @@ impl SharedTestingConfig {
         &self,
         test_plan: &ModuleTestPlan,
         function_name: &str,
-        test_info: &TestCase,
+        test_args: &[MoveValue],
         factory: &Mutex<F>,
     ) -> (
         VMResult<ChangeSet>,
@@ -269,7 +270,7 @@ impl SharedTestingConfig {
                 &[],
             )
             .and_then(|function| {
-                let args = serialize_values(test_info.arguments.iter());
+                let args = serialize_values(test_args);
                 MoveVM::execute_loaded_function(
                     function,
                     args,
@@ -319,6 +320,177 @@ impl SharedTestingConfig {
         }
     }
 
+    fn run_one_test<F: UnitTestFactory>(
+        &self,
+        test_plan: &ModuleTestPlan,
+        test_info: &TestCase,
+        output: &TestOutput<impl Write>,
+        factory: &Mutex<F>,
+        stats: &mut TestStatistics,
+        rng: &mut StdRng,
+        function_name: &String,
+        record_test: bool,
+    ) -> bool {
+        let mut data = vec![0u8; 1024];
+        rng.fill(&mut data[..]);
+        let args = test_info.gen_args(&mut arbitrary::Unstructured::new(&data)).expect("Failed to generate test arguments");
+        let failure_input = if test_info.is_prop_test() {
+            Some(args.clone())
+        } else {
+            None
+        };
+        let (cs_result, ext_result, exec_result, test_run_info) =
+            self.execute_via_move_vm(test_plan, function_name, &args, factory);
+
+        if self.record_writeset {
+            stats.test_output(
+                function_name.to_string(),
+                test_plan,
+                format!("{:?}", cs_result),
+            );
+        }
+
+        let save_session_state = || {
+            if self.save_storage_state_on_failure {
+                cs_result.ok().and_then(|changeset| {
+                    ext_result.ok().and_then(|mut extensions| {
+                        print_resources_and_extensions(
+                            &changeset,
+                            &mut extensions,
+                            &self.starting_storage_state,
+                        )
+                        .ok()
+                    })
+                })
+            } else {
+                None
+            }
+        };
+
+        match exec_result {
+            Err(err) => {
+                let actual_err = MoveError(
+                    err.major_status(),
+                    err.sub_status(),
+                    err.location().clone(),
+                    err.message().cloned(),
+                );
+                assert!(err.major_status() != StatusCode::EXECUTED);
+                match test_info.expected_failure.as_ref() {
+                    Some(ExpectedFailure::Expected) => {
+                        if record_test {
+                            output.pass(function_name);
+                            stats.test_success(test_run_info, test_plan);
+                        }
+                        true
+                    },
+                    Some(ExpectedFailure::ExpectedWithError(expected_err))
+                        if expected_err == &actual_err =>
+                    {
+                        if record_test {
+                            output.pass(function_name);
+                            stats.test_success(test_run_info, test_plan);
+                        }
+                        true
+                    },
+                    Some(ExpectedFailure::ExpectedWithCodeDEPRECATED(code))
+                        if actual_err.0 == StatusCode::ABORTED
+                            && actual_err.1.is_some()
+                            && actual_err.1.unwrap() == *code =>
+                    {
+                        if record_test {
+                            output.pass(function_name);
+                            stats.test_success(test_run_info, test_plan);
+                        }
+                        true
+                    },
+                    // incorrect cases
+                    Some(ExpectedFailure::ExpectedWithError(expected_err)) => {
+                        output.fail(function_name);
+                        stats.test_failure(
+                            TestFailure::new(
+                                FailureReason::wrong_error(expected_err.clone(), actual_err),
+                                failure_input,
+                                test_run_info,
+                                Some(err),
+                                save_session_state(),
+                            ),
+                            test_plan,
+                        );
+                        false
+                    },
+                    Some(ExpectedFailure::ExpectedWithCodeDEPRECATED(expected_code)) => {
+                        output.fail(function_name);
+                        stats.test_failure(
+                            TestFailure::new(
+                                FailureReason::wrong_abort_deprecated(*expected_code, actual_err),
+                                failure_input,
+                                test_run_info,
+                                Some(err),
+                                save_session_state(),
+                            ),
+                            test_plan,
+                        );
+                        false
+                    },
+                    None if err.major_status() == StatusCode::OUT_OF_GAS => {
+                        // Ran out of ticks, report a test timeout and log a test failure
+                        output.timeout(function_name);
+                        stats.test_failure(
+                            TestFailure::new(
+                                FailureReason::timeout(),
+                                failure_input,
+                                test_run_info,
+                                Some(err),
+                                save_session_state(),
+                            ),
+                            test_plan,
+                        );
+                        false
+                    },
+                    None => {
+                        output.fail(function_name);
+                        stats.test_failure(
+                            TestFailure::new(
+                                FailureReason::unexpected_error(actual_err),
+                                failure_input,
+                                test_run_info,
+                                Some(err),
+                                save_session_state(),
+                            ),
+                            test_plan,
+                        );
+                        false
+                    },
+                }
+            },
+            Ok(_) => {
+                // Expected the test to fail, but it executed
+                if test_info.expected_failure.is_some() {
+                    output.fail(function_name);
+                    stats.test_failure(
+                        TestFailure::new(
+                            FailureReason::no_error(),
+                            failure_input,
+                            test_run_info,
+                            None,
+                            save_session_state(),
+                        ),
+                        test_plan,
+                    );
+                    false
+                } else {
+                    // Expected the test to execute fully and it did
+                    if record_test {
+                        output.pass(function_name);
+                        stats.test_success(test_run_info, test_plan);
+                    }
+                    true
+                }
+            },
+        }
+    }
+
     fn exec_module_tests_move_vm_and_stackless_vm<F: UnitTestFactory>(
         &self,
         test_plan: &ModuleTestPlan,
@@ -327,138 +499,29 @@ impl SharedTestingConfig {
     ) -> TestStatistics {
         let mut stats = TestStatistics::new();
 
+        let mut rng = if let Ok(seed_str) = env::var("TEST_SEED") {
+            StdRng::seed_from_u64(seed_str.parse::<u64>().unwrap())
+        } else {
+            StdRng::from_entropy()
+        };
+
         for (function_name, test_info) in &test_plan.tests {
-            let (cs_result, ext_result, exec_result, test_run_info) =
-                self.execute_via_move_vm(test_plan, function_name, test_info, factory);
-
-            if self.record_writeset {
-                stats.test_output(
-                    function_name.to_string(),
-                    test_plan,
-                    format!("{:?}", cs_result),
-                );
-            }
-
-            let save_session_state = || {
-                if self.save_storage_state_on_failure {
-                    cs_result.ok().and_then(|changeset| {
-                        ext_result.ok().and_then(|mut extensions| {
-                            print_resources_and_extensions(
-                                &changeset,
-                                &mut extensions,
-                                &self.starting_storage_state,
-                            )
-                            .ok()
-                        })
-                    })
-                } else {
-                    None
-                }
+            let repeats = if test_info.is_prop_test() {
+                // TODO: not passing from env var
+                // Read number of repeats from TEST_REPEAT env var, default to 10
+                env::var("TEST_REPEAT")
+                    .ok()
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .unwrap_or(10)
+            } else {
+                1
             };
-
-            match exec_result {
-                Err(err) => {
-                    let actual_err = MoveError(
-                        err.major_status(),
-                        err.sub_status(),
-                        err.location().clone(),
-                        err.message().cloned(),
-                    );
-                    assert!(err.major_status() != StatusCode::EXECUTED);
-                    match test_info.expected_failure.as_ref() {
-                        Some(ExpectedFailure::Expected) => {
-                            output.pass(function_name);
-                            stats.test_success(test_run_info, test_plan);
-                        },
-                        Some(ExpectedFailure::ExpectedWithError(expected_err))
-                            if expected_err == &actual_err =>
-                        {
-                            output.pass(function_name);
-                            stats.test_success(test_run_info, test_plan);
-                        },
-                        Some(ExpectedFailure::ExpectedWithCodeDEPRECATED(code))
-                            if actual_err.0 == StatusCode::ABORTED
-                                && actual_err.1.is_some()
-                                && actual_err.1.unwrap() == *code =>
-                        {
-                            output.pass(function_name);
-                            stats.test_success(test_run_info, test_plan);
-                        },
-                        // incorrect cases
-                        Some(ExpectedFailure::ExpectedWithError(expected_err)) => {
-                            output.fail(function_name);
-                            stats.test_failure(
-                                TestFailure::new(
-                                    FailureReason::wrong_error(expected_err.clone(), actual_err),
-                                    test_run_info,
-                                    Some(err),
-                                    save_session_state(),
-                                ),
-                                test_plan,
-                            )
-                        },
-                        Some(ExpectedFailure::ExpectedWithCodeDEPRECATED(expected_code)) => {
-                            output.fail(function_name);
-                            stats.test_failure(
-                                TestFailure::new(
-                                    FailureReason::wrong_abort_deprecated(
-                                        *expected_code,
-                                        actual_err,
-                                    ),
-                                    test_run_info,
-                                    Some(err),
-                                    save_session_state(),
-                                ),
-                                test_plan,
-                            )
-                        },
-                        None if err.major_status() == StatusCode::OUT_OF_GAS => {
-                            // Ran out of ticks, report a test timeout and log a test failure
-                            output.timeout(function_name);
-                            stats.test_failure(
-                                TestFailure::new(
-                                    FailureReason::timeout(),
-                                    test_run_info,
-                                    Some(err),
-                                    save_session_state(),
-                                ),
-                                test_plan,
-                            )
-                        },
-                        None => {
-                            output.fail(function_name);
-                            stats.test_failure(
-                                TestFailure::new(
-                                    FailureReason::unexpected_error(actual_err),
-                                    test_run_info,
-                                    Some(err),
-                                    save_session_state(),
-                                ),
-                                test_plan,
-                            )
-                        },
-                    }
-                },
-                Ok(_) => {
-                    // Expected the test to fail, but it executed
-                    if test_info.expected_failure.is_some() {
-                        output.fail(function_name);
-                        stats.test_failure(
-                            TestFailure::new(
-                                FailureReason::no_error(),
-                                test_run_info,
-                                None,
-                                save_session_state(),
-                            ),
-                            test_plan,
-                        )
-                    } else {
-                        // Expected the test to execute fully and it did
-                        output.pass(function_name);
-                        stats.test_success(test_run_info, test_plan);
-                    }
-                },
+            for _ in 0..repeats - 1 {
+                if !self.run_one_test(test_plan, test_info, output, factory, &mut stats, &mut rng, function_name, false) {
+                    return stats;
+                }
             }
+            self.run_one_test(test_plan, test_info, output, factory, &mut stats, &mut rng, function_name, true);
         }
 
         stats

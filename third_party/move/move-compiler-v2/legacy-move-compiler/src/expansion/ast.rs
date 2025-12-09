@@ -45,6 +45,7 @@ pub enum AttributeValue_ {
     Value(Value),
     Module(ModuleIdent),
     ModuleAccess(ModuleAccess),
+    Star,
 }
 pub type AttributeValue = Spanned<AttributeValue_>;
 
@@ -990,6 +991,7 @@ impl AstDebug for AttributeValue_ {
             AttributeValue_::Value(v) => v.ast_debug(w),
             AttributeValue_::Module(m) => w.write(&format!("{}", m)),
             AttributeValue_::ModuleAccess(n) => n.ast_debug(w),
+            AttributeValue_::Star => w.write("*"),
         }
     }
 }

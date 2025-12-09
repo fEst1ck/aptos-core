@@ -11,6 +11,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+arbitrary = { workspace = true, features = ["derive_arbitrary"] }
 better_any = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 codespan-reporting = { workspace = true }
@@ -33,6 +34,7 @@ move-vm-runtime = { workspace = true, features = ["testing"] }
 move-vm-test-utils = { workspace = true }
 move-vm-types = { workspace = true }
 once_cell = { workspace = true }
+rand = { workspace = true }
 rayon = { workspace = true }
 regex = { workspace = true }
 
@@ -42,6 +44,7 @@ difference = { workspace = true }
 move-cli = { path = "../move-cli" }
 move-model = { path = "../../move-model" }
 move-package = { path = "../move-package" }
+temp-env = "0.3.6"
 tempfile = { workspace = true }
 
 [[bin]]

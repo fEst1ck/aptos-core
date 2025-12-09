@@ -247,7 +247,7 @@ pub struct MoveFunctionLayout(
 /// type instantiation, as well as the closure mask and the captured values together
 /// with their layout. The latter allows to deserialize closures context free (without
 /// needing to lookup information about the function and its dependencies).
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)

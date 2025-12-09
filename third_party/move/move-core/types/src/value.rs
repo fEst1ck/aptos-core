@@ -93,7 +93,7 @@ pub const MASTER_ADDRESS_FIELD_OFFSET: usize = 1;
 /// field offset of a permission storage address in a enum encoded permission signer.
 pub const PERMISSION_ADDRESS_FIELD_OFFSET: usize = 2;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)
@@ -114,7 +114,7 @@ pub enum MoveStruct {
     WithVariantFields(Identifier, u16, Vec<(Identifier, MoveValue)>),
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)
@@ -138,8 +138,64 @@ pub enum MoveValue {
     Closure(Box<MoveClosure>),
 }
 
+/// An argument of a test case.
+#[derive(Debug, Clone)]
+pub enum TestArg {
+    Value(MoveValue),
+    Constraint(MoveValueConstraint),
+}
+
+/// A constraint on the `MoveValue` that can be used to generate a random `MoveValue`.
+#[derive(Debug, Clone)]
+pub enum MoveValueConstraint {
+    AnyU8,
+    AnyU16,
+    AnyU32,
+    AnyU64,
+    AnyU128,
+    AnyU256,
+    AnyBool,
+    AnyAddress,
+    AnySigner,
+}
+
+impl MoveValueConstraint {
+    /// Generate a random `MoveValue` that satisfies the constraint.
+    pub fn gen<'a>(&self, u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<MoveValue> {
+        match self {
+            MoveValueConstraint::AnyU8 => {
+                Ok(MoveValue::U8(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyU16 => {
+                Ok(MoveValue::U16(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyU32 => {
+                Ok(MoveValue::U32(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyU64 => {
+                Ok(MoveValue::U64(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyU128 => {
+                Ok(MoveValue::U128(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyU256 => {
+                Ok(MoveValue::U256(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyBool => {
+                Ok(MoveValue::Bool(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnyAddress => {
+                Ok(MoveValue::Address(u.arbitrary()?))
+            },
+            MoveValueConstraint::AnySigner => {
+                Ok(MoveValue::Signer(u.arbitrary()?))
+            },
+        }
+    }
+}
+
 /// A layout associated with a named field
-#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)
@@ -155,7 +211,7 @@ impl MoveFieldLayout {
     }
 }
 
-#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)
@@ -165,7 +221,7 @@ pub struct MoveVariantLayout {
     pub fields: Vec<MoveFieldLayout>,
 }
 
-#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)
@@ -188,7 +244,7 @@ pub enum MoveStructLayout {
 }
 
 /// Used to distinguish between aggregators ans snapshots.
-#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary, dearbitrary::Dearbitrary)
@@ -224,7 +280,7 @@ impl IdentifierMappingKind {
     }
 }
 
-#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
     any(test, feature = "fuzzing"),
     derive(arbitrary::Arbitrary),

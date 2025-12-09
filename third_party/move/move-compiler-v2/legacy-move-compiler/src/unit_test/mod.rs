@@ -10,7 +10,7 @@ use crate::{
 use move_binary_format::CompiledModule;
 use move_core_types::{
     account_address::AccountAddress, identifier::Identifier, language_storage::ModuleId,
-    value::MoveValue, vm_status::StatusCode,
+    value::{MoveValue, TestArg}, vm_status::StatusCode,
 };
 use std::{collections::BTreeMap, fmt};
 
@@ -44,8 +44,21 @@ pub struct ModuleTestPlan {
 #[derive(Debug, Clone)]
 pub struct TestCase {
     pub test_name: TestName,
-    pub arguments: Vec<MoveValue>,
+    pub arguments: Vec<TestArg>,
     pub expected_failure: Option<ExpectedFailure>,
+}
+
+impl TestCase {
+    pub fn is_prop_test(&self) -> bool {
+        self.arguments.iter().any(|arg| matches!(arg, TestArg::Constraint(_)))
+    }
+
+    pub fn gen_args<'a>(&self, u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Vec<MoveValue>> {
+        self.arguments.iter().map(|arg| match arg {
+            TestArg::Value(value) => Ok(value.clone()),
+            TestArg::Constraint(constraint) => constraint.gen(u),
+        }).collect()
+    }
 }
 
 #[derive(Debug, Clone)]

@@ -883,6 +883,7 @@ fn attribute_value(
     use P::{AttributeValue_ as PV, LeadingNameAccess_ as LN, NameAccessChain_ as PN};
     Some(sp(loc, match avalue_ {
         PV::Value(v) => EV::Value(value(context, v)?),
+        PV::Star => EV::Star,
         PV::ModuleAccess(sp!(ident_loc, PN::Two(sp!(aloc, LN::AnonymousAddress(a)), n))) => {
             let addr = Address::Numerical(None, sp(aloc, a));
             let mident = sp(ident_loc, ModuleIdent_::new(addr, ModuleName(n)));

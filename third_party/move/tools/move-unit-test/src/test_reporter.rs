@@ -15,7 +15,7 @@ use move_binary_format::{
     errors::{ExecutionState, Location, VMError, VMResult},
 };
 use move_command_line_common::{env::read_bool_env_var, files::FileHash};
-use move_core_types::{effects::ChangeSet, language_storage::ModuleId, vm_status::StatusType};
+use move_core_types::{effects::ChangeSet, language_storage::ModuleId, value::MoveValue, vm_status::StatusType};
 use move_ir_types::location::Loc;
 use move_symbol_pool::Symbol;
 use move_vm_runtime::native_extensions::NativeContextExtensions;
@@ -114,6 +114,7 @@ pub struct TestFailure {
     pub test_run_info: TestRunInfo,
     pub vm_error: Option<VMError>,
     pub failure_reason: FailureReason,
+    pub failure_input: Option<Vec<MoveValue>>,
     pub storage_state: Option<String>,
 }
 
@@ -198,6 +199,7 @@ impl FailureReason {
 impl TestFailure {
     pub fn new(
         failure_reason: FailureReason,
+        failure_input: Option<Vec<MoveValue>>,
         test_run_info: TestRunInfo,
         vm_error: Option<VMError>,
         storage_state: Option<String>,
@@ -206,6 +208,7 @@ impl TestFailure {
             test_run_info,
             vm_error,
             failure_reason,
+            failure_input,
             storage_state,
         }
     }
@@ -639,6 +642,7 @@ impl TestResults {
                             .render_error(&self.test_plan)
                             .replace('\n', "\n│ ")
                     )?;
+                    writeln!(writer.lock().unwrap(), "│ Failure input: {:?}", test_failure.failure_input)?;
                     writeln!(writer.lock().unwrap(), "└──────────────────\n")?;
                 }
             }

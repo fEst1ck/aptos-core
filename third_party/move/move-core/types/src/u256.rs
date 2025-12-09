@@ -699,7 +699,6 @@ impl proptest::prelude::Arbitrary for U256 {
     }
 }
 
-#[cfg(any(test, feature = "fuzzing"))]
 impl<'a> arbitrary::Arbitrary<'a> for U256 {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let bytes = <[u8; U256_NUM_BYTES]>::arbitrary(u)?;

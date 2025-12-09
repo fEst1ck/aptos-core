@@ -9,6 +9,7 @@ use move_stdlib::natives::{all_natives, GasParameters};
 use move_unit_test::UnitTestingConfig;
 use std::path::PathBuf;
 use tempfile::tempdir;
+use temp_env::with_vars;
 
 pub fn path_in_crate<S>(relative: S) -> PathBuf
 where
@@ -19,7 +20,7 @@ where
     path
 }
 
-fn run_tests_for_pkg(path_to_pkg: impl Into<String>, v2: bool) {
+fn run_tests_for_pkg(path_to_pkg: impl Into<String>, v2: bool, expected: UnitTestResult) {
     let pkg_path = path_in_crate(path_to_pkg);
 
     let natives = all_natives(
@@ -50,7 +51,7 @@ fn run_tests_for_pkg(path_to_pkg: impl Into<String>, v2: bool) {
         /* compute_coverage */ false,
         &mut std::io::stdout(),
     );
-    if result.is_err() || result.is_ok_and(|r| r == UnitTestResult::Failure) {
+    if result.is_err() || result.is_ok_and(|r| r != expected) {
         panic!("aborting because of Move unit test failures")
     }
 }
@@ -58,6 +59,14 @@ fn run_tests_for_pkg(path_to_pkg: impl Into<String>, v2: bool) {
 #[test]
 fn one_bytecode_dep() {
     // TODO: automatically discovers all Move packages under a package directory and runs unit tests for them
-    run_tests_for_pkg("tests/packages/one-bytecode-dep", true);
-    run_tests_for_pkg("tests/packages/one-bytecode-dep", false);
+    run_tests_for_pkg("tests/packages/one-bytecode-dep", true, UnitTestResult::Success);
+    run_tests_for_pkg("tests/packages/one-bytecode-dep", false, UnitTestResult::Success);
+}
+
+#[test]
+fn prop_test() {
+    with_vars([("TEST_REPEAT", Some("100")), ("TEST_SEED", Some("123"))], || {
+        run_tests_for_pkg("tests/packages/prop-test", true, UnitTestResult::Failure);
+        run_tests_for_pkg("tests/packages/prop-test", false, UnitTestResult::Failure);
+    });
 }

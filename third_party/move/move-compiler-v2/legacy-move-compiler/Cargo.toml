@@ -9,6 +9,7 @@ license = "Apache-2.0"
 
 [dependencies]
 anyhow = { workspace = true }
+arbitrary = { workspace = true, features = ["derive_arbitrary"] }
 clap = { workspace = true, features = ["derive"] }
 codespan-reporting = { workspace = true }
 hex = { workspace = true }

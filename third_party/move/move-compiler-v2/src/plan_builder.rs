@@ -19,7 +19,7 @@ use legacy_move_compiler::{
 };
 use move_command_line_common::{address::NumericalAddress, parser::NumberFormat};
 use move_core_types::{
-    identifier::Identifier, language_storage::ModuleId, value::MoveValue, vm_status::StatusCode,
+    identifier::Identifier, language_storage::ModuleId, value::{MoveValue, MoveValueConstraint, TestArg}, vm_status::StatusCode,
 };
 use move_model::{
     ast::{Address, Attribute, AttributeValue, ModuleName, Value},
@@ -164,13 +164,13 @@ fn build_test_info(
         let Parameter(var, ty, var_loc) = &param;
 
         match test_annotation_params.get(var) {
-            Some(MoveValue::Address(addr)) => match ty {
-                Type::Primitive(PrimitiveType::Signer) => arguments.push(MoveValue::Signer(*addr)),
+            Some(MoveValueOrStar::Value(MoveValue::Address(addr))) => match ty {
+                Type::Primitive(PrimitiveType::Signer) => arguments.push(TestArg::Value(MoveValue::Signer(*addr))),
                 Type::Reference(_, inner) if **inner == Type::Primitive(PrimitiveType::Signer) => {
-                    arguments.push(MoveValue::Signer(*addr));
+                    arguments.push(TestArg::Value(MoveValue::Signer(*addr)));
                 },
                 Type::Primitive(PrimitiveType::Address) => {
-                    arguments.push(MoveValue::Address(*addr))
+                    arguments.push(TestArg::Value(MoveValue::Address(*addr)))
                 },
                 _ => {
                     let err_msg = "Unexpected argument type: expect an address or a signer";
@@ -184,7 +184,38 @@ fn build_test_info(
                     ]);
                 },
             },
-            Some(value) => arguments.push(value.clone()),
+            Some(MoveValueOrStar::Value(value)) => arguments.push(TestArg::Value(value.clone())),
+            Some(MoveValueOrStar::Star) => {
+                match ty {
+                    Type::Primitive(primitive_type) => {
+                        match primitive_type {
+                            PrimitiveType::Bool => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyBool)),
+                            PrimitiveType::U8 => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyU8)),
+                            PrimitiveType::U16 => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyU16)),
+                            PrimitiveType::U32 => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyU32)),
+                            PrimitiveType::U64 => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyU64)),
+                            PrimitiveType::U128 => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyU128)),
+                            PrimitiveType::U256 => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyU256)),
+                            PrimitiveType::Address => arguments.push(TestArg::Constraint(MoveValueConstraint::AnyAddress)),
+                            PrimitiveType::Signer => arguments.push(TestArg::Constraint(MoveValueConstraint::AnySigner)),
+                            _ => {
+                                env.error_with_labels(&var_loc, "Unexpected argument type: expect a primitive type", vec![(
+                                    var_loc.clone(),
+                                    "Corresponding to this parameter".to_string(),
+                                )]);
+                                return None;
+                            }
+                        }
+                    },
+                    _ => {
+                        env.error_with_labels(&var_loc, "Unexpected argument type: expect a primitive type", vec![(
+                            var_loc.clone(),
+                            "Corresponding to this parameter".to_string(),
+                        )]);
+                        return None;
+                    }
+                }
+            }
             None => {
                 let missing_param_msg = "Missing test parameter assignment in test. Expected a \
                                          parameter to be assigned in this attribute";
@@ -220,7 +251,7 @@ fn parse_test_attribute(
     env: &GlobalEnv,
     test_attribute: &Attribute,
     depth: usize,
-) -> BTreeMap<Symbol, MoveValue> {
+) -> BTreeMap<Symbol, MoveValueOrStar> {
     match test_attribute {
         Attribute::Apply(id, _, _) if depth > 0 => {
             let aloc = env.get_node_loc(*id);
@@ -541,6 +572,14 @@ fn convert_location(env: &GlobalEnv, attr: Attribute) -> Option<ModuleId> {
             )]);
             None
         },
+        AttributeValue::Star(id) => {
+            let vloc = env.get_node_loc(id);
+            env.error_with_labels(&loc, "invalid attribute value", vec![(
+                vloc,
+                "Expected a module identifier, e.g. 'std::vector'".to_string(),
+            )]);
+            None
+        },
     }
 }
 
@@ -561,6 +600,9 @@ fn convert_constant_value_u64_constant_or_value(
         AttributeValue::Name(id, opt_module_name, sym) => {
             let vloc = env.get_node_loc(*id);
             (vloc, opt_module_name, sym)
+        },
+        AttributeValue::Star(_node_id) => {
+            return None;
         },
     };
     let module_env: ModuleEnv = if let Some(module_name) = opt_module_name {
@@ -689,17 +731,23 @@ fn convert_model_ast_value_u64(env: &GlobalEnv, loc: Loc, value: &Value) -> Opti
     }
 }
 
+enum MoveValueOrStar {
+    Value(MoveValue),
+    Star,
+}
+
 fn convert_attribute_value_to_move_value(
     env: &GlobalEnv,
     value: &AttributeValue,
-) -> Option<MoveValue> {
+) -> Option<MoveValueOrStar> {
     // Only addresses are allowed
     match value {
         AttributeValue::Value(_id, Value::Address(addr)) => match addr {
             Address::Numerical(num) => Some(*num),
             Address::Symbolic(sym) => env.resolve_address_alias(*sym),
         }
-        .map(MoveValue::Address),
+        .map(|addr| MoveValueOrStar::Value(MoveValue::Address(addr))),
+        AttributeValue::Star(_id) => Some(MoveValueOrStar::Star),
         _ => None,
     }
 }

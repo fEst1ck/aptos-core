@@ -1,0 +1,13 @@
+[package]
+name = "prop-test"
+version = "1.0.0"
+authors = []
+
+[addresses]
+
+[dev-addresses]
+
+[dependencies]
+MoveStdlib = { local = "../../../../../../../aptos-move/framework/move-stdlib" }
+
+[dev-dependencies]

@@ -11241,6 +11241,7 @@ name = "legacy-move-compiler"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "arbitrary",
  "bcs 0.1.4",
  "clap 4.5.21",
  "codespan-reporting",
@@ -12643,6 +12644,7 @@ name = "move-unit-test"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "arbitrary",
  "better_any",
  "clap 4.5.21",
  "codespan-reporting",
@@ -12668,8 +12670,10 @@ dependencies = [
  "move-vm-test-utils",
  "move-vm-types",
  "once_cell",
+ "rand 0.7.3",
  "rayon",
  "regex",
+ "temp-env",
  "tempfile",
 ]
 
@@ -17522,6 +17526,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba323866e5d033818e3240feeb9f7db2c4296674e4d9e16b97b7bf8f490434e8"
 dependencies = [
  "pin-utils",
+]
+
+[[package]]
+name = "temp-env"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96374855068f47402c3121c6eed88d29cb1de8f3ab27090e273e420bdabcf050"
+dependencies = [
+ "parking_lot 0.12.1",
 ]
 
 [[package]]

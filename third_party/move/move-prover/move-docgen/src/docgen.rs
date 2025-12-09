@@ -594,6 +594,7 @@ impl<'env> Docgen<'env> {
                         };
                         format!("{} = {}{}", symbol_string, module_prefix, symbol2_name)
                     },
+                    AttributeValue::Star(_node_id) => "*".to_string(),
                 }
             },
         };

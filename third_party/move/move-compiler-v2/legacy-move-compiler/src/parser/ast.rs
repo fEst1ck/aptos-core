@@ -115,6 +115,7 @@ pub struct UseDecl {
 pub enum AttributeValue_ {
     Value(Value),
     ModuleAccess(NameAccessChain),
+    Star,
 }
 pub type AttributeValue = Spanned<AttributeValue_>;
 
@@ -1195,6 +1196,7 @@ impl AstDebug for AttributeValue_ {
         match self {
             AttributeValue_::Value(v) => v.ast_debug(w),
             AttributeValue_::ModuleAccess(n) => n.ast_debug(w),
+            AttributeValue_::Star => w.write("*"),
         }
     }
 }

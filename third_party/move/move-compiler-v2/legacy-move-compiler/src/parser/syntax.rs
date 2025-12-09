@@ -714,13 +714,20 @@ fn parse_visibility(context: &mut Context) -> Result<Visibility, Box<Diagnostic>
     })
 }
 
-// Parse an attribute value. Either a value literal or a module access
+// Parse an attribute value. Either a value literal, a module access, or "*"
 //      AttributeValue =
 //          <Value>
 //          | <NameAccessChain>
+//          | "*"
 fn parse_attribute_value(context: &mut Context) -> Result<AttributeValue, Box<Diagnostic>> {
     if let Some(v) = maybe_parse_value(context)? {
         return Ok(sp(v.loc, AttributeValue_::Value(v)));
+    }
+
+    if context.tokens.peek() == Tok::Star {
+        let loc = current_token_loc(context.tokens);
+        context.tokens.advance()?;
+        return Ok(sp(loc, AttributeValue_::Star));
     }
 
     let ma = parse_name_access_chain(context, false, || "attribute name value")?;

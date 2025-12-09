@@ -70,6 +70,7 @@ pub struct SpecFunDecl {
 pub enum AttributeValue {
     Value(NodeId, Value),
     Name(NodeId, Option<ModuleName>, Symbol),
+    Star(NodeId),
 }
 
 #[derive(Debug, Clone)]
