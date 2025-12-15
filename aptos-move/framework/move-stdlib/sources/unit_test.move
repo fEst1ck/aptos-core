@@ -9,4 +9,9 @@ module std::unit_test {
     /// This will cause a linking failure if an attempt is made to publish a
     /// test module in a VM that isn't in unit test mode.
     native public fun create_signers_for_testing(num_signers: u64): vector<signer>;
+
+    /// Generates a random value of a primitive type T.
+    /// Supported types: bool, u8, u16, u32, u64, u128, u256, address
+    /// Aborts if T is not a primitive type.
+    native public fun any<T>(): T;
 }
