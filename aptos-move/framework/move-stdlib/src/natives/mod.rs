@@ -9,6 +9,8 @@ pub mod bcs;
 pub mod cmp;
 pub mod hash;
 pub mod mem;
+#[cfg(feature = "testing")]
+pub mod prop_test;
 pub mod signer;
 pub mod string;
 #[cfg(feature = "testing")]
@@ -43,6 +45,7 @@ pub fn all_natives(
         add_natives!("vector", vector::make_all(builder));
         #[cfg(feature = "testing")]
         {
+            add_natives!("prop_test", prop_test::make_all(builder));
             add_natives!("unit_test", unit_test::make_all(builder));
         }
     });
