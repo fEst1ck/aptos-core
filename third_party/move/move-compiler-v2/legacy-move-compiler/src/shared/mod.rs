@@ -662,6 +662,8 @@ pub mod known_attributes {
         Test,
         // This test is expected to fail
         ExpectedFailure,
+        // Property test configuration (e.g., repeat count)
+        PropTest,
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -721,6 +723,7 @@ pub mod known_attributes {
                 TestingAttribute::EXPECTED_FAILURE => {
                     Self::Testing(TestingAttribute::ExpectedFailure)
                 },
+                TestingAttribute::PROPTEST => Self::Testing(TestingAttribute::PropTest),
                 VerificationAttribute::VERIFY_ONLY => {
                     Self::Verification(VerificationAttribute::VerifyOnly)
                 },
@@ -781,14 +784,15 @@ pub mod known_attributes {
 
     impl TestingAttribute {
         pub const ABORT_CODE_NAME: &'static str = "abort_code";
-        const ALL_ATTRIBUTE_NAMES: [&'static str; 3] =
-            [Self::TEST, Self::TEST_ONLY, Self::EXPECTED_FAILURE];
+        const ALL_ATTRIBUTE_NAMES: [&'static str; 4] =
+            [Self::TEST, Self::TEST_ONLY, Self::EXPECTED_FAILURE, Self::PROPTEST];
         pub const ARITHMETIC_ERROR_NAME: &'static str = "arithmetic_error";
         pub const ERROR_LOCATION: &'static str = "location";
         pub const EXPECTED_FAILURE: &'static str = "expected_failure";
         pub const MAJOR_STATUS_NAME: &'static str = "major_status";
         pub const MINOR_STATUS_NAME: &'static str = "minor_status";
         pub const OUT_OF_GAS_NAME: &'static str = "out_of_gas";
+        pub const PROPTEST: &'static str = "proptest";
         pub const TEST: &'static str = "test";
         pub const TEST_ONLY: &'static str = "test_only";
         pub const VECTOR_ERROR_NAME: &'static str = "vector_error";
@@ -815,6 +819,7 @@ pub mod known_attributes {
                 Self::Test => Self::TEST,
                 Self::TestOnly => Self::TEST_ONLY,
                 Self::ExpectedFailure => Self::EXPECTED_FAILURE,
+                Self::PropTest => Self::PROPTEST,
             }
         }
 
@@ -835,10 +840,13 @@ pub mod known_attributes {
                 Lazy::new(|| IntoIterator::into_iter([AttributePosition::Function]).collect());
             static EXPECTED_FAILURE_POSITIONS: Lazy<BTreeSet<AttributePosition>> =
                 Lazy::new(|| IntoIterator::into_iter([AttributePosition::Function]).collect());
+            static PROPTEST_POSITIONS: Lazy<BTreeSet<AttributePosition>> =
+                Lazy::new(|| IntoIterator::into_iter([AttributePosition::Function]).collect());
             match self {
                 TestingAttribute::TestOnly => &TEST_ONLY_POSITIONS,
                 TestingAttribute::Test => &TEST_POSITIONS,
                 TestingAttribute::ExpectedFailure => &EXPECTED_FAILURE_POSITIONS,
+                TestingAttribute::PropTest => &PROPTEST_POSITIONS,
             }
         }
     }

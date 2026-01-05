@@ -15,7 +15,7 @@ use legacy_move_compiler::unit_test::{
     ExpectedFailure, ModuleTestPlan, NamedOrBytecodeModule, TestCase, TestPlan,
 };
 use move_binary_format::{
-    errors::{Location, VMResult},
+    errors::{Location, PartialVMError, VMResult},
     file_format::CompiledModule,
 };
 use move_bytecode_utils::Modules;
@@ -23,7 +23,8 @@ use move_core_types::{
     account_address::AccountAddress,
     effects::{ChangeSet, Op},
     identifier::IdentStr,
-    value::{serialize_values, MoveValue},
+    language_storage::ModuleId,
+    value::{serialize_values, MoveValue, TestArg},
     vm_status::StatusCode,
 };
 use move_resource_viewer::MoveValueAnnotator;
@@ -238,6 +239,57 @@ impl<W: Write> TestOutput<'_, '_, W> {
 }
 
 impl SharedTestingConfig {
+    /// Execute a function call and return its return value.
+    /// Used for generating test arguments via function calls like `#[test(a = gen())]`.
+    fn execute_function_call<F: UnitTestFactory>(
+        &self,
+        module_id: &ModuleId,
+        function_name: &str,
+        factory: &Mutex<F>,
+        extensions: &mut NativeContextExtensions,
+    ) -> VMResult<MoveValue> {
+        let module_storage = self.starting_storage_state.as_unsync_module_storage();
+        let mut gas_meter = factory.lock().unwrap().new_gas_meter();
+        let traversal_storage = TraversalStorage::new();
+        let mut traversal_context = TraversalContext::new(&traversal_storage);
+        let mut data_cache = TransactionDataCache::empty();
+
+        let ident_str = IdentStr::new(function_name)
+            .map_err(|e| PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
+                .with_message(format!("Invalid function name '{}': {}", function_name, e))
+                .finish(Location::Undefined))?;
+        
+        let function = module_storage.load_function(
+            module_id,
+            ident_str,
+            &[],
+        )?;
+
+        let result = MoveVM::execute_loaded_function(
+            function,
+            Vec::<Vec<u8>>::new(), // No arguments for generator functions
+            &mut data_cache,
+            &mut gas_meter,
+            &mut traversal_context,
+            extensions,
+            &module_storage,
+            &self.starting_storage_state,
+        )?;
+
+        // Extract the return value (generator functions should return a single value)
+        if result.return_values.len() != 1 {
+            return Err(PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
+                .with_message(format!("Generator function {} must return exactly one value", function_name))
+                .finish(Location::Undefined));
+        }
+
+        let (bytes, layout) = &result.return_values[0];
+        MoveValue::simple_deserialize(bytes, layout)
+            .map_err(|e| PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
+                .with_message(format!("Failed to deserialize return value from {}: {:?}", function_name, e))
+                .finish(Location::Undefined))
+    }
+
     #[allow(clippy::field_reassign_with_default)]
     fn execute_via_move_vm<F: UnitTestFactory>(
         &self,
@@ -330,10 +382,35 @@ impl SharedTestingConfig {
         rng: &mut StdRng,
         function_name: &String,
         record_test: bool,
+        extensions: &mut NativeContextExtensions,
     ) -> bool {
+        // Generate test arguments, handling function calls
+        let mut args = Vec::new();
         let mut data = vec![0u8; 1024];
         rng.fill(&mut data[..]);
-        let args = test_info.gen_args(&mut arbitrary::Unstructured::new(&data)).expect("Failed to generate test arguments");
+        let mut u = arbitrary::Unstructured::new(&data);
+
+        for arg in &test_info.arguments {
+            let value = match arg {
+                TestArg::Value(value) => value.clone(),
+                TestArg::Constraint(constraint) => constraint.gen(&mut u).expect("Failed to generate test argument"),
+                TestArg::FunctionCall(opt_module_id, func_name) => {
+                    // Execute the function call to generate the argument
+                    let module_id = opt_module_id.as_ref().unwrap_or(&test_plan.module_id);
+                    match self.execute_function_call(module_id, func_name, factory, extensions) {
+                        Ok(value) => value,
+                        Err(err) => {
+                            output.fail(function_name);
+                            eprintln!("Failed to execute generator function {}::{}: {:?}", 
+                                module_id, func_name, err);
+                            return false;
+                        },
+                    }
+                },
+            };
+            args.push(value);
+        }
+
         let failure_input = if test_info.is_prop_test() {
             Some(args.clone())
         } else {
@@ -507,21 +584,24 @@ impl SharedTestingConfig {
 
         for (function_name, test_info) in &test_plan.tests {
             let repeats = if test_info.is_prop_test() {
-                // TODO: not passing from env var
-                // Read number of repeats from TEST_REPEAT env var, default to 10
-                env::var("TEST_REPEAT")
-                    .ok()
-                    .and_then(|s| s.parse::<usize>().ok())
-                    .unwrap_or(10)
+                // Use repeats from test case if specified, otherwise fall back to env var or default
+                test_info.repeats
+                    .or_else(|| {
+                        env::var("TEST_REPEAT")
+                            .ok()
+                            .and_then(|s| s.parse::<usize>().ok())
+                    })
+                    .unwrap_or(256)
             } else {
                 1
             };
+            let mut extensions = extensions::new_extensions();
             for _ in 0..repeats - 1 {
-                if !self.run_one_test(test_plan, test_info, output, factory, &mut stats, &mut rng, function_name, false) {
+                if !self.run_one_test(test_plan, test_info, output, factory, &mut stats, &mut rng, function_name, false, &mut extensions) {
                     return stats;
                 }
             }
-            self.run_one_test(test_plan, test_info, output, factory, &mut stats, &mut rng, function_name, true);
+            self.run_one_test(test_plan, test_info, output, factory, &mut stats, &mut rng, function_name, true, &mut extensions);
         }
 
         stats

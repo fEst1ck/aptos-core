@@ -117,9 +117,11 @@ fn build_test_info(
     let expected_failure_name = env.symbol_pool().make(TestingAttribute::EXPECTED_FAILURE);
     let test_name = env.symbol_pool().make(TestingAttribute::TEST);
     let test_only_name = env.symbol_pool().make(TestingAttribute::TEST_ONLY);
+    let proptest_name = env.symbol_pool().make(TestingAttribute::PROPTEST);
 
     let test_attribute_opt = attrs.iter().find(|a| a.name() == test_name);
     let abort_attribute_opt = attrs.iter().find(|a| a.name() == expected_failure_name);
+    let proptest_attribute_opt = attrs.iter().find(|a| a.name() == proptest_name);
 
     let test_attribute = match test_attribute_opt {
         None => {
@@ -158,6 +160,18 @@ fn build_test_info(
     }
 
     let test_annotation_params = parse_test_attribute(env, test_attribute, 0);
+    
+    // Parse proptest attribute for repeat count (separate from test attribute)
+    let repeats = match proptest_attribute_opt {
+        Some(proptest_attribute) => {
+            let proptest_attribute_loc = env.get_node_loc(proptest_attribute.node_id());
+            parse_proptest_attribute(env, proptest_attribute, &proptest_attribute_loc)
+        },
+        None => {
+            // Fall back to parsing repeats from test attribute for backward compatibility
+            parse_repeats_parameter(env, &test_annotation_params, &test_attribute_loc)
+        },
+    };
 
     let mut arguments = Vec::new();
     for param in function.get_parameters_ref() {
@@ -185,6 +199,115 @@ fn build_test_info(
                 },
             },
             Some(MoveValueOrStar::Value(value)) => arguments.push(TestArg::Value(value.clone())),
+            Some(MoveValueOrStar::FunctionCall(opt_module_id, func_name)) => {
+                // Type check: verify the generator function's return type matches the parameter type
+                let generator_module_id = match opt_module_id {
+                    Some(id) => id.clone(),
+                    None => {
+                        // Convert current_module to ModuleId using the existing helper
+                        convert_module_id(env, var_loc.clone(), None)
+                            .unwrap_or_else(|| {
+                                // Fallback: construct from current_module
+                                let module_env = env.find_module(current_module)
+                                    .expect("current module exists");
+                                let module_name = module_env.get_name();
+                                let addr = module_name.addr();
+                                let name_sym = module_name.name();
+                                let name_str = env.symbol_pool().string(name_sym).to_string();
+                                let name_id = Identifier::new(name_str).unwrap();
+                                let account_addr = match addr {
+                                    Address::Numerical(addr) => *addr,
+                                    Address::Symbolic(sym) => env.resolve_address_alias(*sym)
+                                        .expect("current module address should be resolvable"),
+                                };
+                                ModuleId::new(account_addr, name_id)
+                            })
+                    },
+                };
+                
+                let func_ident = match Identifier::new(func_name.clone()) {
+                    Ok(ident) => ident,
+                    Err(_) => {
+                        env.error(&var_loc, &format!("Invalid function name '{}'", func_name));
+                        return None;
+                    },
+                };
+                
+                let generator_func = env.find_function_by_language_storage_id_name(
+                    &generator_module_id,
+                    &func_ident,
+                );
+
+                match generator_func {
+                    Some(gen_func) => {
+                        // Get the return type of the generator function
+                        let gen_return_type = gen_func.get_result_type();
+                        
+                        // Check if the return type matches the parameter type
+                        // For functions that return multiple values, we check the first return type
+                        let gen_return_types = gen_return_type.flatten();
+                        if gen_return_types.is_empty() {
+                            let type_ctx = function.get_type_display_ctx();
+                            env.error_with_labels(
+                                &var_loc,
+                                &format!("Generator function {}::{} must return exactly one value", 
+                                    generator_module_id, func_name),
+                                vec![
+                                    (gen_func.get_id_loc(), "Generator function defined here".to_string()),
+                                    (var_loc.clone(), format!("Expected to match parameter type {}", ty.display(&type_ctx))),
+                                ],
+                            );
+                            return None;
+                        }
+                        
+                        if gen_return_types.len() > 1 {
+                            let type_ctx = function.get_type_display_ctx();
+                            env.error_with_labels(
+                                &var_loc,
+                                &format!("Generator function {}::{} returns {} values, but test generators must return exactly one value", 
+                                    generator_module_id, func_name, gen_return_types.len()),
+                                vec![
+                                    (gen_func.get_id_loc(), "Generator function defined here".to_string()),
+                                    (var_loc.clone(), format!("Expected to match parameter type {}", ty.display(&type_ctx))),
+                                ],
+                            );
+                            return None;
+                        }
+
+                        let gen_ret_ty = &gen_return_types[0];
+                        
+                        // Check type compatibility
+                        if gen_ret_ty != ty {
+                            let type_ctx = function.get_type_display_ctx();
+                            env.error_with_labels(
+                                &var_loc,
+                                &format!("Type mismatch: generator function {}::{} returns type {}, but parameter expects type {}", 
+                                    generator_module_id, func_name, 
+                                    gen_ret_ty.display(&type_ctx), ty.display(&type_ctx)),
+                                vec![
+                                    (gen_func.get_id_loc(), format!("Generator function returns {}", gen_ret_ty.display(&type_ctx))),
+                                    (var_loc.clone(), format!("Parameter expects {}", ty.display(&type_ctx))),
+                                ],
+                            );
+                            return None;
+                        }
+                    },
+                    None => {
+                        env.error_with_labels(
+                            &var_loc,
+                            &format!("Generator function {}::{} not found", generator_module_id, func_name),
+                            vec![
+                                (test_attribute_loc.clone(), "Referenced in test attribute here".to_string()),
+                                (var_loc.clone(), "For this parameter".to_string()),
+                            ],
+                        );
+                        return None;
+                    },
+                }
+
+                // Store the function call to be executed at test runtime
+                arguments.push(TestArg::FunctionCall(opt_module_id.clone(), func_name.clone()));
+            },
             Some(MoveValueOrStar::Star) => {
                 match ty {
                     Type::Primitive(primitive_type) => {
@@ -240,6 +363,7 @@ fn build_test_info(
         test_name: fn_name_str.to_string(),
         arguments,
         expected_failure,
+        repeats,
     })
 }
 
@@ -260,7 +384,8 @@ fn parse_test_attribute(
         },
         Attribute::Apply(_id, sym, vec) => {
             assert!(
-                *TestingAttribute::TEST == env.symbol_pool().string(*sym).to_string(),
+                *TestingAttribute::TEST == env.symbol_pool().string(*sym).to_string()
+                || *TestingAttribute::PROPTEST == env.symbol_pool().string(*sym).to_string(),
                 "ICE: We should only be parsing a raw test attribute"
             );
             vec.iter()
@@ -734,21 +859,104 @@ fn convert_model_ast_value_u64(env: &GlobalEnv, loc: Loc, value: &Value) -> Opti
 enum MoveValueOrStar {
     Value(MoveValue),
     Star,
+    /// A function call to generate the value at test runtime.
+    /// Stores (module_id, function_name) where module_id is None for current module.
+    FunctionCall(Option<ModuleId>, String),
 }
 
 fn convert_attribute_value_to_move_value(
     env: &GlobalEnv,
     value: &AttributeValue,
 ) -> Option<MoveValueOrStar> {
-    // Only addresses are allowed
     match value {
         AttributeValue::Value(_id, Value::Address(addr)) => match addr {
             Address::Numerical(num) => Some(*num),
             Address::Symbolic(sym) => env.resolve_address_alias(*sym),
         }
         .map(|addr| MoveValueOrStar::Value(MoveValue::Address(addr))),
+        AttributeValue::Value(_id, Value::Number(num)) => {
+            // Convert BigInt to u64 for repeats parameter
+            if num <= &BigInt::from(u64::MAX) {
+                num.to_u64().map(|n| MoveValueOrStar::Value(MoveValue::U64(n)))
+            } else {
+                None
+            }
+        },
+        AttributeValue::Value(_id, _) => {
+            // Other value types (Bool, etc.) are not yet supported as test arguments
+            None
+        },
         AttributeValue::Star(_id) => Some(MoveValueOrStar::Star),
-        _ => None,
+        AttributeValue::Name(_id, opt_module_name, sym) => {
+            // Treat Name as a function call (e.g., gen() or my_module::gen())
+            let func_name = env.symbol_pool().string(*sym).to_string();
+            let module_id = opt_module_name.as_ref().and_then(|module_name| {
+                let addr = module_name.addr();
+                let name_sym = module_name.name();
+                let name_str = env.symbol_pool().string(name_sym).to_string();
+                let optional_num_addr: Option<move_core_types::account_address::AccountAddress> = match addr {
+                    Address::Numerical(num_addr) => Some(*num_addr),
+                    Address::Symbolic(sym) => env.resolve_address_alias(*sym),
+                };
+                optional_num_addr.map(|addr_bytes| {
+                    ModuleId::new(addr_bytes, Identifier::new(name_str).expect("name is valid for identifier"))
+                })
+            });
+            Some(MoveValueOrStar::FunctionCall(module_id, func_name))
+        },
+    }
+}
+
+fn parse_proptest_attribute(
+    env: &GlobalEnv,
+    proptest_attribute: &Attribute,
+    proptest_attribute_loc: &Loc,
+) -> Option<usize> {
+    let proptest_params = parse_test_attribute(env, proptest_attribute, 0);
+    let repeat_sym = env.symbol_pool().make("repeat");
+    match proptest_params.get(&repeat_sym) {
+        Some(MoveValueOrStar::Value(MoveValue::U64(n))) => {
+            if *n == 0 {
+                env.error(proptest_attribute_loc, "repeat parameter must be greater than 0");
+                None
+            } else if *n > usize::MAX as u64 {
+                env.error(proptest_attribute_loc, &format!("repeat parameter {} exceeds maximum value {}", n, usize::MAX));
+                None
+            } else {
+                Some(*n as usize)
+            }
+        },
+        Some(_) => {
+            env.error(proptest_attribute_loc, "repeat parameter must be a positive integer");
+            None
+        },
+        None => None,
+    }
+}
+
+fn parse_repeats_parameter(
+    env: &GlobalEnv,
+    test_annotation_params: &BTreeMap<Symbol, MoveValueOrStar>,
+    test_attribute_loc: &Loc,
+) -> Option<usize> {
+    let repeats_sym = env.symbol_pool().make("repeats");
+    match test_annotation_params.get(&repeats_sym) {
+        Some(MoveValueOrStar::Value(MoveValue::U64(n))) => {
+            if *n == 0 {
+                env.error(test_attribute_loc, "repeats parameter must be greater than 0");
+                None
+            } else if *n > usize::MAX as u64 {
+                env.error(test_attribute_loc, &format!("repeats parameter {} exceeds maximum value {}", n, usize::MAX));
+                None
+            } else {
+                Some(*n as usize)
+            }
+        },
+        Some(_) => {
+            env.error(test_attribute_loc, "repeats parameter must be a positive integer");
+            None
+        },
+        None => None,
     }
 }
 

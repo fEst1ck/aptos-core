@@ -90,7 +90,7 @@ fn run_test_impl(path: &Path) -> anyhow::Result<()> {
     let unit_test_config = UnitTestingConfig {
         num_threads: 1,
         source_files,
-        dep_files: move_stdlib::move_stdlib_files(),
+        dep_files: move_stdlib::aptos_move_stdlib_files(),
         named_address_values: move_stdlib::move_stdlib_named_addresses()
             .into_iter()
             .collect(),

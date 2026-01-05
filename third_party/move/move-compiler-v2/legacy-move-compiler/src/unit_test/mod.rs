@@ -46,17 +46,22 @@ pub struct TestCase {
     pub test_name: TestName,
     pub arguments: Vec<TestArg>,
     pub expected_failure: Option<ExpectedFailure>,
+    pub repeats: Option<usize>,
 }
 
 impl TestCase {
     pub fn is_prop_test(&self) -> bool {
-        self.arguments.iter().any(|arg| matches!(arg, TestArg::Constraint(_)))
+        self.arguments.iter().any(|arg| matches!(arg, TestArg::Constraint(_) | TestArg::FunctionCall(_, _)))
     }
 
     pub fn gen_args<'a>(&self, u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Vec<MoveValue>> {
         self.arguments.iter().map(|arg| match arg {
             TestArg::Value(value) => Ok(value.clone()),
             TestArg::Constraint(constraint) => constraint.gen(u),
+            TestArg::FunctionCall(_, _) => {
+                // Function calls are handled separately in the test runner
+                Err(arbitrary::Error::IncorrectFormat)
+            },
         }).collect()
     }
 }

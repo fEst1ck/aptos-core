@@ -143,6 +143,9 @@ pub enum MoveValue {
 pub enum TestArg {
     Value(MoveValue),
     Constraint(MoveValueConstraint),
+    /// A function call to generate the argument value at test runtime.
+    /// Stores (module_id, function_name) where module_id is None for current module.
+    FunctionCall(Option<ModuleId>, String),
 }
 
 /// A constraint on the `MoveValue` that can be used to generate a random `MoveValue`.
