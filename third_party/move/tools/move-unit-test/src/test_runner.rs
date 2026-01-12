@@ -234,6 +234,15 @@ impl<W: Write> TestOutput<'_, '_, W> {
         )
         .unwrap();
     }
+
+    fn gas_usage(&self, gas_used: u64) {
+        writeln!(
+            self.writer.lock().unwrap(),
+            "Gas usage: {}",
+            gas_used
+        )
+        .unwrap()
+    }
 }
 
 impl SharedTestingConfig {
@@ -368,12 +377,14 @@ impl SharedTestingConfig {
                     match test_info.expected_failure.as_ref() {
                         Some(ExpectedFailure::Expected) => {
                             output.pass(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_success(test_run_info, test_plan);
                         },
                         Some(ExpectedFailure::ExpectedWithError(expected_err))
                             if expected_err == &actual_err =>
                         {
                             output.pass(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_success(test_run_info, test_plan);
                         },
                         Some(ExpectedFailure::ExpectedWithCodeDEPRECATED(code))
@@ -382,11 +393,13 @@ impl SharedTestingConfig {
                                 && actual_err.1.unwrap() == *code =>
                         {
                             output.pass(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_success(test_run_info, test_plan);
                         },
                         // incorrect cases
                         Some(ExpectedFailure::ExpectedWithError(expected_err)) => {
                             output.fail(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_failure(
                                 TestFailure::new(
                                     FailureReason::wrong_error(expected_err.clone(), actual_err),
@@ -399,6 +412,7 @@ impl SharedTestingConfig {
                         },
                         Some(ExpectedFailure::ExpectedWithCodeDEPRECATED(expected_code)) => {
                             output.fail(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_failure(
                                 TestFailure::new(
                                     FailureReason::wrong_abort_deprecated(
@@ -415,6 +429,7 @@ impl SharedTestingConfig {
                         None if err.major_status() == StatusCode::OUT_OF_GAS => {
                             // Ran out of ticks, report a test timeout and log a test failure
                             output.timeout(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_failure(
                                 TestFailure::new(
                                     FailureReason::timeout(),
@@ -427,6 +442,7 @@ impl SharedTestingConfig {
                         },
                         None => {
                             output.fail(function_name);
+                            output.gas_usage(test_run_info.gas_used);
                             stats.test_failure(
                                 TestFailure::new(
                                     FailureReason::unexpected_error(actual_err),
@@ -443,6 +459,7 @@ impl SharedTestingConfig {
                     // Expected the test to fail, but it executed
                     if test_info.expected_failure.is_some() {
                         output.fail(function_name);
+                        output.gas_usage(test_run_info.gas_used);
                         stats.test_failure(
                             TestFailure::new(
                                 FailureReason::no_error(),
@@ -455,6 +472,7 @@ impl SharedTestingConfig {
                     } else {
                         // Expected the test to execute fully and it did
                         output.pass(function_name);
+                        output.gas_usage(test_run_info.gas_used);
                         stats.test_success(test_run_info, test_plan);
                     }
                 },
